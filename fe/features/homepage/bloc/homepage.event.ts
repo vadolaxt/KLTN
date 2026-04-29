@@ -1,10 +1,9 @@
 // ─────────────────────────────────────────────
-// /app/homepage/page.tsx — Route entry point
-// Gọi lại HomepageView để test giao diện
+// HOMEPAGE EVENTS
 // ─────────────────────────────────────────────
 
-import HomepageView from '@/features/homepage/homepage.view';
-
-export default function HomepagePage() {
-  return <HomepageView />;
-}
+export type HomepageEvent =
+  | { type: 'FETCH_ALL_START' }
+  | { type: 'FETCH_ALL_SUCCESS'; payload: { stats: unknown[]; services: unknown[]; news: unknown[] } }
+  | { type: 'FETCH_ALL_FAILURE'; payload: { error: string } }
+  | { type: 'RESET' };
