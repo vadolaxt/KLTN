@@ -362,11 +362,11 @@ export type ComponentColorKey = keyof typeof COLORS.COMPONENT;
  */
 export function getColor(path: string): ColorValue | undefined {
   const keys = path.split('.');
-  let current: any = COLORS;
+  let current: unknown = COLORS;
   
   for (const key of keys) {
     if (current && typeof current === 'object' && key in current) {
-      current = current[key];
+      current = (current as Record<string, unknown>)[key];
     } else {
       return undefined;
     }
@@ -388,7 +388,7 @@ export function generateCSSVariables(): Record<string, string> {
  * @param component - Component name
  * @returns Component color object or undefined
  */
-export function getComponentColors(component: ComponentColorKey): any {
+export function getComponentColors(component: ComponentColorKey): typeof COLORS.COMPONENT[ComponentColorKey] {
   return COLORS.COMPONENT[component];
 }
 

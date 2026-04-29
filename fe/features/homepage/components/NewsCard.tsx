@@ -11,7 +11,7 @@ const GRAD_MAP: Record<NewsItem['gradientVariant'], string> = {
   purple: 'bg-gradient-to-br from-[#3a1a5c] to-[#5a2d8a]',
 };
 
-interface NewsCardProps extends NewsItem {}
+type NewsCardProps = NewsItem;
 
 export default function NewsCard({
   tag,

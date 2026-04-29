@@ -12,7 +12,7 @@ export const delay = (ms: number): Promise<void> =>
 /**
  * Debounces a function call
  */
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
@@ -27,7 +27,7 @@ export const debounce = <T extends (...args: any[]) => any>(
 /**
  * Throttles a function call
  */
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {
@@ -88,7 +88,7 @@ export const generateId = (prefix = 'id'): string => {
 /**
  * Checks if a value is empty (null, undefined, empty string, empty array, empty object)
  */
-export const isEmpty = (value: any): boolean => {
+export const isEmpty = (value: unknown): boolean => {
   if (value == null) return true;
   if (typeof value === 'string') return value.trim().length === 0;
   if (Array.isArray(value)) return value.length === 0;
@@ -129,7 +129,7 @@ export const safeJsonParse = <T>(json: string, fallback: T): T => {
 /**
  * Creates a URL with query parameters
  */
-export const createUrlWithParams = (baseUrl: string, params: Record<string, any>): string => {
+export const createUrlWithParams = (baseUrl: string, params: Record<string, string | number | boolean | null | undefined>): string => {
   const url = new URL(baseUrl);
   Object.entries(params).forEach(([key, value]) => {
     if (value !== null && value !== undefined) {
@@ -159,6 +159,8 @@ export const isValidVietnamesePhone = (phone: string): boolean => {
  * Converts Vietnamese text to slug
  */
 export const vietnameseToSlug = (text: string): string => {
+  // vietnameseMap is used as reference for replacement logic below
+  /*
   const vietnameseMap: Record<string, string> = {
     'à': 'a', 'á': 'a', 'ạ': 'a', 'ả': 'a', 'ã': 'a', 'â': 'a', 'ầ': 'a', 'ấ': 'a', 'ậ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ă': 'a', 'ằ': 'a', 'ắ': 'a', 'ặ': 'a', 'ẳ': 'a', 'ẵ': 'a',
     'è': 'e', 'é': 'e', 'ẹ': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ê': 'e', 'ề': 'e', 'ế': 'e', 'ệ': 'e', 'ể': 'e', 'ễ': 'e',
@@ -168,6 +170,7 @@ export const vietnameseToSlug = (text: string): string => {
     'ỳ': 'y', 'ý': 'y', 'ỵ': 'y', 'ỷ': 'y', 'ỹ': 'y',
     'đ': 'd'
   };
+  */
 
   return text
     .toLowerCase()

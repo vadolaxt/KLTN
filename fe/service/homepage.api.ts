@@ -85,7 +85,7 @@ const MOCK_NEWS: NewsItem[] = [
     tag: 'Lịch nộp hồ sơ',
     title: 'Lịch nộp hồ sơ xét tuyển',
     description: 'Cập nhật lịch nộp hồ sơ xét tuyển, thời hạn đăng ký và các mốc thời gian quan trọng.',
-    date: '2025-02-29',
+    date: '2025-03-01',
     emoji: '📅',
     gradientVariant: 'blue',
   },
@@ -105,6 +105,7 @@ const MOCK_NEWS: NewsItem[] = [
 export async function getStats(): Promise<StatItem[]> {
   try {
     const res = await fetch(API_ENDPOINTS.HOMEPAGE.STATS);
+    if (!res.ok) throw new Error('Fetch failed');
     return await res.json();
   } catch {
     // Fallback mock data khi chưa có API
@@ -115,6 +116,7 @@ export async function getStats(): Promise<StatItem[]> {
 export async function getServices(): Promise<ServiceItem[]> {
   try {
     const res = await fetch(API_ENDPOINTS.HOMEPAGE.SERVICES);
+    if (!res.ok) throw new Error('Fetch failed');
     return await res.json();
   } catch {
     return MOCK_SERVICES;
@@ -124,6 +126,7 @@ export async function getServices(): Promise<ServiceItem[]> {
 export async function getNews(): Promise<NewsItem[]> {
   try {
     const res = await fetch(API_ENDPOINTS.HOMEPAGE.NEWS);
+    if (!res.ok) throw new Error('Fetch failed');
     return await res.json();
   } catch {
     return MOCK_NEWS;

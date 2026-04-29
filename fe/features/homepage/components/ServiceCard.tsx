@@ -6,7 +6,7 @@ import { ICONS } from '@/lib/constants/icons';
 import type { ServiceItem } from '@/features/homepage/bloc/homepage.state';
 import Link from 'next/link';
 
-interface ServiceCardProps extends ServiceItem {}
+type ServiceCardProps = ServiceItem;
 
 export default function ServiceCard({
   iconKey,
