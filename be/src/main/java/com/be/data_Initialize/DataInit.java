@@ -5,6 +5,8 @@ import com.be.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DataInit {
@@ -15,15 +17,17 @@ public class DataInit {
             if (userRepository.count() == 0) {
                 System.out.println("--- Khởi tạo dữ liệu mẫu cho MongoDB ---");
 
+                PasswordEncoder encoder = new BCryptPasswordEncoder();
+
                 User user1 = new User();
-                user1.setName("Nguyen Van A");
-                user1.setEmail("vana@gmail.com");
-                user1.setPassword("123456"); // Trong thực tế nên dùng BCryptPasswordEncoder
+                user1.setLastName("Nguyen Van A");
+                user1.setEmail("a@gmail.com");
+                user1.setPassword(encoder.encode("123456"));
 
                 User user2 = new User();
-                user2.setName("Admin Hệ Thống");
+                user2.setLastName("Admin Hệ Thống");
                 user2.setEmail("admin@be.com");
-                user2.setPassword("admin123");
+                user2.setPassword(encoder.encode("123456"));
 
                 // Lưu vào MongoDB
                 userRepository.save(user1);
