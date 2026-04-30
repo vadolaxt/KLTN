@@ -1,5 +1,6 @@
 package com.be.service;
 
+import com.be.dto.request.AuthRequest;
 import com.be.dto.response.AuthResponse;
 import com.be.entity.User;
 import com.be.repository.UserRepository;
@@ -9,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,29 +19,43 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     UserRepository userRepository;
     JwtService jwtService;
-    PasswordEncoder encoder;
+    PasswordEncoder passwordEncoder;
     private final JwtDecoder jwtDecoder;
 
-    public AuthResponse login(String email, String password) {
+    public AuthResponse login(AuthRequest request) {
+        String email = request.getEmail();
+        String password = request.getPassword();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        boolean validPassword = encoder.matches(password, user.getPassword());
-        if (!validPassword) {
-            throw new RuntimeException("Sai mật khẩu");
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            return AuthResponse.builder().
+                    authenticated(false)
+                    .build();
         }
 
         return AuthResponse.builder()
-                .token(jwtService.generateToken(user.getEmail(), "USER"))
+                .accessToken(jwtService.generateToken(user.getEmail(), user.getRole().toString(), false))
+                .refreshToken(jwtService.generateToken(user.getEmail(), user.getRole().toString(), true))
+                .authenticated(true)
                 .build();
     }
 
-    public String refreshToken(String token) {
-        Jwt jwt;
-        jwt = jwtDecoder.decode(token); // nho try catch token invalid
+    public String refreshToken(String refreshToken) {
+        try {
+            Jwt jwt = jwtDecoder.decode(refreshToken);
+            String email = jwt.getSubject();
 
-        User user = userRepository.findByLastName(jwt.getSubject()).orElseThrow(() -> new RuntimeException("user not found")); // xem lai cai exception
+            if (!"REFRESH_TOKEN".equals(jwt.getClaim("scope"))) {
+                throw new RuntimeException("Invalid token type");
+            }
 
-        return jwtService.generateToken(user.getLastName(), "USER");
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("user not found"));
+
+            return jwtService.generateToken(user.getEmail(), "USER", false);
+        } catch (JwtException e) {
+            throw new RuntimeException("Refresh token expired or invalid");
+        }
     }
 }

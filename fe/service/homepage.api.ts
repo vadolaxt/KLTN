@@ -2,7 +2,7 @@
 // HOMEPAGE API SERVICE
 // ─────────────────────────────────────────────
 
-import { API_ENDPOINTS } from '@/lib/constants/api-client';
+// import { API_ENDPOINTS } from '@/lib/constants/api-client';
 import type { StatItem, ServiceItem, NewsItem } from '@/features/homepage/bloc/homepage.state';
 
 // ── Mock data (dùng khi chưa có backend) ──────
@@ -104,7 +104,7 @@ const MOCK_NEWS: NewsItem[] = [
 
 export async function getStats(): Promise<StatItem[]> {
   try {
-    const res = await fetch(API_ENDPOINTS.HOMEPAGE.STATS);
+    const res = await fetch("API_ENDPOINTS.HOMEPAGE.STATS");
     return await res.json();
   } catch {
     // Fallback mock data khi chưa có API
@@ -114,7 +114,7 @@ export async function getStats(): Promise<StatItem[]> {
 
 export async function getServices(): Promise<ServiceItem[]> {
   try {
-    const res = await fetch(API_ENDPOINTS.HOMEPAGE.SERVICES);
+    const res = await fetch("API_ENDPOINTS.HOMEPAGE.SERVICES");
     return await res.json();
   } catch {
     return MOCK_SERVICES;
@@ -123,7 +123,7 @@ export async function getServices(): Promise<ServiceItem[]> {
 
 export async function getNews(): Promise<NewsItem[]> {
   try {
-    const res = await fetch(API_ENDPOINTS.HOMEPAGE.NEWS);
+    const res = await fetch("API_ENDPOINTS.HOMEPAGE.NEWS");
     return await res.json();
   } catch {
     return MOCK_NEWS;

@@ -1,5 +1,6 @@
 package com.be.entity;
 
+import com.be.enums.Role;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,4 +28,5 @@ public class User {
     String email;
     String address;
     String password;
+    Role role;
 }

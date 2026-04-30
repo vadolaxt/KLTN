@@ -6,6 +6,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -33,21 +37,19 @@ public class JwtService {
     @Value("${jwt.refresh-token-expire}")
     int refreshTokenExpiration;
 
-    public String generateToken(String email, String role) {
+    public String generateToken(String userName, String role, boolean isRefresh) {
         Instant now = Instant.now();
-        Instant expired = now.plus(accessTokenExpiration, ChronoUnit.SECONDS);
+        long expired = isRefresh ? refreshTokenExpiration : accessTokenExpiration;
+        JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
 
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                 .issuedAt(now)
-                .expiresAt(expired)
-                .subject(email)
+                .expiresAt(now.plus(expired, ChronoUnit.SECONDS))
+                .subject(userName)
                 .claim("role", role) // khi nao lam phan quyen thi de y
+                .claim("scope", isRefresh ? "REFRESH_TOKEN" : "ACCESS_TOKEN")
                 .build();
 
-        JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
-
-        return jwtEncoder
-                .encode(JwtEncoderParameters.from(jwsHeader, claimsSet))
-                .getTokenValue();
+        return jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claimsSet)).getTokenValue();
     }
 }
