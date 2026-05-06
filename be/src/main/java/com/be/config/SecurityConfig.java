@@ -45,15 +45,12 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v1/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(resourceServer -> resourceServer
-                                .bearerTokenResolver(bearerTokenResolver()) // các API cần đăng nhập sẽ có thể tự lấy JWT từ cookie
                                 .jwt(Customizer.withDefaults())
-//                        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-//                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
                 )
         ;
         return http.build();
@@ -64,30 +61,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public BearerTokenResolver bearerTokenResolver() {
-        return request -> {
-            String path = request.getServletPath();
-            // Do not resolve tokens for public endpoints where tokens are not required
-            // This prevents blacklisted/expired tokens from blocking login/register
-            if (path.startsWith("/v1/auth/login") || path.startsWith("/v1/auth/register")) {
-                return null;
-            }
-
-            if (request.getCookies() != null) {
-                for (Cookie cookie : request.getCookies()) {
-                    if ("accessToken".equals(cookie.getName())) {
-                        return cookie.getValue();
-                    }
-                }
-            }
-            String authorizationHeader = request.getHeader("Authorization");
-            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-                return authorizationHeader.substring(7);
-            }
-            return null;
-        };
-    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

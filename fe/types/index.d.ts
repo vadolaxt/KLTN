@@ -14,3 +14,11 @@ export interface AuthResponse {
 	refreshToken: string;
 	authenticated: boolean;
 }
+
+export interface RegisterRequest {
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+	otp?: string;
+}

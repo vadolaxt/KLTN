@@ -1,6 +1,7 @@
 interface EnvironmentConfig {
   apiBaseUrl: string;
   serverUrl: string;
+  googleClientId: string;
   isDevelopment: boolean;
   isProduction: boolean;
   isTest: boolean;
@@ -11,7 +12,8 @@ interface EnvironmentConfig {
 
 export const ENV_CONFIG: EnvironmentConfig = {
   apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000',
-  serverUrl: 'http://localhost:8081/v1',
+  serverUrl: 'http://localhost:8081/api',
+  googleClientId: "655464563429-c45i97cc5isk764dbvjn0pt9fij8m41a.apps.googleusercontent.com",
   isDevelopment: process.env.NODE_ENV === 'development',
   isProduction: process.env.NODE_ENV === 'production',
   isTest: process.env.NODE_ENV === 'test',

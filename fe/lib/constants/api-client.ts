@@ -36,14 +36,17 @@ apiClient.interceptors.response.use(
 		if (
 			error.response?.status === 401 &&
 			!originalRequest._retry &&
-			!originalRequest.url?.includes("/v1/auth/refresh")
+			!originalRequest.url?.includes("/auth/refresh") &&
+			!originalRequest.url?.includes("/auth/login") &&
+			!originalRequest.url?.includes("/auth/register")
+
 		) {
 			originalRequest._retry = true;
 
 			try {
 				// 2. Gọi refresh token
 				// Trình duyệt sẽ tự gửi refreshToken cookie (vì path /v1/auth/refresh khớp)
-				await apiClient.post("/v1/auth/refresh");
+				await apiClient.post("/auth/refresh");
 
 				// 3. Thực hiện lại request ban đầu với cookie mới đã được cập nhật
 				return apiClient(originalRequest);

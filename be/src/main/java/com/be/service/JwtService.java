@@ -1,5 +1,6 @@
 package com.be.service;
 
+import com.be.entity.User;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -37,7 +38,7 @@ public class JwtService {
     @Value("${jwt.refresh-token-expire}")
     int refreshTokenExpiration;
 
-    public String generateToken(String userName, String role, boolean isRefresh) {
+    public String generateToken(User user, boolean isRefresh) {
         Instant now = Instant.now();
         long expired = isRefresh ? refreshTokenExpiration : accessTokenExpiration;
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
@@ -45,8 +46,8 @@ public class JwtService {
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(now.plus(expired, ChronoUnit.SECONDS))
-                .subject(userName)
-                .claim("role", role) // khi nao lam phan quyen thi de y
+                .subject(user.getFirstName()+" "+ user.getLastName())
+                .claim("role", user.getRole())
                 .claim("scope", isRefresh ? "REFRESH_TOKEN" : "ACCESS_TOKEN")
                 .build();
 
