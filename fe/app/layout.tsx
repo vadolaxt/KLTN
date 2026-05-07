@@ -1,5 +1,18 @@
 import type {Metadata} from "next";
 import "./globals.css";
+import {GoogleOAuthProvider} from "@react-oauth/google";
+import {ENV_CONFIG} from "@/core";
+import {Toaster} from "@/components/ui/sonner";
+
+const geistSans = Geist({
+	variable: "--font-sans",
+	subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+	variable: "--font-geist-mono",
+	subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
     title: "Tuyển sinh - Trường Đại Học Nông Lâm TP. HCM",
@@ -7,19 +20,20 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-    children,
-}: Readonly<{
-    children: React.ReactNode;
+												  children,
+											  }: Readonly<{
+	children: React.ReactNode;
 }>) {
-    return (
-        <html
-            lang="vi"
-            className="h-full antialiased"
-            suppressHydrationWarning
-        >
-        <body className="min-h-full flex flex-col font-vietnam text-text-dark bg-white overflow-x-hidden">
-            {children}
-        </body>
-        </html>
-    );
+	return (
+		<html
+			lang="en"
+			className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+		<body className="min-h-full flex flex-col">
+		<GoogleOAuthProvider clientId={ENV_CONFIG.googleClientId}>
+			{children}
+		</GoogleOAuthProvider>
+		<Toaster position="top-center" richColors/>
+		</body>
+		</html>
+	);
 }
