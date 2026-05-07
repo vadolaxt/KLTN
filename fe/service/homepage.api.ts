@@ -7,8 +7,8 @@ import type { StatItem, ServiceItem, NewsItem } from '@/features/homepage/bloc/h
 
 // ── Mock data (dùng khi chưa có backend) ──────
 const MOCK_STATS: StatItem[] = [
-  { id: '1', value: '50+', label: 'Ngành đào tạo' },
-  { id: '2', value: '15', label: 'Khoa/Viện' },
+  { id: '1', value: '36', label: 'Ngành đào tạo' },
+  { id: '2', value: '12', label: 'Khoa' },
   { id: '3', value: '20,000+', label: 'Sinh viên' },
   { id: '4', value: '1955', label: 'Năm thành lập' },
 ];
