@@ -2,13 +2,13 @@
 // HOMEPAGE API SERVICE
 // ─────────────────────────────────────────────
 
-// import { API_ENDPOINTS } from '@/lib/constants/api-client';
+import { API_ENDPOINTS } from '@/lib/constants/api-client';
 import type { StatItem, ServiceItem, NewsItem } from '@/features/homepage/bloc/homepage.state';
 
 // ── Mock data (dùng khi chưa có backend) ──────
 const MOCK_STATS: StatItem[] = [
-  { id: '1', value: '50+', label: 'Ngành đào tạo' },
-  { id: '2', value: '15', label: 'Khoa/Viện' },
+  { id: '1', value: '36', label: 'Ngành đào tạo' },
+  { id: '2', value: '12', label: 'Khoa' },
   { id: '3', value: '20,000+', label: 'Sinh viên' },
   { id: '4', value: '1955', label: 'Năm thành lập' },
 ];
@@ -105,6 +105,8 @@ const MOCK_NEWS: NewsItem[] = [
 export async function getStats(): Promise<StatItem[]> {
   try {
     const res = await fetch("");
+    if (!res.ok) throw new Error('Fetch failed');
+    const res = await fetch(API_ENDPOINTS.HOMEPAGE.STATS);
     if (!res.ok) throw new Error('Fetch failed');
     return await res.json();
   } catch {
