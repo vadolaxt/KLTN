@@ -3,6 +3,7 @@ import "./globals.css";
 import {GoogleOAuthProvider} from "@react-oauth/google";
 import {ENV_CONFIG} from "@/core";
 import {Toaster} from "@/components/ui/sonner";
+import {Geist, Geist_Mono} from "next/font/google";
 
 const geistSans = Geist({
 	variable: "--font-sans",
