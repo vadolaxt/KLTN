@@ -2,8 +2,10 @@ package com.be.controller;
 
 import com.be.dto.ApiResponse;
 import com.be.dto.request.AuthRequest;
+import com.be.dto.request.ForgetPasswordRequest;
 import com.be.dto.request.RegisterRequest;
 import com.be.dto.response.AuthResponse;
+import com.be.dto.response.UserProfileResponse;
 import com.be.service.AuthService;
 import com.be.service.EmailService;
 import jakarta.validation.Valid;
@@ -38,7 +40,6 @@ public class AuthController {
         String otp = authService.generateOtp();
         authService.saveOtp(request.getEmail(), otp);
         emailService.sendOtpEmail(request.getEmail(), otp);
-
         long otpTTL = authService.getTTL(request.getEmail());
 
         return ResponseEntity.ok(
@@ -160,11 +161,31 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<?>> getUserProfile(
+    public ResponseEntity<ApiResponse<UserProfileResponse>> getUserProfile(
             @CookieValue(name = "accessToken", required = false) String accessToken
     ) {
 
+        UserProfileResponse userProfileResponse = authService.getUserProfile(accessToken);
 
-        return null;
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Get user profile successfully",
+                        userProfileResponse)
+        );
+    }
+
+    @PostMapping("/forget-password")
+    public ResponseEntity<ApiResponse<Void>> forgetPassword(
+            @Valid @RequestBody ForgetPasswordRequest request
+    ){
+        authService.forgetPassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        "Change user password successfully",
+                        null)
+        );
     }
 }

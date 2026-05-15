@@ -1,4 +1,3 @@
-// hooks/use-login.ts
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -20,6 +19,8 @@ export const useLogin = () => {
 			const result = await AuthService.login({ email, password });
 
 			if (result.status === "OK" || result.data?.authenticated) {
+				localStorage.setItem("isLogin", "true");
+
 				router.push("/homepage");
 				router.refresh();
 			} else {

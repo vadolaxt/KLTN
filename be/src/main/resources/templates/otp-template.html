@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+        <td style="padding: 20px 0;">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" width="400"
+                   style="background-color: #ffffff; border-radius: 16px; overflow: hidden; shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <!-- Header -->
+                <tr>
+                    <td align="center" style="padding: 30px 20px; background-color: #1a4a1a;">
+                        <h1 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 1px;">NLU SERVER</h1>
+                    </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                    <td style="padding: 40px 30px;">
+                        <p style="margin: 0 0 24px; font-size: 14px; color: #666666; line-height: 1.5;">
+                            Bạn đã gửi yêu cầu xác thực đến hệ thống. Vui lòng sử dụng mã OTP dưới đây để hoàn
+                            tất quá trình:
+                        </p>
+
+                        <!-- OTP Box -->
+                        <div style="background-color: #f0f7f0; border: 2px dashed #2d7a2d; border-radius: 12px; padding: 20px; text-align: center;">
+                            <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: bold; color: #c9a227; letter-spacing: 8px;"
+                                  th:text="${otpCode}">123456</span>
+                        </div>
+
+                        <p style="margin: 24px 0 0; font-size: 13px; color: #888888; text-align: center;">
+                            Mã này có hiệu lực trong <strong style="color: #d9534f;">5 phút</strong>.
+                        </p>
+                        <p style="; font-size: 13px; color: #888888; text-align: center;">
+                            Vui lòng ko chia sẻ mã ra bên ngoài.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="padding: 20px; background-color: #fafafa; border-top: 1px solid #eeeeee; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #aaaaaa;">
+                            Nếu bạn không thực hiện yêu cầu này, hãy bỏ qua email này.<br>
+                            © 2026 Ban Tuyển Sinh - Đại học Nông Lâm TP.HCM
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

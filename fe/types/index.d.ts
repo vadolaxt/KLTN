@@ -1,3 +1,5 @@
+import {string} from "zod";
+
 export interface ApiResponse<T> {
 	status: string;
 	message: string;
@@ -23,6 +25,12 @@ export interface RegisterRequest {
 	otp?: string;
 }
 
+export interface ForgetPasswordRequest {
+	email: string;
+	newPassword: string;
+	otp?: string;
+}
+
 export interface ChatMessage {
 	role: "USER" | "CHATBOT";
 	content: string;
@@ -34,6 +42,10 @@ export interface ChatRequest {
 	content: string;
 }
 
-export interface BotRequest {
-	query: string;
+export default interface UserProfileResponse {
+	firstName: string;
+	lastName: string;
+	dob: string;
+	identity: string;
+	email: string;
 }

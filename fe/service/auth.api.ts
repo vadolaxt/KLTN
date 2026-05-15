@@ -1,5 +1,5 @@
 import {apiClient} from "@/lib/constants/api-client";
-import {ApiResponse, AuthRequest, AuthResponse, RegisterRequest} from "@/types";
+import UserProfileResponse, {ApiResponse, AuthRequest, AuthResponse, ForgetPasswordRequest, RegisterRequest} from "@/types";
 
 export const AuthService = {
 	login: async (request: AuthRequest): Promise<ApiResponse<AuthResponse>> => {
@@ -29,5 +29,15 @@ export const AuthService = {
 		const response = await apiClient.post(`/auth/logout`);
 		return response.status;
 	},
+
+	forgetPassword: async (request: ForgetPasswordRequest): Promise<ApiResponse<void>> => {
+		const response = await apiClient.post<ApiResponse<void>>(`auth/forget-password`, request)
+		return response.data
+	},
+
+	me: async (): Promise<ApiResponse<UserProfileResponse>> => {
+		const response = await apiClient.get<ApiResponse<UserProfileResponse>>(`auth/me`)
+		return response.data
+	}
 
 }

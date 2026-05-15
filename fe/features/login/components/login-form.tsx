@@ -61,6 +61,13 @@ export default function LoginForm({
 					Đăng ký ngay
 				</Link>
 			</div>
+			<div className="text-center mt-2 text-sm">
+				<Link
+					href="/forget-password"
+					className="text-blue-500 hover:underline font-medium">
+					Quên mật khẩu
+				</Link>
+			</div>
 		</form>
 	);
 }

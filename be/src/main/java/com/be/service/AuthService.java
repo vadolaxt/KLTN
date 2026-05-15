@@ -1,11 +1,14 @@
 package com.be.service;
 
 import com.be.dto.request.AuthRequest;
+import com.be.dto.request.ForgetPasswordRequest;
 import com.be.dto.request.RegisterRequest;
 import com.be.dto.response.AuthResponse;
+import com.be.dto.response.UserProfileResponse;
 import com.be.entity.User;
 import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
+import com.be.mapper.UserMapper;
 import com.be.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -16,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseCookie;
@@ -39,6 +43,9 @@ public class AuthService {
     PasswordEncoder passwordEncoder;
     JwtDecoder jwtDecoder;
     StringRedisTemplate redisTemplate;
+
+    @Autowired
+    UserMapper userMapper;
 
     @NonFinal
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
@@ -74,7 +81,9 @@ public class AuthService {
         if (storedOtp == null) {
             throw new AppException(ErrorCode.OTP_EXPIRED);
         }
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent() ||
+                userRepository.findByIdentity(request.getIdentity()).isPresent()
+        ) {
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
         }
         if (!request.getOtp().equals(storedOtp)) {
@@ -202,5 +211,43 @@ public class AuthService {
         } catch (JwtException e) {
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
+    }
+
+    public String getUserIdFromToken(String accessToken) {
+        return jwtDecoder.decode(accessToken).getSubject();
+    }
+
+    public UserProfileResponse getUserProfile(String accessToken) {
+        String userId = getUserIdFromToken(accessToken);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        UserProfileResponse response = userMapper.toResponse(user);
+
+        if (response == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return response;
+    }
+
+    public void forgetPassword( ForgetPasswordRequest request) {
+        String redisKey = "otp:" + request.email();
+        String storedOtp = redisTemplate.opsForValue().get(redisKey);
+
+        if (storedOtp == null) {
+            throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
+        if (!request.otp().equals(storedOtp)) {
+            throw new AppException(ErrorCode.OTP_MISMATCH);
+        }
+
+        redisTemplate.delete(redisKey);
+
+
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
     }
 }
