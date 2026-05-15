@@ -26,6 +26,15 @@ public enum ErrorCode {
     OTP_EXPIRED(HttpStatus.BAD_REQUEST, "OTP expired"),
     OTP_MISMATCH(HttpStatus.BAD_REQUEST, "OTP mismatch"),
 
+    // ==== FAST API ====
+    FASTAPI_CONNECTION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "Hệ thống AI hiện đang bảo trì"),
+    AI_SERVICE_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "AI phản hồi quá lâu, vui lòng thử lại sau"),
+    AI_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Fast API internal error"),
+    AI_QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Hết lượt gọi chat trong ngày"),
+
+    // ==== CHAT BOT ====
+    CHAT_CONTENT_EMPTY(HttpStatus.BAD_REQUEST, "Nội dung tin nhắn không được để trống"),
+    CHAT_HISTORY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể lưu lịch sử cuộc trò chuyện"),
 
 
     ;

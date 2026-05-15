@@ -1,5 +1,4 @@
 import type {Metadata} from "next";
-import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 import {GoogleOAuthProvider} from "@react-oauth/google";
 import {ENV_CONFIG} from "@/core";

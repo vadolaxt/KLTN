@@ -1,4 +1,11 @@
 package com.be.dto.request;
 
-public class ChatRequest {
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+public record ChatRequest (
+//        String sessionId,
+        String content
+){
 }

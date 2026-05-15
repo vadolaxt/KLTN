@@ -46,7 +46,7 @@ public class JwtService {
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(now.plus(expired, ChronoUnit.SECONDS))
-                .subject(user.getFirstName()+" "+ user.getLastName())
+                .subject(user.getId())
                 .claim("role", user.getRole())
                 .claim("scope", isRefresh ? "REFRESH_TOKEN" : "ACCESS_TOKEN")
                 .build();

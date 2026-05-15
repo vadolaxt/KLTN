@@ -22,3 +22,18 @@ export interface RegisterRequest {
 	password: string;
 	otp?: string;
 }
+
+export interface ChatMessage {
+	role: "USER" | "CHATBOT";
+	content: string;
+	timestamp?: string;
+}
+
+export interface ChatRequest {
+	// sessionId: string;
+	content: string;
+}
+
+export interface BotRequest {
+	query: string;
+}

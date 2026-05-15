@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -156,5 +157,14 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString())
                 .body(ApiResponse.success(HttpStatus.OK, "Đã xóa session", null));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<?>> getUserProfile(
+            @CookieValue(name = "accessToken", required = false) String accessToken
+    ) {
+
+
+        return null;
     }
 }

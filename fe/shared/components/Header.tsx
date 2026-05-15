@@ -2,6 +2,8 @@
 // Header — Logo + action buttons
 // ─────────────────────────────────────────────
 
+import Link from "next/link";
+
 export default function Header() {
   return (
     <header className="w-full px-10 flex items-center justify-between h-[80px] sticky top-0 z-50 bg-white border-b border-gray-mid shadow-[0_2px_12px_rgba(0,0,0,0.07)]">
@@ -22,9 +24,9 @@ export default function Header() {
 
       {/* Action buttons */}
       <div className="flex gap-3">
-        <button className="px-[22px] py-[9px] text-[14px] font-semibold rounded-md transition-all duration-200 text-green-main border-2 border-green-main bg-transparent hover:bg-green-main hover:text-white">
+        <Link href={"/login"} className="px-[22px] py-[9px] text-[14px] font-semibold rounded-md transition-all duration-200 text-green-main border-2 border-green-main bg-transparent hover:bg-green-main hover:text-white">
           Đăng nhập
-        </button>
+        </Link>
         <button className="px-[22px] py-[9px] text-[14px] font-semibold rounded-md transition-all duration-200 text-white bg-green-main border-2 border-green-main hover:bg-green-dark hover:border-green-dark">
           Đăng ký xét tuyển
         </button>

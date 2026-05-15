@@ -189,13 +189,13 @@ public class AuthService {
     public String refreshToken(String refreshToken) {
         try {
             Jwt jwt = jwtDecoder.decode(refreshToken);
-            String email = jwt.getSubject();
+            String userId = jwt.getSubject();
 
             if (!"REFRESH_TOKEN".equals(jwt.getClaim("scope"))) {
                 throw new AppException(ErrorCode.WRONG_TOKEN_TYPE);
             }
 
-            User user = userRepository.findByEmail(email)
+            User user = userRepository.findById(userId)
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
             return jwtService.generateToken(user, false);
