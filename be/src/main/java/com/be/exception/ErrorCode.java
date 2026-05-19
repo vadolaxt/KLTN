@@ -36,6 +36,9 @@ public enum ErrorCode {
     CHAT_CONTENT_EMPTY(HttpStatus.BAD_REQUEST, "Nội dung tin nhắn không được để trống"),
     CHAT_HISTORY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Không thể lưu lịch sử cuộc trò chuyện"),
 
+    MAJOR_NOT_FOUND(HttpStatus.NOT_FOUND, "Ngành không tồn tại"),
+    SUBJECT_COMBINATION_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "Ngành xét tuyển không bao gồm tổ hợp này"),
+    SCORE_LIST_EMPTY(HttpStatus.BAD_REQUEST, "Bảng điểm dự đoán trống"),
 
     ;
     private final HttpStatus status;
