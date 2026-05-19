@@ -9,11 +9,12 @@ import lombok.experimental.FieldDefaults;
 import java.util.List;
 
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public record PredictScoreRequest(
         String majorCode,
+
         @NotEmpty(message = "Danh sách điểm không được để trống")
         List<SubjectScore> scores,
+
         String subjectCombination,
         int targetYear
 ) {
