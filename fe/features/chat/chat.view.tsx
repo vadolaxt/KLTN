@@ -10,7 +10,6 @@ import {ChatService} from "@/service/chat.api";
 
 export default function ChatView() {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
-	const [isChatting, setIsChatting] = useState(false);
 
 	// Tự động lấy lịch sử chat của User khi vừa vào trang
 	useEffect(() => {
@@ -26,7 +25,6 @@ export default function ChatView() {
 	}, []);
 
 	const handleSendMessage = async (text: string) => {
-		setIsChatting(true);
 		// Lên UI ngay lập tức
 		const userMsg: ChatMessage = { role: "USER", content: text };
 		setMessages((prev) => [...prev, userMsg]);
@@ -41,8 +39,6 @@ export default function ChatView() {
 			}
 		} catch (error) {
 			console.error("Lỗi gửi tin nhắn:", error);
-		} finally {
-			setIsChatting(false);
 		}
 	};
 

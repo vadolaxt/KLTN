@@ -8,8 +8,8 @@ const FOOTER_COLS = [
   {
     title: 'Tuyển sinh',
     links: [
-      { label: 'Đề án tuyển sinh 2025', href: '#' },
-      { label: 'Phương thức xét tuyển', href: '#' },
+      { label: 'Đề án tuyển sinh 2026', href: '/de-an-tuyen-sinh' },
+      { label: 'Phương thức xét tuyển', href: '/de-an-tuyen-sinh#methods' },
       { label: 'Ngành đào tạo', href: '#' },
       { label: 'Học phí', href: '#' },
       { label: 'Ký túc xá', href: '#' },
@@ -18,17 +18,17 @@ const FOOTER_COLS = [
   {
     title: 'Hỗ trợ',
     links: [
-      { label: 'Tra cứu tuyển sinh', href: '#' },
+      { label: 'Tra cứu tuyển sinh', href: '/tra-cuu' },
       { label: 'Quản lý hồ sơ', href: '#' },
       { label: 'Cẩm nang tuyển sinh', href: '#' },
       { label: 'Câu hỏi thường gặp', href: '#' },
-      { label: 'Liên hệ tư vấn', href: '#' },
+      { label: 'Liên hệ tư vấn', href: '/lien-he' },
     ],
   },
   {
     title: 'Nhà trường',
     links: [
-      { label: 'Giới thiệu', href: '#' },
+      { label: 'Đề án tuyển sinh', href: '/de-an-tuyen-sinh' },
       { label: 'Đào tạo', href: '#' },
       { label: 'Nghiên cứu khoa học', href: '#' },
       { label: 'Hợp tác quốc tế', href: '#' },
@@ -57,11 +57,11 @@ export default function Footer() {
             </div>
           </div>
           <p className="text-[13px] leading-[1.7] text-[#8bc88b]">
-            Địa chỉ: KP 6, P. Linh Trung, TP. Thủ Đức, TP. HCM
+            Địa chỉ: Khu phố 33, phường Linh Xuân, TP. Hồ Chí Minh
             <br />
-            Điện thoại: 028 3896 6780
+            Điện thoại: 0773.284.806, 028.3896.3350
             <br />
-            Email: tuyensinh@hcmuaf.edu.vn
+            Website: hcmuaf.edu.vn
           </p>
         </div>
 

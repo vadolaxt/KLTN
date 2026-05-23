@@ -23,8 +23,10 @@ export default function GoogleAuthButton() {
 			);
 
 			if (res.status === 200) {
+				localStorage.setItem("isLogin", "true");
 				toast.success("Đăng nhập thành công!");
 				router.push("/homepage");
+				router.refresh();
 			}
 		} catch (error: unknown) {
 			let message = "Đã xảy ra lỗi";
@@ -55,7 +57,7 @@ export default function GoogleAuthButton() {
 				useOneTap={false}
 				theme="outline"
 				size="large"
-				text="continue_with"
+				text="signin_with"
 				shape="rectangular"
 			/>
 		</div>

@@ -1,11 +1,12 @@
 "use client"
 
 import RegisterForm from "@/features/register/components/register-form";
+import AuthShell from "@/features/auth/components/auth-shell";
 
 export default function RegisterView() {
 	return (
-		<div className="flex justify-center items-center min-h-screen">
+		<AuthShell mode="register">
 			<RegisterForm/>
-		</div>
+		</AuthShell>
 	)
 }

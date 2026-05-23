@@ -29,7 +29,7 @@ const MOCK_SERVICES: ServiceItem[] = [
     name: 'Quản Lý Hồ Sơ Thí Sinh',
     description: 'Nộp và theo dõi hồ sơ xét tuyển trực tuyến, cập nhật thông tin cá nhân.',
     linkLabel: 'Vào hồ sơ',
-    href: '#',
+    href: '/ho-so',
     variant: 'default',
   },
   {
@@ -47,7 +47,7 @@ const MOCK_SERVICES: ServiceItem[] = [
     name: 'Dự Đoán Trúng Tuyển',
     description: 'Công cụ dự đoán khả năng trúng tuyển dựa trên điểm số và phương thức xét tuyển.',
     linkLabel: 'Dự đoán ngay',
-    href: '#',
+    href: '/du-doan',
     variant: 'default',
   },
   {
@@ -65,7 +65,7 @@ const MOCK_SERVICES: ServiceItem[] = [
     name: 'Chatbot Tư Vấn Trực Tuyến',
     description: '',
     linkLabel: '',
-    href: '#',
+    href: '/chat',
     variant: 'chatbot',
   },
 ];

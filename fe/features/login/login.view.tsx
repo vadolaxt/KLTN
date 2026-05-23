@@ -2,13 +2,14 @@
 
 import { useLogin } from "@/hooks/use-login";
 import LoginForm from "@/features/login/components/login-form";
+import AuthShell from "@/features/auth/components/auth-shell";
 
 export default function LoginView() {
 	const loginProps = useLogin();
 
 	return (
-		<div className="flex justify-center items-center min-h-screen">
+		<AuthShell mode="login">
 			<LoginForm {...loginProps} onSubmit={loginProps.handleLogin} />
-		</div>
+		</AuthShell>
 	);
 }

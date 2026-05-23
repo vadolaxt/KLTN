@@ -9,12 +9,12 @@ import Link from 'next/link';
 
 const NAV_LINKS = [
   { label: 'Trang chủ', href: '/' },
-  { label: 'Giới thiệu', href: '#' },
-  { label: 'Tra cứu', href: '#' },
+  { label: 'Đề án tuyển sinh', href: '/de-an-tuyen-sinh' },
+  { label: 'Tra cứu', href: '/tra-cuu' },
   { label: 'Hồ sơ', href: '/ho-so' },
   { label: 'Dự đoán trúng tuyển', href: '/du-doan' },
   { label: 'Cẩm nang', href: '#' },
-  { label: 'Liên hệ', href: '#' },
+  { label: 'Liên hệ', href: '/lien-he' },
 ];
 
 export default function Navbar() {

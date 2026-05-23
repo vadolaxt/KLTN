@@ -58,9 +58,12 @@ export default function Header() {
 						>
 							Đăng nhập
 						</Link>
-						<button className="px-[22px] py-[9px] text-[14px] font-semibold rounded-md transition-all duration-200 text-white bg-green-700 border-2 border-green-700 hover:bg-green-800 hover:border-green-800">
+						<Link
+							href="/register"
+							className="px-[22px] py-[9px] text-[14px] font-semibold rounded-md transition-all duration-200 text-white bg-green-700 border-2 border-green-700 hover:bg-green-800 hover:border-green-800"
+						>
 							Đăng ký xét tuyển
-						</button>
+						</Link>
 					</div>
 				) : (
 					/* TRƯỜNG HỢP ĐÃ ĐĂNG NHẬP */

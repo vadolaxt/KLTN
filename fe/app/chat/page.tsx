@@ -1,5 +1,10 @@
 import ChatView from "@/features/chat/chat.view";
+import AuthRequired from "@/shared/components/AuthRequired";
 
 export default function ChatPage() {
-	return <ChatView/>
+	return (
+		<AuthRequired featureName="chatbot tư vấn tuyển sinh">
+			<ChatView/>
+		</AuthRequired>
+	)
 }

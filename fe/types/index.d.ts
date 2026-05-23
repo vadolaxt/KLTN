@@ -1,5 +1,3 @@
-import {string} from "zod";
-
 export interface ApiResponse<T> {
 	status: string;
 	message: string;
@@ -20,6 +18,8 @@ export interface AuthResponse {
 export interface RegisterRequest {
 	firstName: string;
 	lastName: string;
+	dateOfBirth: string;
+	identity: string;
 	email: string;
 	password: string;
 	otp?: string;

@@ -44,7 +44,7 @@ export default function OTPModal({
 		try {
 			await onVerify(value);
 			toast.success("Xác thực thành công!");
-		} catch (error) {
+		} catch {
 			setOtp(""); // Thường thì khi sai cũng nên xóa để user nhập lại
 			toast.error("Mã OTP không chính xác, vui lòng thử lại.");
 		} finally {
@@ -54,9 +54,9 @@ export default function OTPModal({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleOpenChange}>
-			<DialogContent className="sm:max-w-[425px] flex flex-col items-center">
+			<DialogContent className="sm:max-w-[380px] flex flex-col items-center">
 				<DialogHeader className="text-center">
-					<DialogTitle className="text-2xl">Xác thực OTP</DialogTitle>
+					<DialogTitle className="text-xl">Xác thực OTP</DialogTitle>
 					<DialogDescription>
 						Chúng tôi đã gửi mã xác thực đến email <br/>
 						<span className="font-bold text-foreground">{email}</span>

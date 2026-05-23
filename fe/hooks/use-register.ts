@@ -14,8 +14,10 @@ export const useRegister = () => {
 
 	const form = useForm<RegisterFormData>({
 		resolver: zodResolver(registerFormValidation),
+		mode: "onChange",
+		reValidateMode: "onChange",
 		defaultValues: {
-			firstName: "", lastName: "", email: "", identity: "", password: "", confirmPassword: "",
+			firstName: "", lastName: "", dateOfBirth: "", email: "", identity: "", password: "", confirmPassword: "",
 		}
 	});
 
@@ -34,7 +36,7 @@ export const useRegister = () => {
 				toast.success(`Mã OTP đã được gửi đến ${data.email}`);
 			}
 
-		} catch (error: any) {
+		} catch (error: unknown) {
 			if (axios.isAxiosError(error)) {
 				const message = error.response?.data?.message || "Kiểm tra tài khoản thất bại";
 				toast.error(message);
@@ -64,9 +66,11 @@ export const useRegister = () => {
 					router.push("/login");
 				}, 1500);
 			}
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Nếu OTP sai, backend thường trả về lỗi 400/401
-			const message = error.response?.data?.message || "Mã OTP không hợp lệ hoặc đã hết hạn";
+			const message = axios.isAxiosError(error)
+				? error.response?.data?.message || "Mã OTP không hợp lệ hoặc đã hết hạn"
+				: "Mã OTP không hợp lệ hoặc đã hết hạn";
 			toast.error(message);
 			throw error; // Ném lỗi để Modal xử lý reset OTP (nếu cần)
 		}

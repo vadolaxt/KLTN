@@ -20,13 +20,13 @@ export default function TopBar() {
           <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 fill-topbar-icon">
             <path d={ICONS.LOCATION.path} />
           </svg>
-          Địa chỉ: KP 6, P. Linh Trung, TP. Thủ Đức, TP. HCM
+          Địa chỉ: Khu phố 33, phường Linh Xuân, TP. Hồ Chí Minh
         </span>
         <span className="flex items-center gap-1.5">
           <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 fill-topbar-icon">
             <path d={ICONS.PHONE.path} />
           </svg>
-          Số điện thoại: 028 3896 6780
+          Số điện thoại: 0773.284.806, 028.3896.3350
         </span>
       </div>
 

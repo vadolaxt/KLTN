@@ -4,6 +4,7 @@ import NavBar from '@/shared/components/NavBar';
 import Footer from '@/shared/components/Footer';
 import ProfileSidebar from './components/ProfileSidebar';
 import ProfileHeader from './components/ProfileHeader';
+import Link from 'next/link';
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,9 +15,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
       {/* BREADCRUMB */}
       <div className="bg-green-pale px-10 py-[14px] flex items-center gap-2 text-[13px] text-text-mid border-b border-gray-mid">
-        <a href="/" className="text-green-main font-semibold hover:text-green-dark hover:underline">🏠 Trang chủ</a>
+        <Link href="/" className="text-green-main font-semibold hover:text-green-dark hover:underline">🏠 Trang chủ</Link>
         <span className="text-text-light">›</span>
-        <a href="#" className="text-green-main font-semibold hover:text-green-dark hover:underline">Dịch vụ tuyển sinh</a>
+        <Link href="#" className="text-green-main font-semibold hover:text-green-dark hover:underline">Dịch vụ tuyển sinh</Link>
         <span className="text-text-light">›</span>
         <span>Quản lý hồ sơ thí sinh</span>
       </div>

@@ -17,7 +17,7 @@ export default function ChatInput({onSendMessage}: { onSendMessage: (msg: string
 			value={input}
 			onChange={(e) => setInput(e.target.value)}
 			onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), handleSend())}
-			placeholder="Nhập câu hỏi của bạn..."
+			placeholder="Nhập câu hỏi của thí sinh..."
 			className="flex-1 bg-transparent border-none outline-none resize-none text-sm py-1 max-h-32"
 			rows={1}
 		/>

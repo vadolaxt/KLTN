@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AuthService } from "@/service/auth.api";
 import {forgetPasswordValidation} from "@/features/forget-password/forget-password-validation";
 import {ForgetPasswordFormData} from "@/features/forget-password/forget-password-validation";
+import axios from "axios";
 
 export const useForgetPassword = () => {
 	const router = useRouter();
@@ -14,6 +15,8 @@ export const useForgetPassword = () => {
 
 	const form = useForm<ForgetPasswordFormData>({
 		resolver: zodResolver(forgetPasswordValidation),
+		mode: "onChange",
+		reValidateMode: "onChange",
 		defaultValues: { email: "", password: "", confirmPassword: "" }
 	});
 
@@ -24,8 +27,10 @@ export const useForgetPassword = () => {
 			setFormData(data);
 			setShowOTP(true);
 			toast.success(`Mã xác thực đã được gửi đến ${data.email}`);
-		} catch (error: any) {
-			const message = error.response?.data?.message || "Không thể gửi OTP";
+		} catch (error: unknown) {
+			const message = axios.isAxiosError(error)
+				? error.response?.data?.message || "Không thể gửi OTP"
+				: "Không thể gửi OTP";
 			toast.error(message);
 		}
 	};
@@ -43,8 +48,10 @@ export const useForgetPassword = () => {
 			toast.success("Đổi mật khẩu thành công!");
 			setShowOTP(false);
 			setTimeout(() => router.push("/login"), 1500);
-		} catch (error: any) {
-			const message = error.response?.data?.message || "Mã OTP không hợp lệ";
+		} catch (error: unknown) {
+			const message = axios.isAxiosError(error)
+				? error.response?.data?.message || "Mã OTP không hợp lệ"
+				: "Mã OTP không hợp lệ";
 			toast.error(message);
 			throw error;
 		}

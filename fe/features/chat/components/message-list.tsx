@@ -2,8 +2,9 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import type { ChatMessage } from "@/types";
 
-export default function MessageList({messages}: { messages: any[] }) {
+export default function MessageList({messages}: { messages: ChatMessage[] }) {
 	return (
 		<div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 bg-[#fafaf8]">
 			{messages.map((msg, idx) => (

@@ -15,7 +15,7 @@ export default function StatCard({ value, label, isLast }: StatCardProps) {
         isLast ? '' : 'border-r border-gray-mid'
       }`}
     >
-      <div className="text-[44px] font-black leading-none text-green-main font-serif group-hover:scale-105 transition-transform duration-200">
+      <div className="text-[44px] font-black leading-none text-green-main font-vietnam group-hover:scale-105 transition-transform duration-200">
         {value}
       </div>
       <div className="text-[14px] font-medium mt-1.5 text-text-mid">
