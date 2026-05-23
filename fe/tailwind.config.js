@@ -29,7 +29,7 @@ module.exports = {
       },
       fontFamily: {
         'vietnam': ['"Be Vietnam Pro"', 'sans-serif'],
-        'serif': ['"Playfair Display"', 'serif'],
+        'serif': ['"Be Vietnam Pro"', 'sans-serif'],
       },
       spacing: {
         '15': '3.75rem',
@@ -52,6 +52,7 @@ module.exports = {
     },
   },
   plugins: [
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('@tailwindcss/typography'),
   ],
 }

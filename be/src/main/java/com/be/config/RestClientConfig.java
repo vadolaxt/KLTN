@@ -3,6 +3,8 @@ package com.be.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
 @Configuration
@@ -12,10 +14,12 @@ public class RestClientConfig {
 
     @Bean
     public RestClient fastapiClient() {
+        String normalizedBaseUrl = fastapiBaseUrl.endsWith("/") ? fastapiBaseUrl : fastapiBaseUrl + "/";
+
         return RestClient.builder()
-                .baseUrl(fastapiBaseUrl)
-                .defaultHeader("Content-Type", "application/json")
-                // Bạn có thể thêm Timeout hoặc interceptor tại đây
+                .baseUrl(normalizedBaseUrl)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
 }
