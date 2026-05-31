@@ -1,4 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
+@config "../tailwind.config.js";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -126,5 +128,18 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer components {
+  .google-login-button iframe {
+    width: 100% !important;
+    height: 48px !important;
+    border-radius: 0.5rem;
+  }
+
+  .google-login-button > div {
+    width: 100% !important;
+    height: 48px !important;
   }
 }
