@@ -1,0 +1,6 @@
+Kiến trúc sử dụng là: Hybrid RAG (Intent Router) giúp giảm lượng token sử dụng
+
+IC: lựa ra những khoảng top 3 intent liên quan đến câu hỏi  (thí sinh hỏi 1 câu có thể có nhiều intent)
+Nên đật threshold cho các intent được chọn để tránh rơi vào intent có confidence score thấp
+
+Về cấu trúc data, mỗi intent tách thành 1 file .txt (hoặc dạng file khác) với tên giống intent
