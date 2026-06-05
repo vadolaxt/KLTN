@@ -6,7 +6,8 @@ from rag.generator import generate_response
 from entity.entity import ChatResponse, ChatRequest, AdmissionPredictResponse, AdmissionPredictRequest
 from score import predict_admission
 from config.rag_config import BASE_DIR, admission_bundle, embeddings, llm
-from rag.intent_classifier import ic_call
+from rag.router import ic_call, split_question
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 
 app = FastAPI()
 app.add_middleware(
@@ -18,14 +19,22 @@ app.add_middleware(
 )
 
 
-def get_intent(text: str) -> str:
+def get_intent(text: list[str]):
     try:
-        results = ic_call(text)
-        if isinstance(results, list) and len(results) > 0:
-            return results[0]['intent']
+        results = split_question(text)
+
+        if not results:
+            return []
+
+        return [
+            x["intent"]
+            for x in results
+        ]
+
     except Exception as e:
         print(f"Lỗi Intent: {e}")
-    return "unknown"
+
+        return []
 
 
 @app.post("/api/chat", response_model=ChatResponse)
@@ -36,8 +45,10 @@ async def chat_endpoint(request: ChatRequest):
     try:
         intent = get_intent(user_query)
         print(f"Intent: {intent}")
-        context = get_relevant_context(user_query, intent, embeddings, BASE_DIR)
+        context = get_relevant_context(query=user_query, intent=intent, top_k=3, num_candidates=30)
+        print(f"Context: {context}")
         answer = generate_response(llm, user_query, context)
+        print(f"Answer: {answer}")
 
         return ChatResponse(intent=intent, answer=answer)
 

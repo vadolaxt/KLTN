@@ -49,7 +49,7 @@ class MainClass:
                 return "so_luoc_ve_truong"  # Hoặc intent mặc định nào đó
         except Exception as e:
             print(f"Lỗi phân loại: {e}")
-            return "so_luoc_ve_truong"
+            return "so_luoc_ve_truong.md"
 
     def run_pipeline(self, user_query):
         print(f"\n--- Chatbot Processing ---")

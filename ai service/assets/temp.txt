@@ -1,0 +1,124 @@
+## Mã Phương thức xét tuyển (PTXT): 100
+* Tên phương thức xét tuyển: Xét kết quả thi tốt nghiệp THPT
+
+## Mã Phương thức xét tuyển (PTXT): 200
+* Tên phương thức xét tuyển: Xét kết quả học tập cấp THPT (học bạ)
+
+## Mã Phương thức xét tuyển (PTXT): 402
+* Tên phương thức xét tuyển: Sử dụng kết quả thi đánh giá năng lực, đánh giá tư duy do đơn vị khác tổ chức để xét tuyển
+
+## Mã Phương thức xét tuyển (PTXT): 405
+* Tên phương thức xét tuyển: Kết hợp kết quả thi tốt nghiệp THPT với điểm thi năng khiếu để xét tuyển
+
+## Mã Phương thức xét tuyển (PTXT): 406
+* Tên phương thức xét tuyển: Kết hợp kết quả học tập cấp THPT với điểm thi năng khiếu để xét tuyển
+
+## Mã Phương thức xét tuyển (PTXT): 407
+* Tên phương thức xét tuyển: Kết hợp kết quả thi tốt nghiệp THPT với kết quả học tập cấp THPT để xét tuyển
+
+## Mã Phương thức xét tuyển (PTXT): 409
+* Tên phương thức xét tuyển: Kết hợp kết quả thi tốt nghiệp THPT với chứng chỉ quốc tế để xét tuyển
+
+## Mã Phương thức xét tuyển (PTXT): 410
+* Tên phương thức xét tuyển: Kết hợp kết quả học tập cấp THPT với chứng chỉ quốc tế để xét tuyển
+
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+# Mã tổ hợp và các môn
+
+### Mã tổ hợp: A00
+* Môn: Toán – Vật lý – Hóa học
+
+### Mã tổ hợp: A01
+* Môn: Toán – Vật lý – Tiếng Anh
+
+### Mã tổ hợp: A02
+* Môn: Toán – Vật lý – Sinh học
+
+### Mã tổ hợp: A04
+* Môn: Toán – Vật lý – Địa lý
+
+### Mã tổ hợp: B00
+* Môn: Toán – Hóa học – Sinh học
+
+### Mã tổ hợp: B03
+* Môn: Toán – Sinh học – Ngữ văn
+
+### Mã tổ hợp: C01
+* Môn: Toán – Ngữ văn – Vật lý
+
+### Mã tổ hợp: D00
+* Môn: Toán – Ngữ văn – Tiếng Anh
+
+### Mã tổ hợp: D01
+* Môn: Toán – Ngữ văn – Tiếng Anh
+
+### Mã tổ hợp: D03
+* Môn: Toán – Ngữ văn – Tiếng Pháp
+
+### Mã tổ hợp: D05
+* Môn: Toán – Ngữ văn – Tiếng Đức
+
+### Mã tổ hợp: D07
+* Môn: Toán – Hóa học – Tiếng Anh
+
+### Mã tổ hợp: D08
+* Môn: Toán – Sinh học – Tiếng Anh
+
+### Mã tổ hợp: D09
+* Môn: Toán – Lịch sử – Tiếng Anh
+
+### Mã tổ hợp: D10
+* Môn: Toán – Địa lý – Tiếng Anh
+
+### Mã tổ hợp: D14
+* Môn: Ngữ văn – Lịch sử – Tiếng Anh
+
+### Mã tổ hợp: D15
+* Môn: Ngữ văn – Địa lý – Tiếng Anh
+
+### Mã tổ hợp: M00
+* Môn: Ngữ văn – Năng khiếu kể chuyện – Năng khiếu hát
+
+### Mã tổ hợp: X01
+* Môn: Toán – Ngữ văn – GD Kinh tế & pháp luật
+
+### Mã tổ hợp: X02
+* Môn: Toán – Ngữ văn – Tin học
+
+### Mã tổ hợp: X04
+* Môn: Toán – Ngữ văn – Công nghệ nông nghiệp
+
+### Mã tổ hợp: X06
+* Môn: Toán – Vật lý – Tin học
+
+### Mã tổ hợp: X07
+* Môn: Toán – Vật lý – Công nghệ công nghiệp
+
+### Mã tổ hợp: X10
+* Môn: Toán – Hóa học – Tin học
+
+### Mã tổ hợp: X12
+* Môn: Toán – Sinh học – Công nghệ nông nghiệp
+
+### Mã tổ hợp: X14
+* Môn: Toán – Sinh học – Tin học
+
+### Mã tổ hợp: X16
+* Môn: Toán – Tiếng Anh – Công nghệ nông nghiệp
+
+### Mã tổ hợp: X25
+* Môn: Toán – Tiếng Anh – GD Kinh tế & pháp luật
+
+### Mã tổ hợp: X26
+* Môn: Toán – Tiếng Anh – Tin học
+
+### Mã tổ hợp: X28
+* Môn: Toán – Tiếng Anh – Công nghệ công nghiệp
