@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import joblib
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,15 +23,15 @@ embeddings = GoogleGenerativeAIEmbeddings(
     task_type="retrieval_query"
 )
 
-# --- 3. Khởi tạo LLM ---
 # llm = ChatGoogleGenerativeAI(
 #     model="gemini-2.5-flash",
 #     temperature=0.1,
 #     google_api_key=os.getenv("GOOGLE_API_KEY")
 # )
 llm = ChatOpenAI(
-    model="meta/llama-3.1-8b-instruct",
+    # model="meta/llama-3.1-8b-instruct",
+    model="qwen/qwen3-next-80b-a3b-instruct",
     openai_api_key=os.environ.get("NVDIA_API_KEY"),
     openai_api_base="https://integrate.api.nvidia.com/v1",
-    temperature=0.1
+    temperature=0
 )
