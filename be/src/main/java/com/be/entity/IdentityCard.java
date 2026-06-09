@@ -7,8 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -16,11 +16,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Document(collection = "subjects")
-public class Subject {
-    @Id
-    String id;
-
-    String code;
-    String subjectName;
+public class IdentityCard {
+    String number;
+    Instant issuedDate;
+    String issuedPlace;
 }

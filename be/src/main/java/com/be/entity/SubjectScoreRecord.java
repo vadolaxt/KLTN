@@ -10,17 +10,23 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection = "subject_score_records")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Document(collection = "subjects")
-public class Subject {
+public class SubjectScoreRecord {
     @Id
     String id;
 
-    String code;
+    String scoreProfileId;
+    String subjectCode;
     String subjectName;
+    double score;
+    String scoreSource;
+    int schoolYear;
+    int gradeLevel;
+    int semester;
 }

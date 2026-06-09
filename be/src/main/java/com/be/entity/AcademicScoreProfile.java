@@ -10,17 +10,22 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
+
+@Document(collection = "academic_score_profiles")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Document(collection = "subjects")
-public class Subject {
+public class AcademicScoreProfile {
     @Id
     String id;
 
-    String code;
-    String subjectName;
+    String userId;
+    String admissionMethod;
+    int year;
+    String source;
+    Instant updatedAt;
 }

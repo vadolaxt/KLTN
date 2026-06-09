@@ -2,9 +2,11 @@ package com.be.service;
 
 import com.be.dto.request.PredictScoreRequest;
 import com.be.dto.response.PredictScoreResponse;
+import com.be.entity.AdmissionInfo;
 import com.be.entity.Major;
 import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
+import com.be.repository.AdmissionInfoRepository;
 import com.be.repository.MajorRepository;
 import com.be.supportClass.SubjectScore;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,6 +38,9 @@ public class PredictScoreService {
 
     @Autowired
     MajorRepository majorRepository;
+
+    @Autowired
+    AdmissionInfoRepository admissionInfoRepository;
 
     @Value("${FASTAPI_BASE_URL}")
     String fastapiBaseUrl;
@@ -77,7 +82,57 @@ public class PredictScoreService {
                 "target_year", targetYear
         );
 
-        return callFastApi(requestBody);
+        PredictScoreResponse response = callFastApi(requestBody);
+        return enrichWithAdmissionHistory(response, major, targetYear);
+    }
+
+    private PredictScoreResponse enrichWithAdmissionHistory(PredictScoreResponse response, Major major, int targetYear) {
+        PredictScoreResponse.PredictResult result = response.result();
+        int previousYear = targetYear - 1;
+        int twoYearsAgo = targetYear - 2;
+
+        Double previousYearCutoffScore = findCutoffScore(previousYear, major);
+        Double twoYearsAgoCutoffScore = findCutoffScore(twoYearsAgo, major);
+
+        return PredictScoreResponse.builder()
+                .result(PredictScoreResponse.PredictResult.builder()
+                        .majorCode(result.majorCode())
+                        .majorName(result.majorName())
+                        .targetYear(result.targetYear())
+                        .studentScore(result.studentScore())
+                        .subjectCombination(result.subjectCombination())
+                        .schoolCode(major.getSchoolCode())
+                        .schoolName("Trường Đại học Nông Lâm TP.HCM")
+                        .combinationMatched(result.combinationMatched())
+                        .predictCutOff(result.predictCutOff())
+                        .margin(result.margin())
+                        .admissionProbability(result.admissionProbability())
+                        .previousYear(previousYear)
+                        .previousYearCutoffScore(previousYearCutoffScore)
+                        .twoYearsAgo(twoYearsAgo)
+                        .twoYearsAgoCutoffScore(twoYearsAgoCutoffScore)
+                        .model(result.model())
+                        .pipeline(result.pipeline())
+                        .build())
+                .build();
+    }
+
+    private Double findCutoffScore(int year, Major major) {
+        return admissionInfoRepository.findByYearAndMajorCode(year, major.getCode())
+                .stream()
+                .filter(info -> sameText(info.getMajorName(), major.getName()))
+                .filter(info -> sameText(info.getProgramType(), major.getProgramType()))
+                .findFirst()
+                .or(() -> admissionInfoRepository.findByYearAndMajorCode(year, major.getCode()).stream().findFirst())
+                .map(AdmissionInfo::getCutoffScore)
+                .orElse(null);
+    }
+
+    private boolean sameText(String left, String right) {
+        if (left == null || right == null) {
+            return left == right;
+        }
+        return left.trim().equalsIgnoreCase(right.trim());
     }
 
     private PredictScoreResponse callFastApi(Map<String, Object> requestBody) {

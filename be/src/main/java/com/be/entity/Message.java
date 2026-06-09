@@ -24,6 +24,7 @@ public class Message {
     @Id
     String id;
     String sessionId;
+    String conversationId;
     String role;
     String content;
     Instant timestamp;
