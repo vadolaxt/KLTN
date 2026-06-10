@@ -6,7 +6,7 @@ from rag.generator import generate_response
 from entity.entity import ChatResponse, ChatRequest, AdmissionPredictResponse, AdmissionPredictRequest
 from score import predict_admission
 from config.rag_config import BASE_DIR, admission_bundle, embeddings, llm
-from rag.router import ic_call, split_question
+from rag.classifier import ic_call, split_question
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 
 app = FastAPI()
@@ -45,7 +45,7 @@ async def chat_endpoint(request: ChatRequest):
     try:
         intent = get_intent(user_query)
         print(f"Intent: {intent}")
-        context = get_relevant_context(query=user_query, intent=intent, top_k=3, num_candidates=30)
+        context = get_relevant_context(query=user_query, intent=intent, top_k=5, num_candidates=50)
         print(f"Context: {context}")
         answer = generate_response(llm, user_query, context)
         print(f"Answer: {answer}")

@@ -3,17 +3,13 @@ intent: "ky_tuc_xa"
 dorm_type: "co_may"
 ---
 
-
-# Ký túc xá Đại học Nông Lâm TP.HCM nằm ngay trong khuôn viên trường, bao gồm KTX Cỏ May và hệ thống 06 khu ký túc xá (A, B, C, D, E, F).
-
-
-## 1. KTX Cỏ May
+# Sơ lược
 
 KTX Cỏ May dành cho sinh viên có hoàn cảnh khó khăn, mồ côi cha/mẹ, học giỏi và không có điều kiện tự thuê nhà.
 
 Ký túc xá bắt đầu hoạt động từ năm 2016 và duy trì xét chọn sinh viên nội trú hằng năm.
 
-### Quyền lợi dành cho sinh viên nội trú
+# Quyền lợi
 
 * Miễn phí:
 
@@ -34,7 +30,7 @@ Ký túc xá bắt đầu hoạt động từ năm 2016 và duy trì xét chọn
   * Bảo hiểm y tế
   * Bảo hiểm tai nạn trong học kỳ đầu
 
-### Điều kiện xét chọn
+# Điều kiện
 
 * Có kết quả học tập tốt:
 
@@ -47,7 +43,7 @@ Ký túc xá bắt đầu hoạt động từ năm 2016 và duy trì xét chọn
 
 > Sinh viên không đáp ứng điều kiện sẽ bị loại khỏi danh sách nội trú.
 
-### Hồ sơ đăng ký
+# Hồ sơ đăng ký
 
 Chuẩn bị các giấy tờ sau:
 
@@ -59,7 +55,7 @@ Chuẩn bị các giấy tờ sau:
   * Tối đa 03 trang
   * Có xác nhận của giáo viên chủ nhiệm
 
-### Cách thức nộp hồ sơ
+Cách thức nộp hồ sơ
 
 * Nộp trực tiếp hoặc gửi qua đường bưu điện đến:
 

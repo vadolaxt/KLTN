@@ -3,18 +3,13 @@ intent: "ky_tuc_xa"
 dorm_type: "ky_tuc_xa_dai_hoc_nong_lam"
 ---
 
-
-# Ký túc xá Đại học Nông Lâm TP.HCM nằm ngay trong khuôn viên trường, bao gồm KTX Cỏ May và hệ thống 06 khu ký túc xá (A, B, C, D, E, F).
-
-Hệ thống ký túc xá gồm 06 khu: A, B, C, D, E, F.
-
-### Phân khu
-
+# Sơ lược
+Hệ thống ký túc xá gồm 06 khu: A, B, C, D, E, F:
 * Khu A, C: dành cho sinh viên nam
 * Khu B, D: dành cho sinh viên nữ
 * Khu E, F: dành cho cả nam và nữ
 
-### Chi phí lưu trú
+# Chi phí
 
 Khu: A
 * Đối tượng: Nam
@@ -46,7 +41,7 @@ Khu: F
 
 Lưu ý: Khu E có thêm ban công và nhà vệ sinh riêng.
 
-### Hướng dẫn đăng ký ký túc xá
+# Hồ sơ đăng ký
 
 Sinh viên chuẩn bị:
 

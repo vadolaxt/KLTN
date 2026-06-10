@@ -2,11 +2,7 @@
 intent: "cau_lac_bo"
 ---
 
-## Giới thiệu
-
-Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp Trường và nhiều CLB, Tổ, Đội, Nhóm cấp Khoa thuộc các lĩnh vực học thuật, kỹ năng, văn hóa, nghệ thuật, thể thao,… tạo không gian để sinh viên trao đổi học tập, sinh hoạt ngoại khóa. Tân sinh viên có nhiều lựa chọn để tham gia CLB, Đội, Nhóm phù hợp để phát triển sở trường, kỹ năng mềm và giao lưu với các bạn có cùng đam mê, năng khiếu, giải tỏa căng thẳng sau những giờ học chính khóa. Đầu mỗi năm học, các CLB, Tổ, Đội, Nhóm tổ chức tuyển tân thành viên.
-
-## 1. BEC ENGLISH CLUB
+## Tên: BEC ENGLISH CLUB
 
 - Slogan: One benefit/One Energy/One Chance BEC
 - Lĩnh vực hoạt động: Học thuật.
@@ -15,7 +11,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: bec@tuoitrenonglam.com
 - Fanpage: https://www.facebook.com/BioEnglishClub
 
-## 2. CLB BÓNG RỔ ĐẠI HỌC NÔNG LÂM
+## Tên: BÓNG RỔ ĐẠI HỌC NÔNG LÂM
 
 - Slogan: 1 2 3 Nông Lâm (x3)
 - Lĩnh vực hoạt động: Thể thao.
@@ -24,16 +20,16 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: thinh.vohuy@hcmuaf.edu.vn
 - Fanpage: https://www.facebook.com/NLUBASKETBALL
 
-## 3. CLB CÁN BỘ ĐOÀN NGÔI SAO XANH
+## Tên: CÁN BỘ ĐOÀN NGÔI SAO XANH
 
 - Slogan: Dám nghĩ - Biết làm - Dám hành động
 - Lĩnh vực hoạt động: Đào tạo lực lượng Cán bộ Đoàn – Hội.
 - Đơn vị quản lý: Đoàn Thanh niên.
 - Chủ nhiệm CLB: Nguyễn Võ Xuân Thùy.
 - Email: clbdoanngoisaoxanh@hcmuaf.edu.vn
-- Fanpage: https://www.facebook.com/ClbCanBoDoanNgoiSaoXanh
+- Fanpage: https://www.facebook.com/CanBoDoanNgoiSaoXanh
 
-## 4. CLB DU LỊCH SINH THÁI
+## Tên: DU LỊCH SINH THÁI
 
 - Slogan: Kết nối đam mê
 - Lĩnh vực hoạt động: Học thuật, bảo vệ môi trường, hoạt động thiện nguyện xã hội.
@@ -42,7 +38,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: dlst@tuoitrenonglam.com
 - Fanpage: https://www.facebook.com/dlst.info
 
-## 5. CLB DƯỢC THÚ Y
+## Tên: DƯỢC THÚ Y
 
 - Slogan: Học tập – Chia sẻ - Nghiên cứu – Sáng tạo
 - Lĩnh vực hoạt động: Học thuật, Nghiên cứu khoa học.
@@ -51,7 +47,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: duocthuynlu@gmail.com
 - Fanpage: Câu lạc bộ Dược Thú Y Đại học Nông Lâm TP.HCM
 
-## 6. CLB ĐỒNG HÀNH – AC
+## Tên: ĐỒNG HÀNH – AC
 
 - Slogan: Đồng hành AC - Đồng hành cùng sinh viên
 - Lĩnh vực hoạt động: Tư vấn tuyển sinh, hỗ trợ sinh viên.
@@ -60,7 +56,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: ac@tuoitrenonglam.com
 - Fanpage: https://www.facebook.com/clbdonghanh.ac
 
-## 7. FIRE ENGLISH CLUB
+## Tên: FIRE ENGLISH CLUB
 
 - Slogan: We are FIRE – FIRE KHÔNG PHAI MỜ
 - Lĩnh vực hoạt động: Ngoại ngữ.
@@ -69,7 +65,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: fireenglishclub@tuoitrenonglam.com
 - Fanpage: https://www.facebook.com/FiRE.EnglishClub
 
-## 8. CLB HỌC THUẬT–KỸ NĂNG QUẢN TRỊ (B.A.S)
+## Tên: HỌC THUẬT–KỸ NĂNG QUẢN TRỊ (B.A.S)
 
 - Slogan: B.A.S đến với nhau bằng nhiệt huyết, ở lại với nhau bằng tình cảm.
 - Lĩnh vực hoạt động: Kỹ năng, thể thao, tình nguyện, học thuật, văn nghệ, truyền thông.
@@ -78,7 +74,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: caulacbo.b.a.s@gmail.com
 - Fanpage: https://www.facebook.com/CLB.B.A.S
 
-## 9. CLB KARATE-DO
+## Tên: KARATE-DO
 
 - Slogan: Rèn luyện tinh thần và thể lực để vững bước cho tương lai. Kiai!
 - Lĩnh vực hoạt động: Thể thao.
@@ -87,7 +83,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: Lequangtri@hcmuaf.edu.vn
 - Fanpage: https://www.facebook.com/groups/308034235884043
 
-## 10. CLB KẾT NỐI THÀNH CÔNG
+## Tên: KẾT NỐI THÀNH CÔNG
 
 - Slogan: Đồng hành cùng sinh viên!
 - Lĩnh vực hoạt động: Trang bị kỹ năng mềm, hoạt động tình nguyện xã hội.
@@ -96,7 +92,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: clbketnoithanhcong10@gmail.com
 - Fanpage: https://www.facebook.com/clbkntc
 
-## 11. CLB KHỞI NGHIỆP (NLU STARTUP CLUB) NSC
+## Tên: KHỞI NGHIỆP (NLU STARTUP CLUB) NSC
 
 - Slogan: Ươm mầm ý tưởng – Vững bước thành công.
 - Lĩnh vực hoạt động: Khởi nghiệp, nghiên cứu khoa học, học thuật, tình nguyện xã hội.
@@ -105,7 +101,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: clbkhoinghiep@tuoitrenonglam.com
 - Fanpage: https://www.facebook.com/NSC.CLBKNNL
 
-## 12. CLB MỘT SỨC KHỎE TP.HCM (HCMC One Health Club)
+## Tên: MỘT SỨC KHỎE TP.HCM (HCMC One Health Club)
 
 - Lĩnh vực hoạt động: Học thuật.
 - Đơn vị quản lý: Đoàn - Hội khoa Chăn nuôi Thú y.
@@ -113,7 +109,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: onehealthtphcm@gmail.com
 - Fanpage: https://www.facebook.com/oh.tphcm
 
-## 13. CLB SÁCH VÀ HÀNH ĐỘNG NÔNG LÂM TP.HCM
+## Tên: SÁCH VÀ HÀNH ĐỘNG NÔNG LÂM TP.HCM
 
 - Slogan: Hành động – Kỷ luật – Không bỏ cuộc
 - Lĩnh vực hoạt động: Học thuật, truyền thông, sách.
@@ -122,7 +118,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: sachvahanhdong@tuoitrenonglam.com
 - Fanpage: https://www.facebook.com/clbsvhdnlu
 
-## 14. CLB TIẾNG ANH KHOA CÔNG NGHỆ HÓA HỌC VÀ THỰC PHẨM
+## Tên: TIẾNG ANH KHOA CÔNG NGHỆ HÓA HỌC VÀ THỰC PHẨM
 
 (Seeds For Future) SFF
 - Lĩnh vực hoạt động: Học thuật, ngoại ngữ.
@@ -131,7 +127,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: englishclubsff@gmail.com
 - Fanpage: https://www.facebook.com/sffenglishclub
 
-## 15. CLB TIẾNG ANH KHOA KINH TẾ EFB (English For Business Club) EFB
+## Tên: TIẾNG ANH KHOA KINH TẾ EFB (English For Business Club) EFB
 
 - Slogan: Will be the better not be the best.
 - Lĩnh vực hoạt động: Học thuật, ngoại ngữ.
@@ -140,7 +136,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: englishforbusinessnlu@gmail.com
 - Fanpage: https://www.facebook.com/englishforbusinessnlu
 
-## 16. CLB THỂ THAO ĐIỆN TỬ PWF – CLB PWF GAMING
+## Tên: THỂ THAO ĐIỆN TỬ PWF – CLB PWF GAMING
 
 - Slogan: PWF - Kết nối đam mê, chinh phục thử thách.
 - Lĩnh vực hoạt động: Thể thao điện tử.
@@ -149,7 +145,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: pwfgamingnlu@gmail.com
 - Fanpage: https://www.facebook.com/pwfgamingnlu
 
-## 17. CLB THÚ Y ENGSCOPE
+## Tên: THÚ Y ENGSCOPE
 
 - Slogan: Engscope – Lan tỏa kiến thức – Kết nối đam mê – Nuôi dưỡng tương lai
 - Lĩnh vực hoạt động: Học thuật.
@@ -158,7 +154,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: engscope.asvm@gmail.com
 - Fanpage: https://www.facebook.com/Engscope
 
-## 18. CLB TRUYỀN THÔNG NÔNG LÂM RADIO
+## Tên: TRUYỀN THÔNG NÔNG LÂM RADIO
 
 - Slogan: Nơi cảm xúc tôi và bạn hòa tan.
 - Lĩnh vực hoạt động: Truyền thông.
@@ -167,7 +163,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: hcmnlu.radio@gmail.com
 - Fanpage: https://www.facebook.com/NongLamUniversity.Radio
 
-## 19. WILDLIFE VET STUDENT CLUB
+## Tên: WILDLIFE VET STUDENT CLUB
 
 - Slogan: Vì sức khỏe của ĐVHD – For better health of wildlife.
 - Lĩnh vực hoạt động: Truyền thông, ngoại ngữ, động vật hoang dã.
@@ -176,7 +172,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: wildlife28082019@gmail.com
 - Fanpage: https://www.facebook.com/WildlifeVetsClub
 
-## 20. CLB YÊU MÔI TRƯỜNG
+## Tên: YÊU MÔI TRƯỜNG
 
 - Slogan: Tôi, Bạn yêu môi trường.
 - Lĩnh vực hoạt động: Tình nguyện xã hội, học thuật, bảo vệ môi trường, truyền thông, thể thao.
@@ -185,7 +181,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: clbyeumoitruong@hcmuaf.edu.vn
 - Fanpage: https://vi-vn.facebook.com/CLB.YMT.NL
 
-## 21. TỔ TU DƯỠNG RÈN LUYỆN HẠT GIỐNG ĐỎ
+## Tên: TỔ TU DƯỠNG RÈN LUYỆN HẠT GIỐNG ĐỎ
 
 - Slogan: Hạt giống đỏ - Sáng mãi một niềm tin.
 - Lĩnh vực hoạt động: Tư tưởng, lý luận chính trị, kiến thức lịch sử, xã hội.
@@ -194,7 +190,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: hatgiongdo@hcmuaf.edu.vn
 - Fanpage: https://www.facebook.com/totdrlhatgiongdo
 
-## 22. ĐỘI CÔNG TÁC XÃ HỘI
+## Tên: ĐỘI CÔNG TÁC XÃ HỘI
 
 - Slogan: Sống là cho đâu chỉ nhận riêng mình.
 - Lĩnh vực hoạt động: Các hoạt động tình nguyện xã hội.
@@ -203,7 +199,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: doicongtacxahoi@st.hcmuaf.edu.vn
 - Fanpage: https://www.facebook.com/ctxh2001nlu
 
-## 23. ĐỘI KHÁT VỌNG TUỔI TRẺ KHOA CHĂN NUÔI THÚ Y
+## Tên: ĐỘI KHÁT VỌNG TUỔI TRẺ KHOA CHĂN NUÔI THÚ Y
 
 - Slogan: Gắn kết sức trẻ - chia sẻ yêu thương.
 - Lĩnh vực hoạt động: Hỗ trợ hoạt động Đoàn - Hội khoa.
@@ -212,7 +208,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: doikhatvongtuoitre@tuoitrenonglam.com
 - Fanpage: https://www.facebook.com/khatvongtuoitrekhoacnty
 
-## 24. ĐỘI NHIỆT HUYẾT RỪNG XANH
+## Tên: ĐỘI NHIỆT HUYẾT RỪNG XANH
 
 - Slogan: Nhiệt huyết – Đoàn kết – Hành động.
 - Lĩnh vực hoạt động: Đào tạo cán bộ Đoàn - Hội, hoạt động tình nguyện xã hội, học thuật.
@@ -221,7 +217,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: doinhiethuyetrungxanh@hcmuaf.edu.vn
 - Fanpage: https://www.facebook.com/NhietHuyetRungXanh/
 
-## 25. ĐỘI VĂN NGHỆ MFB–MELODY FROM BIO
+## Tên: ĐỘI VĂN NGHỆ MFB–MELODY FROM BIO
 
 - Slogan: Music – Friend - Bioscience.
 - Lĩnh vực hoạt động: Văn nghệ.
@@ -230,7 +226,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: melodyfrombiotech@tuoitrenonglam.com
 - Fanpage: https://www.facebook.com/melodyfrombio
 
-## 26. ĐỘI VĂN NGHỆ RẠNG ĐÔNG
+## Tên: ĐỘI VĂN NGHỆ RẠNG ĐÔNG
 
 - Slogan: Rạng Đông khoảng cách bằng 0.
 - Lĩnh vực hoạt động: Văn nghệ, Truyền thông.
@@ -239,7 +235,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: vanngherangdong@hcmuaf.edu.vn
 - Fanpage: https://www.facebook.com/doivannghe.rangdong
 
-## 27. ĐỘI VĂN NGHỆ XUNG KÍCH NHỊP ĐIỆU XANH
+## Tên: ĐỘI VĂN NGHỆ XUNG KÍCH NHỊP ĐIỆU XANH
 
 - Slogan: Nhịp Điệu Xanh, mãi trong tim, trong tim, trong tim. Yeah!!!
 - Lĩnh vực hoạt động: Văn nghệ.
@@ -248,7 +244,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: vannghenhipdieuxanh@hcmuaf.edu.vn
 - Fanpage: https://www.facebook.com/Vnxk.nhip.dieu.xanh
 
-## 28. ĐỘI XUNG KÍCH KHOA KHOA HỌC SINH HỌC
+## Tên: ĐỘI XUNG KÍCH KHOA KHOA HỌC SINH HỌC
 
 - Slogan: Xung kích, kết nối nhiệt huyết – tình nguyện – trách nhiệm.
 - Lĩnh vực hoạt động: Tình nguyện xã hội, văn nghệ, bảo vệ môi trường.
@@ -257,7 +253,7 @@ Trường Đại học Nông Lâm TP.HCM có các CLB, Tổ, Đội, Nhóm cấp
 - Email: doixungkichkhsh@toitrenonglam.com
 - Fanpage: https://www.facebook.com/doixungkichbiotech
 
-## 29. HỘI CỔ ĐỘNG VIÊN (NONG LAM BUFFALOES) NLB
+## Tên: HỘI CỔ ĐỘNG VIÊN (NONG LAM BUFFALOES) NLB
 
 - Slogan: We are Nong Lam - We cheer Nong Lam.
 - Lĩnh vực hoạt động: Thể thao, cổ động thể thao.

@@ -6,6 +6,7 @@ scikit-learn
 torch
 python-dotenv
 openpyxl
+pyyaml
 
 openai
 google-genai

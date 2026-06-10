@@ -1,289 +1,314 @@
-import os
 import time
-import hashlib
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Dict, Any, Optional, Callable
 
 from dotenv import load_dotenv
-from pymongo import MongoClient
-from pymongo.operations import SearchIndexModel
 
 from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter, MarkdownHeaderTextSplitter
+
 from entity.entity import KnowledgeChunk
+from utils.helper import *
+from metadata_process import *
+from pattern import *
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
 
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
 DATA_PATH = Path(BASE_DIR / os.getenv("DATA_PATH", "data/knowledge")).resolve()
 
-MONGODB_URI = os.getenv("MONGODB_URI")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
-MONGO_COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME")
-MONGO_VECTOR_INDEX_NAME = os.getenv("MONGO_VECTOR_INDEX_NAME")
+API_KEY = get_api_key()
 
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL")
-EMBEDDING_DIMENSIONS = int(os.getenv("EMBEDDING_DIMENSIONS", 1024))
+EMBEDDING_MODEL = get_embedding_model()
+EMBEDDING_DIMENSIONS = get_embedding_dimensions()
+EMBED_SLEEP_SECONDS = get_embedding_sleep_second()
 
-CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 1000))
-CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 200))
-EMBED_SLEEP_SECONDS = float(os.getenv("EMBED_SLEEP_SECONDS", 1.0))
+MONGO_URI = get_mongo_uri()
+MONGO_DB_NAME = get_mongo_db_name()
+MONGO_COLLECTION_NAME = get_mongo_collection_name()
+MONGO_VECTOR_INDEX_NAME = get_mongo_vector_index_name()
 
-RESET_COLLECTION = os.getenv("RESET_COLLECTION")
-
-def now() -> datetime:
-    return datetime.now(timezone.utc)
+RESET_COLLECTION = reset_collection()
 
 
-def sha256_hash(text: str) -> str:
-    """
-    Tạo mã hash SHA256 cho nội dung chunk.
-
-    Dùng để:
-    - định danh nội dung chunk
-    - tạo _id ổn định
-    - kiểm tra chunk có thay đổi không
-    """
-
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+# gọi embedding model từ api
+def embedding_client() -> NVIDIAEmbeddings:
+    return NVIDIAEmbeddings(
+        model=EMBEDDING_MODEL,
+        api_key=API_KEY,
+        base_url="https://integrate.api.nvidia.com/v1",
+    )
 
 
-def check_env() -> None:
-    if not GOOGLE_API_KEY:
-        raise ValueError("Thiếu GOOGLE_API_KEY trong file .env")
+# đọc file .md từ assets
+# hàm trả về global metadata và raw text
+def read_knowledge_file(file_path: Path) -> Tuple[Dict[str, Any], str]:
+    if not file_path.exists():
+        raise FileNotFoundError(f"Không tìm thấy file: {file_path}")
 
-    if not MONGODB_URI:
-        raise ValueError("Thiếu MONGODB_URI trong file .env")
+    if not file_path.is_file():
+        raise ValueError(f"Path không phải là file: {file_path}")
 
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(f"DATA_PATH không tồn tại: {DATA_PATH}")
+    raw_text = file_path.read_text(encoding="utf-8").lstrip("\ufeff")
+    global_metadata = extract_global_metadata(raw_text)
 
-
-def get_collection():
-    client = MongoClient(MONGODB_URI)
-    db = client[MONGO_DB_NAME]
-    collection = db[MONGO_COLLECTION_NAME]
-
-    return collection
+    return global_metadata, raw_text
 
 
-def build_chunk_id(intent_name: str, chunk_index: int, content_hash: str) -> str:
-    """
-    id:
-        intent_name = hoc_phi
-        chunk_index = 2
-        hash = abcdef123456...
-    """
-
-    return f"{intent_name}_{chunk_index:04d}_{content_hash[:12]}"
-
-
-def create_vector_search_index(collection) -> None:
-    """
-    Tạo MongoDB Atlas Vector Search Index nếu chưa tồn tại.
-
-    Index này cho phép:
-    - semantic search trên field embedding
-    - filter theo intent
-    - filter theo source_file
-    """
-
-    try:
-        existing_indexes = list(collection.list_search_indexes())
-        existing_names = {idx.get("name") for idx in existing_indexes}
-
-        if MONGO_VECTOR_INDEX_NAME in existing_names:
-            print(f"[INDEX] Vector index đã tồn tại: {MONGO_VECTOR_INDEX_NAME}")
-            return
-
-        index_model = SearchIndexModel(
-            definition={
-                "fields": [
-                    {
-                        "type": "vector",
-                        "path": "embedding", # nơi chứa các embedding vector, xem attr embedding trong collection chứa chunk
-                        "numDimensions": EMBEDDING_DIMENSIONS,
-                        "similarity": "cosine", # đo độ tương đồng giữa các vector (xem thêm euclidean, dotProduct)
-                    },
-                    {
-                        "type": "filter",
-                        "path": "intent",
-                    },
-                ]
-            },
-            name=MONGO_VECTOR_INDEX_NAME,
-            type="vectorSearch",
-        )
-
-        collection.create_search_index(index_model)
-
-        print(f"[INDEX] Đã gửi yêu cầu tạo vector index: {MONGO_VECTOR_INDEX_NAME}")
-        print("[INDEX] MongoDB Atlas có thể cần một lúc để index sẵn sàng.")
-
-    except Exception as e:
-        print("[INDEX-WARN] Không tạo được vector index bằng code.")
-        print(f"[INDEX-WARN] Lỗi: {type(e).__name__}: {e}")
-        print("[INDEX-WARN] Có thể tạo thủ công trong MongoDB Atlas UI.")
-
-
-def create_knowledge_chunk(
+# tạo KnowledgeChunk với các giá trị truyền vào
+# class KnowledgeChunk đại diện cho record trong collection
+def map_to_knowledge_chunk(
     intent_name: str,
     filename: str,
     file_path: Path,
     chunk_index: int,
     text: str,
-    vector: List[float]
+    embedding: List[float],
+    metadata: Dict[str, Any],
 ) -> KnowledgeChunk:
 
     content_hash = sha256_hash(text)
-    chunk_id = build_chunk_id(intent_name, chunk_index, content_hash)
-    current_time = now()
+
+    chunk_id = build_chunk_id(
+        intent_name=intent_name,
+        chunk_index=chunk_index,
+        content_hash=content_hash,
+    )
+
+    current_time = datetime.now(timezone.utc)
 
     return KnowledgeChunk(
         id=chunk_id,
         intent=intent_name,
         source_file=filename,
         source_path=str(file_path),
+
         chunk_index=chunk_index,
+
         text=text,
-        embedding=vector,
+        embedding=embedding,
+
         embedding_model=EMBEDDING_MODEL,
         embedding_dimensions=EMBEDDING_DIMENSIONS,
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP,
+
         content_hash=content_hash,
+
         created_at=current_time,
         updated_at=current_time,
+
+        metadata=metadata,
     )
 
 
+# xác định có đang ở header ko
+def is_heading_line(line: str):
+    return heading_pattern().match(line or "")
+
+
+# tách text thành các chunk theo heading
+# các dòng trong chunk được nối bằng \n (nếu tách ra thì tách theo dấu đó)
+# output trả về dict, key là chunk_index (bdau từ 1), value là toàn bộ giá trị của chunk
+def split_text_to_chunks(text: str) -> Dict[int, str]:
+    chunks: Dict[int, str] = {}
+
+    if not text:
+        return chunks
+
+    lines = text.strip().splitlines()
+
+    current_lines: List[str] = []
+    has_content_after_heading = False
+
+    chunk_index_counter = 1
+
+    def flush_chunk():
+        nonlocal current_lines, has_content_after_heading, chunk_index_counter
+
+        chunk_text = "\n".join(current_lines).strip()
+
+        if chunk_text:
+            chunks[chunk_index_counter] = chunk_text
+            chunk_index_counter += 1
+
+        current_lines = []
+        has_content_after_heading = False
+
+    for line in lines:
+        stripped_line = line.strip()
+        heading_match = is_heading_line(line)
+
+        if heading_match:
+            # nếu chưa có chunk hiện tại thì bắt đầu chunk mới
+            if not current_lines:
+                current_lines.append(line)
+                continue
+
+            # nếu chunk hiện tại chưa có content thật,
+            # nghĩa là đang gặp nhiều heading liên tiếp
+            # => vẫn gom vào cùng chunk
+            if not has_content_after_heading:
+                current_lines.append(line)
+                continue
+
+            # nếu chunk hiện tại đã có nội dung,
+            # heading mới sẽ bắt đầu chunk mới
+            flush_chunk()
+            current_lines.append(line)
+            continue
+
+        # dòng thường
+        current_lines.append(line)
+
+        # dòng trống không tính là content thật
+        if stripped_line:
+            has_content_after_heading = True
+
+    flush_chunk()
+
+    return chunks
+
+
+# gộp global và unique metadata lại làm 1 để lưu trong class KnowledgeChunk
+def merge_metadata(
+    global_metadata: Dict[str, Any],
+    unique_metadata: Dict[str, Any],
+) -> Dict[str, Any]:
+    metadata: Dict[str, Any] = {}
+
+    for key, value in (global_metadata or {}).items():
+        if value is None:
+            continue
+        metadata[key] = value
+
+    for key, value in (unique_metadata or {}).items():
+        if value is None:
+            continue
+        metadata[key] = value
+
+    return metadata
+
 def create_vector_stores() -> None:
-    """
-    1. Đọc các file .md trong DATA_PATH
-    2. Lấy tên file làm intent
-    3. Cắt file thành nhiều chunk
-    4. Tạo embedding cho từng chunk
-    5. Lưu từng chunk vào MongoDB Atlas
-    """
-
-    check_env()
-
     collection = get_collection()
 
-    collection.create_index("intent")
-    collection.create_index("source_file")
-    collection.create_index("content_hash")
+    print("[DB]", collection.database.name)
+    print("[COLLECTION]", collection.name)
+    print("[COUNT BEFORE]", collection.count_documents({}))
 
     if RESET_COLLECTION:
         print(f"[RESET] Xóa toàn bộ collection: {MONGO_COLLECTION_NAME}")
         collection.delete_many({})
+        print("[COUNT AFTER RESET]", collection.count_documents({}))
 
-    # create_vector_search_index(collection)
+    embeddings = embedding_client()
 
-    # embeddings = GoogleGenerativeAIEmbeddings(
-    #     model=EMBEDDING_MODEL,
-    #     google_api_key=GOOGLE_API_KEY,
-    #     task_type="retrieval_document",
-    # )
-    embeddings = NVIDIAEmbeddings(
-        model=EMBEDDING_MODEL,
-        api_key=os.getenv("NVDIA_API_KEY"),
-        base_url = "https://integrate.api.nvidia.com/v1",
-    )
+    total_files = 0
+    total_chunks = 0
 
-
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP,
-        separators=[
-            "\n# ",
-            "\n## ",
-            "\n### ",
-            "\n\n",
-            "\n",
-            ". ",
-            " ",
-            "",
-        ],
-    )
-
-    files = sorted([
-        f for f in os.listdir(DATA_PATH)
-        if f.endswith(".md") and os.path.isfile(DATA_PATH / f)
-    ])
+    files = sorted(DATA_PATH.rglob("*.md"))
 
     if not files:
         print(f"[WARN] Không tìm thấy file .md trong thư mục: {DATA_PATH}")
         return
 
-    total_files = 0
-    total_chunks = 0
-
-    for filename in files:
-        file_path = DATA_PATH / filename
-        intent_name = Path(filename).stem.strip()
+    for file_path in files:
+        filename = file_path.name
 
         print("\n====================================")
         print(f"[FILE] {filename}")
-        print(f"[INTENT] {intent_name}")
+        print(f"[PATH] {file_path}")
 
         try:
-            loader = TextLoader(str(file_path), encoding="utf-8")
-            documents = loader.load()
+            # đọc file data
+            global_metadata, raw_text = read_knowledge_file(file_path)
 
-            chunks = text_splitter.split_documents(documents)
+            # intent từ front matter.
+            intent_name = str(global_metadata.get("intent")).strip()
 
-            if not chunks:
-                print("[SKIP] File trống hoặc không tạo được chunk.")
+            if not intent_name:
+                print("[SKIP] Không xác định được intent của file.")
                 continue
 
-            delete_result = collection.delete_many({"source_file": filename})
-            print(f"[CLEAN] Đã xóa {delete_result.deleted_count} chunk cũ của file này.")
+            # Không đưa YAML front matter vào chunk để tránh tạo chunk chỉ chứa metadata.
+            # Metadata global đã được lưu riêng trong global_metadata.
+            content_text = front_matter_pattern().sub("", raw_text, count=1).strip()
 
-            mongo_docs = []
+            if not content_text:
+                print("[SKIP] File không có nội dung sau front matter.")
+                continue
 
-            for chunk_index, doc in enumerate(chunks):
-                text = doc.page_content.strip()
+            # tách raw text thành các chunk theo heading
+            chunk_map = split_text_to_chunks(content_text)
 
-                if not text:
+            if not chunk_map:
+                print("[SKIP] Không tách được chunk hợp lệ từ file.")
+                continue
+
+            knowledge_chunks: List[KnowledgeChunk] = []
+
+            for chunk_index, chunk_text in chunk_map.items():
+                chunk_text = (chunk_text or "").strip()
+
+                if not chunk_text:
                     continue
 
-                vector = embeddings.embed_query(text)
+                # lấy unique metadata từ text của từng chunk.
+                unique_metadata = extract_unique_metadata(chunk_text)
 
-                if len(vector) != EMBEDDING_DIMENSIONS:
-                    raise ValueError(
-                        f"Số chiều embedding không khớp. "
-                        f"Expected={EMBEDDING_DIMENSIONS}, got={len(vector)}."
-                    )
+                # gộp unique và global metadata thành 1
+                metadata = merge_metadata(
+                    global_metadata=global_metadata,
+                    unique_metadata=unique_metadata,
+                )
 
-                chunk_object = create_knowledge_chunk(
+                # embed raw chunk text
+                embedding = embeddings.embed_query(chunk_text)
+
+                knowledge_chunk = map_to_knowledge_chunk(
                     intent_name=intent_name,
                     filename=filename,
                     file_path=file_path,
                     chunk_index=chunk_index,
-                    text=text,
-                    vector=vector,
+                    text=chunk_text,
+                    embedding=embedding,
+                    metadata=metadata,
                 )
 
-                mongo_docs.append(chunk_object.to_mongo_doc())
+                knowledge_chunks.append(knowledge_chunk)
 
-                time.sleep(EMBED_SLEEP_SECONDS)
+                if EMBED_SLEEP_SECONDS and EMBED_SLEEP_SECONDS > 0:
+                    time.sleep(EMBED_SLEEP_SECONDS)
 
-            if not mongo_docs:
+            if not knowledge_chunks:
                 print("[SKIP] Không có chunk hợp lệ để lưu.")
                 continue
 
-            collection.insert_many(mongo_docs, ordered=False)
+            delete_result = collection.delete_many(
+                {
+                    "source_path": str(file_path)
+                }
+            )
 
-            print(f"[OK] Đã lưu {len(mongo_docs)} chunks vào MongoDB.")
+            print(f"[CLEAN] Đã xóa {delete_result.deleted_count} chunk cũ của file này.")
+
+            mongo_docs = [
+                chunk.to_mongo_doc()
+                for chunk in knowledge_chunks
+            ]
+
+            result = collection.insert_many(
+                mongo_docs,
+                ordered=False,
+            )
+
+            inserted_count = len(result.inserted_ids)
+
+            print(f"[OK] Đã lưu {inserted_count} chunks vào MongoDB.")
+            print("[COUNT CURRENT]", collection.count_documents({}))
+
             total_files += 1
-            total_chunks += len(mongo_docs)
+            total_chunks += inserted_count
 
         except Exception as e:
             print(f"[ERROR] Lỗi khi xử lý {filename}: {type(e).__name__}: {e}")
@@ -292,8 +317,29 @@ def create_vector_stores() -> None:
     print("[DONE] Hoàn thành embedding và lưu vào MongoDB Atlas")
     print(f"[DONE] Số file xử lý thành công: {total_files}")
     print(f"[DONE] Tổng số chunks đã lưu: {total_chunks}")
+    print("[COUNT FINAL]", collection.count_documents({}))
     print("====================================")
 
 
 if __name__ == "__main__":
+    # helper.create_vector_search_index()
     create_vector_stores()
+
+    chunk = """
+## Mã ngành: 734
+* Học phí/tín chỉ: 1.161.000
+
+## Mã ngành: 748, 751, 754, 762
+## Mã chuyên ngành: CNC, HHC, BQC, CKC, ITC
+## Khóa học: 2025
+* Học phí/tín chỉ: 1.164.000
+    """
+    # print(split_text_to_chunks(chunk))
+
+#     global_meta= {"abc": 123, "cde": 324}
+#     unique_meta= {"A": 1212, "B": 3434}
+#     text = """## fefefe
+# tutututututu"""
+#
+#     print(build_embedding_input(text, global_meta, unique_meta))
+

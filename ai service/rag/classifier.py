@@ -1,109 +1,16 @@
 from transformers import pipeline, AutoTokenizer
 import os
-import re
 import joblib
 import warnings
+from pattern import *
+from utils.helper import *
 
 from sklearn.exceptions import InconsistentVersionWarning
 
 warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
 
-
 _nlp_pipeline = None
 _label_encoder = None
-
-
-def get_resources():
-    global _nlp_pipeline, _label_encoder
-
-    if _nlp_pipeline is None:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        base_dir = os.path.dirname(current_dir)
-        assets_dir = os.path.join(base_dir, "assets")
-
-        model_path = os.path.abspath(
-            os.path.join(assets_dir, "models", "best_phobert")
-        )
-
-        le_path = os.path.abspath(
-            os.path.join(model_path, "label_encoder.pkl")
-        )
-
-        if _label_encoder is None:
-            if os.path.exists(le_path):
-                try:
-                    _label_encoder = joblib.load(le_path)
-                except Exception as e:
-                    print(f"Lỗi khi load Label Encoder: {e}")
-            else:
-                print(f"Không tìm thấy file Label Encoder tại: {le_path}")
-
-        if not os.path.exists(os.path.join(model_path, "config.json")):
-            print(f"LỖI: Không tìm thấy config.json tại {model_path}")
-            return None
-
-        try:
-            tokenizer = AutoTokenizer.from_pretrained(
-                model_path,
-                local_files_only=True
-            )
-
-            _nlp_pipeline = pipeline(
-                "text-classification",
-                model=model_path,
-                tokenizer=tokenizer,
-                device=-1,
-            )
-
-        except Exception as e:
-            print(f"Lỗi khi khởi tạo IC model: {e}")
-            print("Kiểm tra đủ các file tokenizer như vocab.txt, bpe.codes, tokenizer_config.json...")
-            return None
-
-    return _nlp_pipeline, _label_encoder
-
-
-def decode_label(raw_label, le=None):
-    intent_name = str(raw_label)
-
-    if le is None:
-        return intent_name
-
-    try:
-        raw_label = str(raw_label)
-
-        if raw_label.startswith("LABEL_"):
-            label_idx = int(raw_label.replace("LABEL_", ""))
-        else:
-            label_idx = int(raw_label)
-
-        intent_name = le.inverse_transform([label_idx])[0]
-
-    except Exception:
-        pass
-
-    return intent_name
-
-
-def normalize_question(text):
-    text = str(text).strip()
-    text = re.sub(r"\s+", " ", text)
-    return text
-
-
-# dsach từ nối
-CONNECTORS = [
-    "bên cạnh đó",
-    "ngoài ra",
-    "đồng thời",
-    "thêm nữa",
-    "với lại",
-    "và",
-    "với",
-    "hay",
-    "hoặc",
-    "còn",
-]
 
 # Sắp xếp từ dài trước để tránh lỗi:
 # ví dụ "bên cạnh đó" phải được bắt trước "đó"
@@ -115,7 +22,7 @@ CONNECTOR_PATTERN = re.compile(
         "|".join(
             map(
                 re.escape,
-                sorted(CONNECTORS, key=len, reverse=True)
+                sorted(word_connector, key=len, reverse=True)
             )
         )
     ),
@@ -123,7 +30,7 @@ CONNECTOR_PATTERN = re.compile(
 )
 
 
-STOP_WORDS = "|".join(CONNECTORS)
+STOP_WORDS = "|".join(word_connector)
 
 
 # Các loại context có thể xuất hiện trong câu
@@ -184,8 +91,7 @@ def split_by_connector(question, min_len=4):
 
     """
 
-    text = normalize_question(question)
-    parts = CONNECTOR_PATTERN.split(text)
+    parts = CONNECTOR_PATTERN.split(question)
 
     parts = [
         p.strip()
@@ -193,7 +99,7 @@ def split_by_connector(question, min_len=4):
         if len(p.strip()) >= min_len
     ]
 
-    return parts if parts else [text]
+    return parts if parts else [question]
 
 
 # lấy ra context trong câu
@@ -205,7 +111,6 @@ def extract_context(text):
 
     ở đây lấy ra regex trước rồi từ đó tìm trong CONTEXT_EXTRACTORS lấy ra dict có key tương ứng với regex (value)
     """
-    text = normalize_question(text)
     contexts = {}
 
     # ctruc của CONTEXT_EXTRACTORS là dict
@@ -282,7 +187,7 @@ def enrich_by_intent(part, intent, global_context):
     return enriched
 
 
-# xly phân loại các câu hỏi cùng 1 lúc thay vì phân loại 1 lần 1 câu
+# xác định intent của câu thông qua IC
 def ic_call(questions):
 
     if not questions:
@@ -388,5 +293,20 @@ def split_question(question):
     return results
 
 
+# tiền xử lý query trước khi retrieve
+# 1/ viết thường, xóa tab dư
+# 2/ chuyển đổi các từ viết tắt thành viết đủ
+# 3/ tách câu nhiều ý thành các câu riêng biệt (xem ở router)
+# 4/ trích xuất context từ query để dùng cho filter (nếu có)
+# 5/ gọi ic và phân loại, nếu conf thấp hơn threshold thì ko add vào result trả về
+
+
+
+def preprocess_query(text: str) -> str:
+    text = text.lower().strip()
+
+    return text
+
+
 if __name__ == "__main__":
-    print(split_question("điểm chẩn và tổ hợp xét tuyển ngành công nghệ thông tin và trường có mấy giảng đường"))
+    print(split_question("Điểm chẩn và tổ hợp xét tuyển ngành công nghệ thông tin và trường có mấy giảng đường"))

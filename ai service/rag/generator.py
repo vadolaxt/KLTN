@@ -1,26 +1,10 @@
 def generate_response(llm, query, context):
-
-    if not context or not context.strip():
-        return "Thông tin ko có trong tài liệu."
-
-    invalid_context_prefixes = [
-        "Lỗi khi truy xuất",
-        "Không tìm thấy",
-        "Câu hỏi rỗng",
-        "Không xác định được intent",
-        "Không tìm thấy nội dung context hợp lệ",
-    ]
-
-    if any(context.strip().startswith(prefix) for prefix in invalid_context_prefixes):
-        return "Thông tin ko có trong tài liệu."
-
     prompt = f"""
 Bạn là chatbot tư vấn tuyển sinh của Trường Đại học Nông Lâm.
 
 [BẮT BUỘC]
 
-- Chỉ sử dụng thông tin trong "THÔNG TIN HỖ TRỢ".
-- Không dùng kiến thức ngoài tài liệu.
+- Chỉ sử dụng thông tin trong "THÔNG TIN HỖ TRỢ", không dùng kiến thức ở bên ngoài
 
 [QUY TẮC TRẢ LỜI]
 
@@ -60,9 +44,24 @@ Trong tài liệu liên quan đến chủ đề câu hỏi đề có 1 link dẫ
 Nếu gặp phải các từ viết tắt thì đưa ra link hoặc trích dẫn t nguồn
 (Hiện tại ghi nhớ DT là viết tắt của ngành công nghệ thông tin, KT là viết tắt của ngành kinh tế)
 
-Yêu cầu:
-- Ngắn gọn.
-- Không lặp ý.
+[QUY ƯỚC MÃ PHƯƠNG THỨC XÉT TUYỂN]
+
+Khi trong tài liệu hoặc câu hỏi xuất hiện mã PTXT, phải hiểu và diễn giải theo quy ước sau:
+
+- PTXT 100: Xét kết quả thi tốt nghiệp THPT.
+- PTXT 200: Xét kết quả học tập cấp THPT (học bạ).
+- PTXT 402: Sử dụng kết quả thi đánh giá năng lực, đánh giá tư duy do đơn vị khác tổ chức để xét tuyển.
+- PTXT 405: Kết hợp kết quả thi tốt nghiệp THPT với điểm thi năng khiếu để xét tuyển.
+- PTXT 406: Kết hợp kết quả học tập cấp THPT với điểm thi năng khiếu để xét tuyển.
+- PTXT 407: Kết hợp kết quả thi tốt nghiệp THPT với kết quả học tập cấp THPT để xét tuyển.
+- PTXT 409: Kết hợp kết quả thi tốt nghiệp THPT với chứng chỉ quốc tế để xét tuyển.
+- PTXT 410: Kết hợp kết quả học tập cấp THPT với chứng chỉ quốc tế để xét tuyển.
+
+Nếu trả lời có nhắc đến mã PTXT, nên ghi kèm tên phương thức xét tuyển tương ứng để người hỏi dễ hiểu.
+
+Ví dụ:
+Không chỉ trả: "PTXT 100: 21.25"
+Mà nên trả: "PTXT 100 - Xét kết quả thi tốt nghiệp THPT: 21.25"
 
 THÔNG TIN HỖ TRỢ:
 {context}
