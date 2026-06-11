@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { CalendarDays, ExternalLink } from 'lucide-react';
 
 interface IntroHeroProps {
@@ -17,14 +16,6 @@ export default function IntroHero({ eyebrow, title, subtitle, description, sourc
 
       <div className="relative mx-auto flex min-h-[340px] max-w-[1180px] items-center px-10 py-12">
         <div>
-          <nav className="mb-6 flex items-center gap-2 text-[13px] text-white/70">
-            <Link href="/" className="transition-colors hover:text-gold-light">
-              Trang chủ
-            </Link>
-            <span>/</span>
-            <span className="text-gold-light">Đề án tuyển sinh</span>
-          </nav>
-
           <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-[12px] font-bold uppercase tracking-[1.2px] text-gold-light">
             <CalendarDays size={15} />
             {eyebrow}

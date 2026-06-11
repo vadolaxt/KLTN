@@ -11,6 +11,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.List;
 
 @Document(collection = "academic_score_profiles")
 @Getter
@@ -27,5 +28,8 @@ public class AcademicScoreProfile {
     String admissionMethod;
     int year;
     String source;
+    List<SubjectScoreRecord> subjectScores;
+    CompetencyTestResult competencyTestResult;
+    double totalScore;
     Instant updatedAt;
 }

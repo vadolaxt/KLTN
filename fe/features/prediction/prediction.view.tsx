@@ -5,7 +5,6 @@ import TopBar from '@/shared/components/TopBar';
 import Header from '@/shared/components/Header';
 import NavBar from '@/shared/components/NavBar';
 import Footer from '@/shared/components/Footer';
-import Link from 'next/link';
 
 import PredictionHero from './components/PredictionHero';
 import PredictionInputPanel from './components/PredictionInputPanel';
@@ -20,15 +19,6 @@ export default function PredictionView() {
       <TopBar />
       <Header />
       <NavBar />
-
-      {/* BREADCRUMB */}
-      <div className="bg-green-pale px-10 py-[14px] flex items-center gap-2 text-[13px] text-text-mid border-b border-gray-mid">
-        <Link href="/" className="text-green-main font-semibold hover:text-green-dark hover:underline">Trang chủ</Link>
-        <span className="text-text-light">›</span>
-        <Link href="#" className="text-green-main font-semibold hover:text-green-dark hover:underline">Dịch vụ tuyển sinh</Link>
-        <span className="text-text-light">›</span>
-        <span>Dự đoán khả năng trúng tuyển</span>
-      </div>
 
       <main className="flex-1">
         <PredictionHero />

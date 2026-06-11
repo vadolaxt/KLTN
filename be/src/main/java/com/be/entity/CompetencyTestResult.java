@@ -7,10 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "competency_test_results")
 @Getter
 @Setter
 @Builder
@@ -18,10 +15,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CompetencyTestResult {
-    @Id
-    String id;
-
-    String scoreProfileId;
     String provider;
     int testYear;
     double rawScore;

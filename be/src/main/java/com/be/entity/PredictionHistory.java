@@ -11,6 +11,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.List;
 
 @Document(collection = "prediction_histories")
 @Getter
@@ -25,10 +26,14 @@ public class PredictionHistory {
 
     String userId;
     String majorCode;
+    String majorName;
     String combinationCode;
+    String combinationName;
     String admissionMethod;
     int targetYear;
     double inputScore;
+    List<SubjectScoreRecord> inputSubjectScores;
+    CompetencyTestResult competencyTestResult;
     double predictedCutoff;
     double margin;
     double admissionProbability;
