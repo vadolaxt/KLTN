@@ -8,7 +8,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     # intent: str
-    intent: Union[str, List[str]]
+    # intent: Union[str, List[str]]
+    intent: List[str]
     answer: str
 
 class AdmissionPredictRequest(BaseModel):

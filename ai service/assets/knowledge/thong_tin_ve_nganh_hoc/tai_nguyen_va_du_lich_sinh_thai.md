@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "tai_nguyen_va_du_lich_sinh_thai"
+major: "tài nguyên du lịch và sinh thái"
 ---
 
 

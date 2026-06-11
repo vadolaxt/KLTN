@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "che_bien_lam_san"
+major: "chế biến lâm sản"
 ---
 
 

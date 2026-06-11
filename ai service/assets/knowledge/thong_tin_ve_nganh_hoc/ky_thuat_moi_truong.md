@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "ky_thuat_moi_truong"
+major: "kỹ thuật môi trường"
 ---
 
 

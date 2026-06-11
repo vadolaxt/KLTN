@@ -1,6 +1,6 @@
 ---
 intent: "ky_tuc_xa"
-dorm_type: "co_may"
+dorm_type: "cỏ may"
 ---
 
 # Sơ lược

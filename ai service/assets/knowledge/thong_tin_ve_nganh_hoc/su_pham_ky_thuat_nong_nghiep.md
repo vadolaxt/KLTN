@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "su_pham_ky_thuat_nong_nghiep"
+major: "sư phạm kỹ thuật nông nghiệp"
 ---
 
 

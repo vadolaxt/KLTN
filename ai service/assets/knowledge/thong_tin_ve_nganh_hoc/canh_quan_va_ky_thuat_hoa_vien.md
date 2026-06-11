@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "canh_quan_va_ky_thuat_hoa_vien"
+major: "cảnh quan và kỹ thuật hoa viên"
 ---
 
 

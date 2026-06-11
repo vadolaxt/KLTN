@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "ngon_ngu_anh"
+major: "ngôn ngữ anh"
 ---
 
 

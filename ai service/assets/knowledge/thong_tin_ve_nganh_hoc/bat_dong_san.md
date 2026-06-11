@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "bat_dong_san"
+major: "bất động sản"
 ---
 
 

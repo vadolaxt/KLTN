@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "thu_y"
+major: "thú y"
 ---
 
 

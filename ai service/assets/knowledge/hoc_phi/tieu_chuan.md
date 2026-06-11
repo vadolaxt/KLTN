@@ -1,6 +1,6 @@
 ---
 intent: "hoc_phi"
-program_type: "tieu_chuan"
+program_type: "tiêu chuẩn"
 ---
 
 

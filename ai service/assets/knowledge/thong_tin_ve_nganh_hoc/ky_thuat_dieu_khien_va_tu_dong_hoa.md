@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "ky_thuat_dieu_khien_va_tu_dong_hoa"
+major: "kỹ thuật điều khiển và tự động hóa"
 ---
 
 

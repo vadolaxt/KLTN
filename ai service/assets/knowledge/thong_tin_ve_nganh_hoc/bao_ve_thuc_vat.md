@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "bao_ve_thuc_vat"
+major: "bảo vệ thực vật"
 ---
 
 

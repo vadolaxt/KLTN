@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "cong_nghe_ky_thuat_co_dien_tu"
+major: "công nghệ kỹ thuật cơ điện tử"
 ---
 
 

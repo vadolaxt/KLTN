@@ -1,6 +1,6 @@
 ---
 intent: "hoc_phi"
-program_type: "tien_tien"
+program_type: "tiên tiến"
 ---
 
 ## Tên ngành: Công nghệ thực phẩm (754)

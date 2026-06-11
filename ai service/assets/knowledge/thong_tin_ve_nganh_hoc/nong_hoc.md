@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "nong_hoc"
+major: "nông học"
 ---
 
 

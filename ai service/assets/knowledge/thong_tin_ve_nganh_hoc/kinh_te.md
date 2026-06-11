@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "kinh_te"
+major: "kinh tế"
 ---
 
 

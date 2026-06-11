@@ -1,6 +1,6 @@
 ---
 intent: "hoc_phi"
-program_type: "nang_cao"
+program_type: "nâng cao"
 ---
 
 ## Mã ngành: 734

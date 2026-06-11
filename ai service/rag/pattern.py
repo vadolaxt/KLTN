@@ -29,12 +29,13 @@ def heading_pattern():
     )
     return pattern
 
+
 def unique_metadata_keyword() -> Dict[str, Any]:
     pattern: Dict[str, Any] = {
         "major_code": ["mã ngành"],
         "specialization_code": ["mã chuyên ngành"],
         "major": ["ngành", "tên ngành"],
-        "specialization" : ["chuyên ngành", "tên chuyên ngành"],
+        "specialization": ["chuyên ngành", "tên chuyên ngành"],
 
         "combination": ["tổ hợp", "tổ hợp xét tuyển"],
 
@@ -63,6 +64,7 @@ def unique_metadata_keyword() -> Dict[str, Any]:
 
     return pattern
 
+
 # dsach từ nối (dùng khi tách câu nhiều ý)
 def word_connector():
     ls = [
@@ -79,6 +81,88 @@ def word_connector():
     ]
 
     return ls
+
+
+def metadata_extractor_dict():
+    return {
+        "program_type": [
+            ["hệ"],
+            [
+                "tiêu chuẩn",
+                "tiên tiến",
+                "nâng cao",
+                "vừa làm vừa học",
+            ]
+        ],
+        "major": [
+            ["ngành"],
+            [
+                "bảo vệ thực vật",
+                "bất động sản",
+                "cảnh quan và kỹ thuật hoa viên",
+                "chăn nuôi",
+                "chế biến lâm sản",
+                "công nghệ chế biến thủy sản",
+                "công nghệ kỹ thuật cơ điện tử",
+                "công nghệ kỹ thuật cơ khí",
+                "công nghệ kỹ thuật hóa học",
+                "công nghệ kỹ thuật năng lượng tái tạo",
+                "công nghệ kỹ thuật nhiệt",
+                "công nghệ kỹ thuật oto",
+                "công nghệ sinh học",
+                "công nghệ thông tin",
+                "công nghệ thực phẩm",
+                "đảm bảo chất lượng và an toàn thực phẩm",
+                "hệ thống thông tin",
+                "kế toán",
+                "khoa học môi trường",
+                "kinh doanh nông nghiệp",
+                "kinh tế",
+                "kỹ thuật điều khiển và tự động hóa",
+                "kỹ thuật môi trường",
+                "lâm học",
+                "lâm nghiệp đô thị",
+                "ngôn ngữ anh",
+                "nông học",
+                "nuôi trồng thủy sản",
+                "phát triển nông thôn",
+                "quản lý đất đai",
+                "quản lý tài nguyên và môi trường",
+                "quản lý tài nguyên rừng",
+                "quản trị kinh doanh",
+                "sư phạm kỹ thuật nông nghiệp",
+                "tài nguyên và du lịch sinh thái",
+                "thú y",
+            ]
+        ],
+        "major_code": [
+            ["mã ngành"],
+            []
+
+        ],
+        "specialization": [
+            ["chuyên ngành"],
+            [],
+        ],
+        "specialization_code": [
+            ["mã chuyên ngành"],
+            [],
+        ],
+        "dorm_type": [
+            ["ký túc xá"],
+            ["cỏ may", "ký túc xá trường đại học nông lâm"
+            ],
+        ],
+        "priority_type": [
+            ["điểm ưu tiên"],
+            ["khu vực", "đối tượng"],
+        ],
+        "method": [
+            ["phương thức tuyển sinh", "phương thức xét tuyển"],
+            ["1", "2", "3", "4", "5"],
+        ],
+    }
+
 
 if __name__ == "__main__":
     texts = [
@@ -99,6 +183,3 @@ if __name__ == "__main__":
                 "key": match.group("key").strip(),
                 "value": match.group("value").strip() if match.group("value") else None,
             })
-
-
-

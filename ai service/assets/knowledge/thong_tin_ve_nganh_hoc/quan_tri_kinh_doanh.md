@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "quan_tri_kinh_doanh"
+major: "quản trị kinh doanh"
 ---
 
 

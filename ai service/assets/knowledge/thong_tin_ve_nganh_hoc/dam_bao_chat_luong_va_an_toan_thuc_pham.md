@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "dam_bao_chat_luong_va_an_toan_thuc_pham"
+major: "đảm bảo chất lượng và an toàn thực phẩm"
 ---
 
 

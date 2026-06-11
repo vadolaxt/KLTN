@@ -1,12 +1,21 @@
+import sys
+from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+BASE_DIR = Path(__file__).resolve().parent
+RAG_DIR = BASE_DIR / "rag"
+
+if str(RAG_DIR) not in sys.path:
+    sys.path.append(str(RAG_DIR))
 from rag.retriever import get_relevant_context
 from rag.generator import generate_response
+from rag.classifier import *
+
 from entity.entity import ChatResponse, ChatRequest, AdmissionPredictResponse, AdmissionPredictRequest
 from score import predict_admission
-from config.rag_config import BASE_DIR, admission_bundle, embeddings, llm
-from rag.classifier import ic_call, split_question
+from config.rag_config import BASE_DIR, admission_bundle, llm
 from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 
 app = FastAPI()
@@ -18,43 +27,99 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-def get_intent(text: list[str]):
-    try:
-        results = split_question(text)
-
-        if not results:
-            return []
-
-        return [
-            x["intent"]
-            for x in results
-        ]
-
-    except Exception as e:
-        print(f"Lỗi Intent: {e}")
-
-        return []
-
-
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-    user_query = request.query
+    user_query = request.query.strip()
     print(f"\n[API Nhận Câu Hỏi]: {user_query}")
 
-    try:
-        intent = get_intent(user_query)
-        print(f"Intent: {intent}")
-        context = get_relevant_context(query=user_query, intent=intent, top_k=5, num_candidates=50)
-        print(f"Context: {context}")
-        answer = generate_response(llm, user_query, context)
-        print(f"Answer: {answer}")
+    if not user_query:
+        raise HTTPException(status_code=400, detail="Câu hỏi không được để trống.")
 
-        return ChatResponse(intent=intent, answer=answer)
+    try:
+        # 1. Tách câu + phân loại intent + lấy metadata_filter
+        split_results = split_question(user_query)
+
+        print(f"[SPLIT RESULTS]: {split_results}")
+
+        if not split_results:
+            fallback_answer = "Tôi chưa xác định được ý định câu hỏi của bạn. Bạn có thể hỏi rõ hơn được không?"
+            return ChatResponse(
+                intent=[],
+                answer=fallback_answer
+            )
+
+        context_parts = []
+        intents = []
+
+        # 2. Với mỗi câu đã tách, gọi retrieve context
+        for item in split_results:
+            sub_question = item.get("question", "")
+            intent = item.get("intent", "")
+            conf = item.get("conf", 0.0)
+            metadata_filter = item.get("metadata_filter", {})
+
+            if not sub_question or not intent:
+                continue
+
+            intents.append(intent)
+
+            print("\n------------------------------------")
+            print(f"[SUB QUESTION]: {sub_question}")
+            print(f"[INTENT]: {intent}")
+            print(f"[CONF]: {conf}")
+            print(f"[METADATA FILTER]: {metadata_filter}")
+
+            context = get_relevant_context(
+                query=sub_question,
+                intent=[intent],  # quan trọng: truyền list để tránh duyệt từng ký tự
+                metadata_filter=metadata_filter,
+                top_k=5,
+                num_candidates=50
+            )
+
+            print(f"[CONTEXT]: {context}")
+
+            context_parts.append(
+                f"[Câu hỏi con]: {sub_question}\n"
+                f"[Intent]: {intent}\n"
+                f"[Confidence]: {conf}\n"
+                f"[Metadata filter]: {metadata_filter}\n"
+                f"{context}"
+            )
+
+        # 3. Nếu không lấy được context hợp lệ
+        if not context_parts:
+            fallback_answer = "Tôi cần kiểm tra lại thông tin này."
+            return ChatResponse(
+                intent=intents,
+                answer=fallback_answer
+            )
+
+        # 4. Gom context của tất cả câu hỏi con
+        final_context = "\n\n====================\n\n".join(context_parts)
+
+        print(f"\n[FINAL CONTEXT]: {final_context}")
+
+        # 5. Sinh câu trả lời cuối cùng dựa trên query gốc + toàn bộ context
+        answer = generate_response(
+            llm=llm,
+            query=user_query,
+            context=final_context
+        )
+
+        print(f"[ANSWER]: {answer}")
+
+        return ChatResponse(
+            intent=intents,
+            answer=answer
+        )
 
     except Exception as e:
-        print(f"Lỗi Hệ Thống: {e}")
-        raise HTTPException(status_code=500, detail="Lỗi xử lý hệ thống nội bộ.")
+        print(f"[LỖI HỆ THỐNG]: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Lỗi xử lý hệ thống nội bộ."
+        )
 
 
 @app.post("/api/predict-admission", response_model=AdmissionPredictResponse)

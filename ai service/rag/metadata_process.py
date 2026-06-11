@@ -29,6 +29,9 @@ def normalize_value(value: Any) -> Union[str, List[str]]:
     value = clean_metadata_value(value)
     extractor = r"[,;]"
 
+    if not value:
+        return ""
+
     # nếu có dấu , ; trong value thì output là list
     if re.search(extractor, value):
         return [
@@ -39,26 +42,6 @@ def normalize_value(value: Any) -> Union[str, List[str]]:
 
     # trả vê nguyên dạng nếu ko có , ;
     return value
-
-
-# trúng regex nào trước thì ghép vào
-def search_first(text: str, patterns: List[str]) -> Optional[str]:
-    for p in patterns:
-        match = re.search(
-            p,
-            text or "",
-            flags=re.IGNORECASE | re.MULTILINE | re.UNICODE
-        )
-
-        if not match:
-            continue
-
-        if "value" in match.groupdict():
-            return clean_metadata_value(match.group("value"))
-
-        return clean_metadata_value(match.group(1))
-
-    return None
 
 
 # lấy ra global_metadata trong front matter và lưu dưới dạng dict
@@ -85,7 +68,7 @@ def extract_global_metadata(text: str) -> Dict[str, Any]:
 # lấy ra unique global_metadata lưu các giá trị dưới dạng dict
 def extract_unique_metadata(text: str) -> Dict[str, Any]:
     unique_metadata: Dict[str, Any] = {}
-    text = text.lstrip("\ufeff")
+    text = text.lstrip("\ufeff") # xóa ký tự unicode ở đầu file (nhớ lại ltm)
 
     keyword_config = unique_metadata_keyword()
     keyword_rules = []
@@ -99,13 +82,6 @@ def extract_unique_metadata(text: str) -> Dict[str, Any]:
                 continue
 
             keyword_rules.append((metadata_key, keyword))
-
-    # ưu tiên keyword dài hơn trước
-    # để "mã ngành" match major_code trước "ngành"
-    # keyword_rules.sort(
-    #     key=lambda item: len(item[1]),
-    #     reverse=True
-    # )
 
     # dùng finditer thay vì match
     # vì trong một chunk có thể có nhiều heading
@@ -129,9 +105,9 @@ def extract_unique_metadata(text: str) -> Dict[str, Any]:
             # vd: Công thức tính điểm ưu tiên
             #   => formula : "Công thức tính điểm ưu tiên"
             if heading_value:
-                unique_metadata[metadata_key] = heading_value
+                unique_metadata[metadata_key] = normalize_value(heading_value)
             else:
-                unique_metadata[metadata_key] = heading_key
+                unique_metadata[metadata_key] = normalize_value(heading_value)
             break
 
     return unique_metadata
@@ -146,7 +122,7 @@ year: "2024"
 """
 unique = """
 # Giới thiệu chung
-# ngành: công nghệ thông tin
+# ngành: công nghệ thông tin; kinh tế
 
 Trường Đại học Nông Lâm Thành phố Hồ Chí Minh
 (Nong Lam University – NLU) là trường đại học đa ngành, trực thuộc *Bộ Giáo dục và Đào tạo.

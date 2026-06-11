@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "phat_trien_nong_thon"
+major: "pháp triển nông thôn"
 ---
 
 

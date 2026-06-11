@@ -1,6 +1,6 @@
 ---
 intent: "hoc_phi"
-program_type: "vua_lam_vua_hoc"
+program_type: "vừa làm vừa học"
 ---
 
 

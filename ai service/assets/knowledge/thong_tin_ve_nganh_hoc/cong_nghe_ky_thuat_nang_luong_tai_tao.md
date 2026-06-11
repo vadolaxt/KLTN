@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "cong_nghe_ky_thua_nang_luong_tai_tao"
+major: "công nghệ kỹ thuật năng lượng tái tạo"
 ---
 
 

@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "quan_ly_tai_nguyen_rung"
+major: "quản lý tài nguyên rừng"
 ---
 
 

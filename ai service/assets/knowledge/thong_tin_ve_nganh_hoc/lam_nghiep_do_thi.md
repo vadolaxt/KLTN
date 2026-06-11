@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "lam_nghiep_do_thi"
+major: "lâm nghiệp đô thị"
 ---
 
 

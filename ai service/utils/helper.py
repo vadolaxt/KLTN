@@ -1,6 +1,9 @@
 import hashlib
+import json
 import os
+import re
 from pathlib import Path
+from typing import List
 
 import joblib
 from dotenv import load_dotenv
@@ -200,6 +203,8 @@ def create_vector_search_index(collection=get_collection()) -> None:
 
 
 # lấy ra model và label encoder của IC
+_nlp_pipeline = None
+_label_encoder = None
 def get_resources():
     global _nlp_pipeline, _label_encoder
 
@@ -281,10 +286,39 @@ def llm_call():
     return ChatOpenAI(
         # model="meta/llama-3.1-8b-instruct",
         model="qwen/qwen3-next-80b-a3b-instruct",
-        openai_api_key=os.environ.get("NVDIA_API_KEY"),
+        openai_api_key=os.environ.get("API_KEY"),
         openai_api_base="https://integrate.api.nvidia.com/v1",
         temperature=0
     )
+
+
+# dùng cho
+def parse_llm_json(text: str) -> List[str]:
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"\{[\s\S]*\}", text)
+        if not match:
+            return []
+
+        try:
+            data = json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return []
+
+    if isinstance(data, dict):
+        questions = data.get("questions", [])
+    elif isinstance(data, list):
+        questions = data
+    else:
+        return []
+
+    return [
+        q.strip()
+        for q in questions
+        if isinstance(q, str) and q.strip()
+    ]
+
 
 if __name__ == "__main__":
     create_vector_search_index(get_collection())

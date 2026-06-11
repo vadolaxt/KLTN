@@ -1,6 +1,6 @@
 ---
 intent: "thong_tin_ve_nganh_hoc"
-major: "quan_ly_dat_dai"
+major: "quản lý đất đai"
 ---
 
 

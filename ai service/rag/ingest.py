@@ -1,12 +1,6 @@
 import time
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional, Callable
-
-from dotenv import load_dotenv
-
 from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter, MarkdownHeaderTextSplitter
 
 from entity.entity import KnowledgeChunk
 from utils.helper import *

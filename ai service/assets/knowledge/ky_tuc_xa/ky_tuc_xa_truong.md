@@ -1,6 +1,6 @@
 ---
 intent: "ky_tuc_xa"
-dorm_type: "ky_tuc_xa_dai_hoc_nong_lam"
+dorm_type: "ký túc xá trường đại học nông lâm"
 ---
 
 # Sơ lược
