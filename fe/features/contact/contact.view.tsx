@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Building2, ExternalLink, FileText, Globe2, GraduationCap, MapPin, Phone } from 'lucide-react';
 
 import TopBar from '@/shared/components/TopBar';
@@ -15,16 +14,6 @@ export default function ContactView() {
       <TopBar />
       <Header />
       <NavBar />
-
-      <div className="border-b border-gray-mid bg-green-pale px-10 py-[14px] text-[13px] text-text-mid">
-        <div className="flex items-center gap-2">
-          <Link href="/" className="font-semibold text-green-main hover:text-green-dark hover:underline">
-            Trang chủ
-          </Link>
-          <span className="text-text-light">/</span>
-          <span>Liên hệ</span>
-        </div>
-      </div>
 
       <main className="flex-1">
         <section className="bg-white px-10 py-10">
