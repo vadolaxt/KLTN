@@ -78,6 +78,21 @@ public class DataInit {
             Map.entry("X28", List.of("Toán", "Công nghệ nông nghiệp", "Tiếng Anh"))
     );
 
+    private static final Map<String, String> SUBJECT = Map.ofEntries(
+            Map.entry("TOAN", "Toán"),
+            Map.entry("VAN", "Văn"),
+            Map.entry("VAT_LI", "Vật l"),
+            Map.entry("HOA_HOC", "Hóa học"),
+            Map.entry("SINH_HOC", "Sinh học"),
+            Map.entry("LICH_SU", "Lịch sử"),
+            Map.entry("DIA_LI", "Địa lý"),
+            Map.entry("GDKT_PL", "GDKTPL"),
+            Map.entry("TIN_HOC", "Tin học"),
+            Map.entry("CN_CONG_NGHIEP", "CN Công nghiệp"),
+            Map.entry("CN_NONG_NGHIEP", "CN Nông nghiệp"),
+            Map.entry("Ngoại ngữ", "Toán")
+    );
+
     @Bean
     CommandLineRunner initDatabase(
             UserRepository userRepository,
@@ -93,6 +108,12 @@ public class DataInit {
                 initSampleUsers(userRepository);
             } else {
                 System.out.println("--- Dữ liệu Users đã tồn tại, bỏ qua ---");
+            }
+
+            if (subjectRepository.count() == 0) {
+                initSubject(subjectRepository);
+            } else {
+                System.out.println("--- Dữ liệu Subject đã tồn tại, bỏ qua ---");
             }
 
             initAdmissionDataset(
@@ -123,6 +144,25 @@ public class DataInit {
         userRepository.save(user1);
         userRepository.save(user2);
         System.out.println("--- Đã thêm các User mẫu thành công! ---");
+    }
+
+    private void initSubject(SubjectRepository subjectRepository) {
+        if (subjectRepository.count() > 0) {
+            System.out.println("--- Dữ liệu Subject đã tồn tại, bỏ qua ---");
+            return;
+        }
+
+        List<Subject> subjects = SUBJECT.entrySet()
+                .stream()
+                .map(entry -> Subject.builder()
+                        .code(entry.getKey())
+                        .subjectName(entry.getValue())
+                        .build())
+                .toList();
+
+        subjectRepository.saveAll(subjects);
+
+        System.out.printf("--- Đã seed %d môn học ---%n", subjects.size());
     }
 
     private void initAdmissionDataset(

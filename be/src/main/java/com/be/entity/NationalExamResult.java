@@ -1,26 +1,24 @@
 package com.be.entity;
 
-import com.be.supportClass.SubjectScore;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Year;
 import java.util.List;
 
-@Document(collection = "academic_transcripts")
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AcademicTranscript {
+public class NationalExamResult {
     @Id
     String id;
-
     List<SubjectScore> subjectScores;
-
-    String userId;
 }

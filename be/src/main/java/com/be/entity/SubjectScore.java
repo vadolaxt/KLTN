@@ -1,6 +1,5 @@
-package com.be.supportClass;
+package com.be.entity;
 
-import com.be.entity.Subject;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,5 +10,10 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SubjectScore {
     Subject subject;
-    double score;
+
+    @Builder.Default
+    double score = 0.0;
+
+    int gradeLevel;
+    int semester;
 }

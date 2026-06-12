@@ -5,10 +5,17 @@ import com.be.dto.request.ForgetPasswordRequest;
 import com.be.dto.request.RegisterRequest;
 import com.be.dto.response.AuthResponse;
 import com.be.dto.response.UserProfileResponse;
+import com.be.entity.AcademicScoreProfile;
+import com.be.entity.CompetencyTestResult;
+import com.be.entity.NationalExamResult;
+import com.be.entity.SchoolRecord;
+import com.be.entity.SubjectScore;
 import com.be.entity.User;
 import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
 import com.be.mapper.UserMapper;
+import com.be.repository.AcademicScoreProfileRepository;
+import com.be.repository.SubjectRepository;
 import com.be.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -29,9 +36,12 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
+import java.time.Year;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +53,9 @@ public class AuthService {
     PasswordEncoder passwordEncoder;
     JwtDecoder jwtDecoder;
     StringRedisTemplate redisTemplate;
+    SubjectRepository subjectRepository;
+
+    AcademicScoreProfileRepository academicScoreProfileRepository;
 
     @Autowired
     UserMapper userMapper;
@@ -74,6 +87,72 @@ public class AuthService {
         }
     }
 
+
+    public SchoolRecord initSchoolRecord() {
+        SchoolRecord result = SchoolRecord.builder().build();
+        List<SubjectScore> scores = buildDefaultScores(1);
+        result.setSubjectScoreRecords(scores);
+        return result;
+    }
+
+    public NationalExamResult initNationalExamResult() {
+        NationalExamResult result = NationalExamResult.builder().build();
+        List<SubjectScore> scores = buildDefaultScores(2);
+        result.setSubjectScores(scores);
+        return result;
+    }
+
+    public CompetencyTestResult initCompetencyTestResult() {
+        CompetencyTestResult result = CompetencyTestResult.builder().build();
+
+        return result;
+    }
+
+    public void initAcademicScoreProfile(String userId) {
+        if (userRepository.findById(userId).isPresent()) {
+            return;
+        }
+        AcademicScoreProfile result = AcademicScoreProfile.builder().build();
+        result.setUserId(userId);
+        result.setSchoolRecord(initSchoolRecord());
+        result.setNationalExamResult(initNationalExamResult());
+        result.setCompetencyTestResult(initCompetencyTestResult());
+        academicScoreProfileRepository.save(result);
+    }
+
+    // type: 1 là học bạ, 2 là thpt
+    private List<SubjectScore> buildDefaultScores(int type) {
+        int currentYear = Year.now().getValue();
+        return switch (type) {
+            case 1 -> subjectRepository.findAll().stream()
+                    .flatMap(subject ->
+                            Stream.of(10, 11, 12)
+                                    .flatMap(grade ->
+                                            Stream.of(1, 2)
+                                                    .map(semester ->
+                                                            SubjectScore.builder()
+                                                                    .subject(subject)
+                                                                    .score(0.0)
+                                                                    .gradeLevel(grade)
+                                                                    .semester(semester)
+                                                                    .build()
+                                                    )
+                                    )
+                    )
+                    .toList();
+            case 2 -> subjectRepository.findAll().stream()
+                    .map(subject ->
+                            SubjectScore.builder()
+                                    .subject(subject)
+                                    .score(0.0)
+                                    .build()
+                    )
+                    .toList();
+
+            default -> Collections.emptyList();
+        };
+    }
+
     public String register(RegisterRequest request) {
         String redisKey = "otp:" + request.getEmail();
         String storedOtp = redisTemplate.opsForValue().get(redisKey);
@@ -92,7 +171,7 @@ public class AuthService {
 
         redisTemplate.delete(redisKey);
 
-        userRepository.save(User.builder()
+        User user = userRepository.save(User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .DOB(request.getDateOfBirth().toInstant())
@@ -100,6 +179,10 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build());
+
+        // mặc định tạo hồ sơ điểm khi đăng ký thành công
+        initAcademicScoreProfile(user.getId());
+
         return "Tài khoản đăng ký thành công";
     }
 
@@ -169,6 +252,8 @@ public class AuthService {
         String accessToken = jwtService.generateToken(user, false);
         String refreshToken = jwtService.generateToken(user, true);
 
+        initAcademicScoreProfile(user.getId());
+
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -231,7 +316,7 @@ public class AuthService {
         return response;
     }
 
-    public void forgetPassword( ForgetPasswordRequest request) {
+    public void forgetPassword(ForgetPasswordRequest request) {
         String redisKey = "otp:" + request.email();
         String storedOtp = redisTemplate.opsForValue().get(redisKey);
 

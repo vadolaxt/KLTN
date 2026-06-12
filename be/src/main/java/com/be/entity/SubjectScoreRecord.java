@@ -15,10 +15,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SubjectScoreRecord {
-    String subjectCode;
-    String subjectName;
-    double score;
-    String scoreSource;
+    Subject subject;
+    double avgScore;
     int schoolYear;
     int gradeLevel;
     int semester;

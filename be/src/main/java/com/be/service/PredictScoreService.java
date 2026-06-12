@@ -8,7 +8,7 @@ import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
 import com.be.repository.AdmissionInfoRepository;
 import com.be.repository.MajorRepository;
-import com.be.supportClass.SubjectScore;
+import com.be.entity.SubjectScore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;

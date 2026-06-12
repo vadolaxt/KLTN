@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Year;
+
 @Getter
 @Setter
 @Builder
@@ -15,9 +17,5 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CompetencyTestResult {
-    String provider;
-    int testYear;
-    double rawScore;
-    double maxScore;
-    double convertedScore30;
+    double score;
 }
