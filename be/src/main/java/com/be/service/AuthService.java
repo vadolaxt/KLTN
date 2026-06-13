@@ -83,7 +83,7 @@ public class AuthService {
 
     public void checkUser(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new AppException(ErrorCode.ACCOUNT_EXISTED);
+            throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
         }
     }
 
@@ -109,7 +109,7 @@ public class AuthService {
     }
 
     public void initAcademicScoreProfile(String userId) {
-        if (userRepository.findById(userId).isPresent()) {
+        if (academicScoreProfileRepository.findByUserId(userId).isPresent()) {
             return;
         }
         AcademicScoreProfile result = AcademicScoreProfile.builder().build();

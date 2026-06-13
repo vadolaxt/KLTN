@@ -12,19 +12,18 @@ public enum ErrorCode {
     // ===== AUTH / SECURITY =====
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Unauthorized"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden"),
-    USER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "User already exists"),
-    ACCOUNT_EXISTED(HttpStatus.BAD_REQUEST, "Account already exists"),
-    BAD_CREDENTIALS(HttpStatus.BAD_REQUEST, "Email or password is incorrect"),
+    USER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "Tài khoản đã tồn tại"),
+    BAD_CREDENTIALS(HttpStatus.BAD_REQUEST, "Email hoặc mật khẩu sai"),
 
     // ==== TOKEN ====
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "Invalid token"),
     WRONG_TOKEN_TYPE(HttpStatus.BAD_REQUEST, "Wrong token type"),
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User không tồn tài"),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error"),
 
     // ==== OTP ====
-    OTP_EXPIRED(HttpStatus.BAD_REQUEST, "OTP expired"),
-    OTP_MISMATCH(HttpStatus.BAD_REQUEST, "OTP mismatch"),
+    OTP_EXPIRED(HttpStatus.BAD_REQUEST, "Mã OTP hết hạn"),
+    OTP_MISMATCH(HttpStatus.BAD_REQUEST, "Mã OTP không khớp"),
 
     // ==== FAST API ====
     FASTAPI_CONNECTION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "Hệ thống AI hiện đang bảo trì"),
@@ -39,6 +38,9 @@ public enum ErrorCode {
     MAJOR_NOT_FOUND(HttpStatus.NOT_FOUND, "Ngành không tồn tại"),
     SUBJECT_COMBINATION_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "Ngành xét tuyển không bao gồm tổ hợp này"),
     SCORE_LIST_EMPTY(HttpStatus.BAD_REQUEST, "Bảng điểm dự đoán trống"),
+
+    // ==== ACADEMIC SCORE PROFILE ====
+    ACADEMIC_SCORE_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm được hồ sơ bảng điểm"),
 
     ;
     private final HttpStatus status;

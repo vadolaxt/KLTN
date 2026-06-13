@@ -1,13 +1,20 @@
-import {ApiResponse, AuthRequest, AuthResponse} from "@/types";
+import {ApiResponse} from "@/types";
 import {apiClient} from "@/lib/constants/api-client";
+import {AcademicScoreProfileRequest, AcademicScoreProfileResponse} from "@/types/academicScoreProfile";
 
 export const AcademicScoreProfileService = {
-	// getAcademicScoreProfile: async (request: String)""
-	login: async (request: AuthRequest): Promise<ApiResponse<AuthResponse>> => {
-		const response = await apiClient.post<ApiResponse<AuthResponse>>(
+	getAcademicScoreProfile: async (): Promise<ApiResponse<AcademicScoreProfileResponse>> => {
+		const response = await apiClient.get<ApiResponse<AcademicScoreProfileResponse>>(
 			"/academic-profile",
+		);
+		return response.data;
+	},
+	editAcademicScoreProfile: async (request: AcademicScoreProfileRequest): Promise<ApiResponse<void>> => {
+		const response = await apiClient.post<ApiResponse<void>>(
+			"/academic-profile/edit",
 			request
 		);
 		return response.data;
 	},
+
 }

@@ -12,7 +12,7 @@ public class SubjectScore {
     Subject subject;
 
     @Builder.Default
-    double score = 0.0;
+    double score = 0;
 
     int gradeLevel;
     int semester;

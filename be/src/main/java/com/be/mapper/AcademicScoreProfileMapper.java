@@ -14,6 +14,7 @@ public class AcademicScoreProfileMapper {
                 .schoolRecord(profile.getSchoolRecord())
                 .nationalExamResult(profile.getNationalExamResult())
                 .competencyTestResult(profile.getCompetencyTestResult())
+                .schoolRecordAvg(profile.getSchoolRecord().getAvgScore())
                 .build();
     }
 }

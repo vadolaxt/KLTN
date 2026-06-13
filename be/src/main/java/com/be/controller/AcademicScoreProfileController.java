@@ -49,7 +49,7 @@ public class AcademicScoreProfileController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         HttpStatus.OK,
-                        "Cập nhật hồ sơ điểm thành công!",
+                        "Cập nhật hồ sơ bảng điểm thành công!",
                         null)
         );
     }

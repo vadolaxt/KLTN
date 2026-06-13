@@ -6,10 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.beans.Transient;
-import java.time.Year;
+import org.springframework.data.annotation.Transient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -28,16 +26,19 @@ public class SchoolRecord {
     List<SubjectScore> subjectScoreRecords = new ArrayList<>();
 
     @Transient
-    public Map<Subject, Double> getAvgScore() {
+    public Map<String, Double> getAvgScore() {
         if (subjectScoreRecords == null || subjectScoreRecords.isEmpty()) {
             return new LinkedHashMap<>();
         }
 
         return subjectScoreRecords.stream()
                 .collect(Collectors.groupingBy(
-                        SubjectScore::getSubject,
+                        score -> score.getSubject().getId(),
                         LinkedHashMap::new,
-                        Collectors.averagingDouble(SubjectScore::getScore)
+                        Collectors.collectingAndThen(
+                                Collectors.averagingDouble(SubjectScore::getScore),
+                                avg -> Math.round(avg * 100.0) / 100.0 // Làm tròn 2 chữ số thập phân
+                        )
                 ));
     }
 

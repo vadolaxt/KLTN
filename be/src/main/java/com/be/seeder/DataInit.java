@@ -81,7 +81,7 @@ public class DataInit {
     private static final Map<String, String> SUBJECT = Map.ofEntries(
             Map.entry("TOAN", "Toán"),
             Map.entry("VAN", "Văn"),
-            Map.entry("VAT_LI", "Vật l"),
+            Map.entry("VAT_LI", "Vật lý"),
             Map.entry("HOA_HOC", "Hóa học"),
             Map.entry("SINH_HOC", "Sinh học"),
             Map.entry("LICH_SU", "Lịch sử"),
