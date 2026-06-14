@@ -42,10 +42,50 @@ export interface ChatRequest {
 	content: string;
 }
 
-export default interface UserProfileResponse {
+export interface IdentityCard {
+	number: string;
+	issuedDate: string;
+	issuedPlace: string;
+}
+
+export interface CertificateResult {
+	certificateType: string;
+	organization: string;
+	issuedDate: string;
+	score: number;
+}
+
+export interface CandidateProfileRequest {
 	firstName: string;
 	lastName: string;
 	dob: string;
-	identity: string;
 	email: string;
+	identityCard: IdentityCard;
+	sex: string;
+	ethnic: string;
+	graduateYear: string;
+	birthPlace: string;
+	address: string;
+}
+
+export interface CandidateProfileResponse {
+	firstName: string;
+	lastName: string;
+	dob: string;
+	email: string;
+	identityCard: IdentityCard;
+	sex: string;
+	ethnic: string;
+	graduateYear: string;
+	birthPlace: string;
+	address: string;
+	certificateResult: CertificateResult;
+}
+
+export interface CertificateResultRequest {
+	certificateType: string;
+	organization: string;
+	issuedDate: string;
+	score: number;
+	imageUrl: string;
 }

@@ -39,8 +39,15 @@ public enum ErrorCode {
     SUBJECT_COMBINATION_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "Ngành xét tuyển không bao gồm tổ hợp này"),
     SCORE_LIST_EMPTY(HttpStatus.BAD_REQUEST, "Bảng điểm dự đoán trống"),
 
-    // ==== ACADEMIC SCORE PROFILE ====
+    // ==== PROFILE ====
     ACADEMIC_SCORE_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm được hồ sơ bảng điểm"),
+    CANDIDATE_PROFILE_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm được hồ sơ thí sinh"),
+
+    // ==== CLOUDINARY ====
+    MISSING_FILE(HttpStatus.BAD_REQUEST, "File upload không được để trống"),
+    WRONG_FILE_TYPE(HttpStatus.BAD_REQUEST, "Chỉ cho phép tải lên các định dạng: PDF, JPG, JPEG."),
+
+
 
     ;
     private final HttpStatus status;

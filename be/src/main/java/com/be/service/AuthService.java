@@ -4,17 +4,19 @@ import com.be.dto.request.AuthRequest;
 import com.be.dto.request.ForgetPasswordRequest;
 import com.be.dto.request.RegisterRequest;
 import com.be.dto.response.AuthResponse;
-import com.be.dto.response.UserProfileResponse;
 import com.be.entity.AcademicScoreProfile;
+import com.be.entity.CandidateProfile;
 import com.be.entity.CompetencyTestResult;
+import com.be.entity.IdentityCard;
 import com.be.entity.NationalExamResult;
 import com.be.entity.SchoolRecord;
 import com.be.entity.SubjectScore;
 import com.be.entity.User;
 import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
-import com.be.mapper.UserMapper;
+import com.be.mapper.ProfileMapper;
 import com.be.repository.AcademicScoreProfileRepository;
+import com.be.repository.CandidateProfileRepository;
 import com.be.repository.SubjectRepository;
 import com.be.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -39,6 +41,7 @@ import org.springframework.stereotype.Service;
 import java.time.Year;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -54,11 +57,12 @@ public class AuthService {
     JwtDecoder jwtDecoder;
     StringRedisTemplate redisTemplate;
     SubjectRepository subjectRepository;
+    CandidateProfileRepository  candidateProfileRepository;
 
     AcademicScoreProfileRepository academicScoreProfileRepository;
 
     @Autowired
-    UserMapper userMapper;
+    ProfileMapper profileMapper;
 
     @NonFinal
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
@@ -124,7 +128,7 @@ public class AuthService {
     private List<SubjectScore> buildDefaultScores(int type) {
         int currentYear = Year.now().getValue();
         return switch (type) {
-            case 1 -> subjectRepository.findAll().stream()
+            case 1 -> subjectRepository.findAllByOrderByIndexAsc().stream()
                     .flatMap(subject ->
                             Stream.of(10, 11, 12)
                                     .flatMap(grade ->
@@ -140,7 +144,7 @@ public class AuthService {
                                     )
                     )
                     .toList();
-            case 2 -> subjectRepository.findAll().stream()
+            case 2 -> subjectRepository.findAllByOrderByIndexAsc().stream()
                     .map(subject ->
                             SubjectScore.builder()
                                     .subject(subject)
@@ -161,7 +165,7 @@ public class AuthService {
             throw new AppException(ErrorCode.OTP_EXPIRED);
         }
         if (userRepository.findByEmail(request.getEmail()).isPresent() ||
-                userRepository.findByIdentity(request.getIdentity()).isPresent()
+                userRepository.findByEmail(request.getEmail()).isPresent()
         ) {
             throw new AppException(ErrorCode.USER_ALREADY_EXISTS);
         }
@@ -174,11 +178,15 @@ public class AuthService {
         User user = userRepository.save(User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .DOB(request.getDateOfBirth().toInstant())
-                .identity(request.getIdentity())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build());
+
+        CandidateProfile profile = CandidateProfile.builder()
+                .userId(user.getId())
+                .identityCard(IdentityCard.builder().number(request.getIdentity()).build())
+                .build();
+        candidateProfileRepository.save(profile);
 
         // mặc định tạo hồ sơ điểm khi đăng ký thành công
         initAcademicScoreProfile(user.getId());
@@ -240,14 +248,26 @@ public class AuthService {
         String firstName = (String) payload.get("given_name");
         String lastName = (String) payload.get("family_name");
 
-        User user = userRepository.findByEmail(email).orElseGet(() -> {
+        Optional<User> existingUserOpt = userRepository.findByEmail(email);
+        User user;
+
+        if (existingUserOpt.isPresent()) {
+            user = existingUserOpt.get();
+        } else {
             User newUser = User.builder()
                     .email(email)
                     .firstName(firstName)
                     .lastName(lastName)
                     .build();
-            return userRepository.save(newUser);
-        });
+            user = userRepository.save(newUser);
+
+            CandidateProfile profile = CandidateProfile.builder()
+                    .userId(user.getId())
+                    .build();
+            candidateProfileRepository.save(profile);
+
+            initAcademicScoreProfile(user.getId());
+        }
 
         String accessToken = jwtService.generateToken(user, false);
         String refreshToken = jwtService.generateToken(user, true);
@@ -300,20 +320,6 @@ public class AuthService {
 
     public String getUserIdFromToken(String accessToken) {
         return jwtDecoder.decode(accessToken).getSubject();
-    }
-
-    public UserProfileResponse getUserProfile(String accessToken) {
-        String userId = getUserIdFromToken(accessToken);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-        UserProfileResponse response = userMapper.toResponse(user);
-
-        if (response == null) {
-            throw new AppException(ErrorCode.USER_NOT_FOUND);
-        }
-
-        return response;
     }
 
     public void forgetPassword(ForgetPasswordRequest request) {

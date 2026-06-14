@@ -12,7 +12,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
-@Document(collection = "certificate_results")
 @Getter
 @Setter
 @Builder
@@ -20,15 +19,9 @@ import java.time.Instant;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CertificateResult {
-    @Id
-    String id;
-
-    String userId;
     String certificateType;
-    double score;
-    Instant issuedDate;
-    Instant expiredDate;
-    String imageUrl;
     String organization;
-    String note;
+    Instant issuedDate;
+    double score;
+    String imageUrl;
 }

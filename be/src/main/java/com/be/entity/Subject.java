@@ -25,4 +25,5 @@ public class Subject {
 
     String code;
     String subjectName;
+    Long index; // stt
 }

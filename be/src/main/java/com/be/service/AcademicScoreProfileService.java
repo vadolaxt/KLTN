@@ -9,7 +9,7 @@ import com.be.entity.SchoolRecord;
 import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
 import com.be.mapper.AcademicScoreProfileMapper;
-import com.be.mapper.UserMapper;
+import com.be.mapper.ProfileMapper;
 import com.be.repository.AcademicScoreProfileRepository;
 import com.be.repository.SchoolRecordRepository;
 import com.be.repository.SubjectRepository;
@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AcademicScoreProfileService {
     AuthService authService;
     UserRepository userRepository;
-    UserMapper userMapper;
+    ProfileMapper profileMapper;
     AcademicScoreProfileRepository academicScoreProfileRepository;
     SchoolRecordRepository schoolRecordRepository;
     SubjectRepository subjectRepository;

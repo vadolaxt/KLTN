@@ -32,10 +32,6 @@ public class User {
     @NotBlank
     String lastName;
 
-    Instant DOB;
-
-    String identity; //cccd
-
     @Email
     String email;
 
