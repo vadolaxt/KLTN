@@ -9,6 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 MODEL_PATH = BASE_DIR / "assets" / "models" / "best_predict_score_model.joblib"
+MODEL_SGU_PATH = BASE_DIR / "assets" / "models" / "best_predict_score_model_sgu.joblib"
 
 try:
     admission_bundle = joblib.load(MODEL_PATH)
@@ -16,6 +17,18 @@ try:
 except Exception as e:
     admission_bundle = None
     print(f"Lỗi load admission model: {e}")
+
+try:
+    admission_bundle_sgu = joblib.load(MODEL_SGU_PATH)
+    print("Load SGU admission model thành công!")
+except Exception as e:
+    admission_bundle_sgu = None
+    print(f"Lỗi load SGU admission model: {e}")
+
+admission_bundles = {
+    "NLU": admission_bundle,
+    "SGU": admission_bundle_sgu,
+}
 
 # embeddings = GoogleGenerativeAIEmbeddings(
 #     model="models/gemini-embedding-001",
@@ -28,10 +41,15 @@ except Exception as e:
 #     temperature=0.1,
 #     google_api_key=os.getenv("GOOGLE_API_KEY")
 # )
-llm = ChatOpenAI(
-    # model="meta/llama-3.1-8b-instruct",
-    model="qwen/qwen3-next-80b-a3b-instruct",
-    openai_api_key=os.environ.get("API_KEY"),
-    openai_api_base="https://integrate.api.nvidia.com/v1",
-    temperature=0
-)
+api_key = os.environ.get("API_KEY")
+if api_key:
+    llm = ChatOpenAI(
+        # model="meta/llama-3.1-8b-instruct",
+        model="qwen/qwen3-next-80b-a3b-instruct",
+        openai_api_key=api_key,
+        openai_api_base="https://integrate.api.nvidia.com/v1",
+        temperature=0
+    )
+else:
+    llm = None
+    print("Chua cau hinh API_KEY, chi khoi dong cac API khong dung chat LLM.")

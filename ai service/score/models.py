@@ -22,6 +22,7 @@ from .config import (
     RANDOM_STATE,
     TEST_YEAR,
     TRAIN_END_YEAR,
+    SCHOOL_CODE,
 )
 from .evaluation import (
     ExperimentReport,
@@ -37,12 +38,12 @@ from .features import (
 
 try:
     from lightgbm import LGBMRegressor
-except Exception:  # pragma: no cover - optional dependency
+except Exception:  # pragma: no cover
     LGBMRegressor = None
 
 try:
     from xgboost import XGBRegressor
-except Exception:  # pragma: no cover - optional dependency
+except Exception:  # pragma: no cover
     XGBRegressor = None
 
 
@@ -56,13 +57,14 @@ class ModelBundle:
     train_end_year: int
     source_data: pd.DataFrame
     national_subject_stats: pd.DataFrame | None
+    school_code: str = SCHOOL_CODE
     leaderboard: pd.DataFrame = field(default_factory=pd.DataFrame)
 
 
 def _one_hot_encoder() -> OneHotEncoder:
     try:
         return OneHotEncoder(handle_unknown="ignore", sparse_output=False)
-    except TypeError:  # sklearn < 1.2
+    except TypeError:
         return OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 
@@ -91,22 +93,12 @@ def _build_preprocessor(spec: FeatureSpec, scale_numeric: bool) -> ColumnTransfo
 def _available_regressors() -> dict[str, Any]:
     models: dict[str, Any] = {
         "Linear": LinearRegression(),
-        "Tree": DecisionTreeRegressor(
-            max_depth=5,
-            random_state=RANDOM_STATE,
-        ),
-        "RF": RandomForestRegressor(
-            n_estimators=100,
-            random_state=RANDOM_STATE,
-            n_jobs=1,
-        ),
+        "Tree": DecisionTreeRegressor(max_depth=5, random_state=RANDOM_STATE),
+        "RF": RandomForestRegressor(n_estimators=100, random_state=RANDOM_STATE, n_jobs=1),
     }
     if LGBMRegressor is not None:
         models["LGBM"] = LGBMRegressor(
-            n_estimators=100,
-            learning_rate=0.05,
-            random_state=RANDOM_STATE,
-            verbose=-1,
+            n_estimators=100, learning_rate=0.05, random_state=RANDOM_STATE, verbose=-1
         )
     if XGBRegressor is not None:
         models["XGB"] = XGBRegressor(
@@ -144,21 +136,12 @@ def _make_tuned_xgb_pipeline(spec: FeatureSpec, cv: int = 3) -> GridSearchCV:
         "model__reg_lambda": [1, 5, 10],
     }
     return GridSearchCV(
-        estimator,
-        param_grid,
-        cv=cv,
-        scoring="neg_mean_absolute_error",
-        n_jobs=1,
+        estimator, param_grid, cv=cv, scoring="neg_mean_absolute_error", n_jobs=1
     )
 
 
 def _valid_model_rows(df: pd.DataFrame, year_mask: pd.Series) -> pd.DataFrame:
-    rows = df[
-        year_mask
-        & df["Score_Change"].notna()
-        & df["Cutoff_Score"].notna()
-    ].copy()
-    return rows
+    return df[year_mask & df["Score_Change"].notna() & df["Cutoff_Score"].notna()].copy()
 
 
 def _predict_cutoff(estimator: Pipeline, frame: pd.DataFrame, spec: FeatureSpec) -> np.ndarray:
@@ -168,8 +151,6 @@ def _predict_cutoff(estimator: Pipeline, frame: pd.DataFrame, spec: FeatureSpec)
 
 
 def _select_best(leaderboard: pd.DataFrame) -> pd.Series:
-    sort_cols: list[str]
-    ascending: list[bool]
     if leaderboard["F1_2025"].notna().any():
         sort_cols = ["F1_2025", "Accuracy_2025", "MAE", "RMSE"]
         ascending = [False, False, True, True]
@@ -185,8 +166,12 @@ def _fit_single_model(
     model_name: str,
     pipeline_name: str,
     train_end_year: int,
+    school_code: str = SCHOOL_CODE,
 ) -> tuple[Pipeline, FeatureSpec, pd.DataFrame]:
-    frame = prepare_historical_frame(raw_data, national_subject_stats, train_end_year=train_end_year)
+    frame = prepare_historical_frame(
+        raw_data, national_subject_stats,
+        train_end_year=train_end_year, school_code=school_code,
+    )
     spec = build_pipeline_specs(CATEGORICAL_FEATURES)[pipeline_name]
     if model_name == "XGB_Tuned":
         estimator = _make_tuned_xgb_pipeline(spec)
@@ -201,26 +186,39 @@ def _fit_single_model(
 def run_nlu_experiment(
     historical_df: pd.DataFrame,
     national_subject_stats: pd.DataFrame | None = None,
-    candidate_2025_df: pd.DataFrame | None = None,
+    candidate_df: pd.DataFrame | None = None,
     train_end_year: int = TRAIN_END_YEAR,
     test_year: int = TEST_YEAR,
     retrain_final: bool = True,
+    school_code: str = SCHOOL_CODE,
 ) -> ExperimentReport:
-    """Train 5 algorithms on 2 feature pipelines and evaluate on 2025."""
+    """Huấn luyện và đánh giá mô hình dự đoán điểm chuẩn.
+
+    Quy trình:
+    - Train: dữ liệu từ đầu đến train_end_year (mặc định 2025)
+    - Test : năm test_year (mặc định 2026, nếu có điểm chuẩn thực tế)
+    - Nếu test_year chưa có điểm chuẩn → chỉ dự đoán, không tính metrics test
+    - Sau khi chọn model tốt nhất, retrain trên toàn bộ dữ liệu (bao gồm test_year)
+      để chuẩn bị dự đoán năm tiếp theo.
+
+    Hỗ trợ mở rộng:
+    - Truyền school_code = "SGU" (hoặc trường khác) nếu có dữ liệu tương tự.
+    """
     frame = prepare_historical_frame(
-        historical_df,
-        national_subject_stats,
-        train_end_year=train_end_year,
+        historical_df, national_subject_stats,
+        train_end_year=train_end_year, school_code=school_code,
     )
     pipeline_specs = build_pipeline_specs(CATEGORICAL_FEATURES)
     regressors = _available_regressors()
 
     train_rows = _valid_model_rows(frame, frame["Year"].le(train_end_year))
     test_rows = _valid_model_rows(frame, frame["Year"].eq(test_year))
+
     if train_rows.empty:
-        raise ValueError("No valid training rows after preprocessing.")
-    if test_rows.empty:
-        raise ValueError(f"No valid test rows for year {test_year}.")
+        raise ValueError("Không có dữ liệu huấn luyện hợp lệ sau khi xử lý.")
+
+    # Nếu test_year chưa có điểm chuẩn, vẫn chạy nhưng bỏ qua metrics test
+    has_test_data = not test_rows.empty
 
     rows: list[dict[str, object]] = []
     bundles: dict[tuple[str, str], ModelBundle] = {}
@@ -233,44 +231,40 @@ def run_nlu_experiment(
             estimator = _make_pipeline(model_name, regressor, spec)
             estimator.fit(train_rows[feature_cols], train_rows["Score_Change"])
 
-            y_pred = _predict_cutoff(estimator, test_rows, spec)
-            y_true = test_rows["Cutoff_Score"].to_numpy(dtype=float)
-            metrics = regression_metrics(y_true, y_pred)
+            result_row: dict[str, object] = {"Pipeline": pipeline_name, "Model": model_name}
 
-            pred_df = test_rows[
-                [
-                    "Year",
-                    "Major_Code",
-                    "Major_Name",
-                    "Admission_Quota",
-                    "Cutoff_Score",
-                    "Prev_Year_Score",
-                    "Combination_Key",
-                ]
-            ].copy()
-            pred_df["Pipeline"] = pipeline_name
-            pred_df["Model"] = model_name
-            pred_df["Predicted_Cutoff"] = y_pred
-            pred_df["Prediction_Error"] = pred_df["Predicted_Cutoff"] - pred_df["Cutoff_Score"]
-            cutoff_prediction_parts.append(pred_df)
+            if has_test_data:
+                y_pred = _predict_cutoff(estimator, test_rows, spec)
+                y_true = test_rows["Cutoff_Score"].to_numpy(dtype=float)
+                metrics = regression_metrics(y_true, y_pred)
 
-            candidate_metrics, candidate_pred_df = evaluate_candidate_admissions(
-                candidate_2025_df,
-                pred_df,
-            )
-            if not candidate_pred_df.empty:
-                candidate_pred_df["Pipeline"] = pipeline_name
-                candidate_pred_df["Model"] = model_name
-                candidate_prediction_parts.append(candidate_pred_df)
+                pred_df = test_rows[[
+                    "Year", "Major_Code", "Major_Name", "Admission_Quota",
+                    "Cutoff_Score", "Prev_Year_Score", "Combination_Key",
+                ]].copy()
+                pred_df["Pipeline"] = pipeline_name
+                pred_df["Model"] = model_name
+                pred_df["Predicted_Cutoff"] = y_pred
+                pred_df["Prediction_Error"] = pred_df["Predicted_Cutoff"] - pred_df["Cutoff_Score"]
+                cutoff_prediction_parts.append(pred_df)
 
-            result_row = {
-                "Pipeline": pipeline_name,
-                "Model": model_name,
-                **metrics,
-                **candidate_metrics,
-            }
+                candidate_metrics, candidate_pred_df = evaluate_candidate_admissions(
+                    candidate_df, pred_df
+                )
+                if not candidate_pred_df.empty:
+                    candidate_pred_df["Pipeline"] = pipeline_name
+                    candidate_pred_df["Model"] = model_name
+                    candidate_prediction_parts.append(candidate_pred_df)
+
+                result_row.update({**metrics, **candidate_metrics})
+            else:
+                # Không có điểm chuẩn test_year → dùng metrics trên tập train (CV-like)
+                result_row.update({
+                    "MAE": np.nan, "RMSE": np.nan, "R2": np.nan,
+                    "Accuracy_2025": np.nan, "F1_2025": np.nan, "Candidate_Rows": 0,
+                })
+
             rows.append(result_row)
-
             bundles[(pipeline_name, model_name)] = ModelBundle(
                 estimator=estimator,
                 model_name=model_name,
@@ -279,11 +273,11 @@ def run_nlu_experiment(
                 metrics=result_row,
                 train_end_year=train_end_year,
                 source_data=historical_df.copy(),
-                national_subject_stats=None
-                if national_subject_stats is None
-                else national_subject_stats.copy(),
+                national_subject_stats=None if national_subject_stats is None else national_subject_stats.copy(),
+                school_code=school_code,
             )
 
+    # XGB Tuned (Pipeline B)
     if XGBRegressor is not None and "Pipeline_B_National" in pipeline_specs:
         pipeline_name = "Pipeline_B_National"
         model_name = "XGB_Tuned"
@@ -292,42 +286,36 @@ def run_nlu_experiment(
         estimator = _make_tuned_xgb_pipeline(spec)
         estimator.fit(train_rows[feature_cols], train_rows["Score_Change"])
 
-        y_pred = _predict_cutoff(estimator, test_rows, spec)
-        y_true = test_rows["Cutoff_Score"].to_numpy(dtype=float)
-        metrics = regression_metrics(y_true, y_pred)
+        result_row = {"Pipeline": pipeline_name, "Model": model_name}
 
-        pred_df = test_rows[
-            [
-                "Year",
-                "Major_Code",
-                "Major_Name",
-                "Admission_Quota",
-                "Cutoff_Score",
-                "Prev_Year_Score",
-                "Combination_Key",
-            ]
-        ].copy()
-        pred_df["Pipeline"] = pipeline_name
-        pred_df["Model"] = model_name
-        pred_df["Predicted_Cutoff"] = y_pred
-        pred_df["Prediction_Error"] = pred_df["Predicted_Cutoff"] - pred_df["Cutoff_Score"]
-        cutoff_prediction_parts.append(pred_df)
+        if has_test_data:
+            y_pred = _predict_cutoff(estimator, test_rows, spec)
+            y_true = test_rows["Cutoff_Score"].to_numpy(dtype=float)
+            metrics = regression_metrics(y_true, y_pred)
 
-        candidate_metrics, candidate_pred_df = evaluate_candidate_admissions(
-            candidate_2025_df,
-            pred_df,
-        )
-        if not candidate_pred_df.empty:
-            candidate_pred_df["Pipeline"] = pipeline_name
-            candidate_pred_df["Model"] = model_name
-            candidate_prediction_parts.append(candidate_pred_df)
+            pred_df = test_rows[[
+                "Year", "Major_Code", "Major_Name", "Admission_Quota",
+                "Cutoff_Score", "Prev_Year_Score", "Combination_Key",
+            ]].copy()
+            pred_df["Pipeline"] = pipeline_name
+            pred_df["Model"] = model_name
+            pred_df["Predicted_Cutoff"] = y_pred
+            pred_df["Prediction_Error"] = pred_df["Predicted_Cutoff"] - pred_df["Cutoff_Score"]
+            cutoff_prediction_parts.append(pred_df)
 
-        result_row = {
-            "Pipeline": pipeline_name,
-            "Model": model_name,
-            **metrics,
-            **candidate_metrics,
-        }
+            candidate_metrics, candidate_pred_df = evaluate_candidate_admissions(candidate_df, pred_df)
+            if not candidate_pred_df.empty:
+                candidate_pred_df["Pipeline"] = pipeline_name
+                candidate_pred_df["Model"] = model_name
+                candidate_prediction_parts.append(candidate_pred_df)
+
+            result_row.update({**metrics, **candidate_metrics})
+        else:
+            result_row.update({
+                "MAE": np.nan, "RMSE": np.nan, "R2": np.nan,
+                "Accuracy_2025": np.nan, "F1_2025": np.nan, "Candidate_Rows": 0,
+            })
+
         rows.append(result_row)
         bundles[(pipeline_name, model_name)] = ModelBundle(
             estimator=estimator,
@@ -337,18 +325,21 @@ def run_nlu_experiment(
             metrics=result_row,
             train_end_year=train_end_year,
             source_data=historical_df.copy(),
-            national_subject_stats=None
-            if national_subject_stats is None
-            else national_subject_stats.copy(),
+            national_subject_stats=None if national_subject_stats is None else national_subject_stats.copy(),
+            school_code=school_code,
         )
 
     leaderboard = pd.DataFrame(rows)
-    leaderboard = leaderboard.sort_values(["MAE", "RMSE"], ascending=[True, True]).reset_index(drop=True)
+
+    # Sắp xếp leaderboard: ưu tiên MAE nếu chưa có metrics test
+    if leaderboard["MAE"].notna().any():
+        leaderboard = leaderboard.sort_values(["MAE", "RMSE"], ascending=[True, True]).reset_index(drop=True)
     best_row = _select_best(leaderboard)
     best_key = (str(best_row["Pipeline"]), str(best_row["Model"]))
     best_bundle = bundles[best_key]
     best_bundle.leaderboard = leaderboard.copy()
 
+    # Retrain trên toàn bộ dữ liệu (train_end_year = test_year)
     final_bundle = None
     if retrain_final:
         final_train_end_year = test_year
@@ -358,6 +349,7 @@ def run_nlu_experiment(
             model_name=best_bundle.model_name,
             pipeline_name=best_bundle.pipeline_name,
             train_end_year=final_train_end_year,
+            school_code=school_code,
         )
         final_bundle = ModelBundle(
             estimator=estimator,
@@ -367,18 +359,17 @@ def run_nlu_experiment(
             metrics=best_bundle.metrics,
             train_end_year=final_train_end_year,
             source_data=historical_df.copy(),
-            national_subject_stats=None
-            if national_subject_stats is None
-            else national_subject_stats.copy(),
+            national_subject_stats=None if national_subject_stats is None else national_subject_stats.copy(),
+            school_code=school_code,
             leaderboard=leaderboard.copy(),
         )
 
     return ExperimentReport(
         leaderboard=leaderboard,
-        cutoff_predictions=pd.concat(cutoff_prediction_parts, ignore_index=True),
+        cutoff_predictions=pd.concat(cutoff_prediction_parts, ignore_index=True)
+            if cutoff_prediction_parts else pd.DataFrame(),
         candidate_predictions=pd.concat(candidate_prediction_parts, ignore_index=True)
-        if candidate_prediction_parts
-        else pd.DataFrame(),
+            if candidate_prediction_parts else pd.DataFrame(),
         best_bundle=best_bundle,
         final_bundle=final_bundle,
     )
@@ -387,7 +378,7 @@ def run_nlu_experiment(
 def save_model_bundle(bundle: ModelBundle, output_dir: str | Path = MODEL_DIR) -> Path:
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    file_name = f"{bundle.pipeline_name}_{bundle.model_name}_nlu.joblib"
+    file_name = f"{bundle.pipeline_name}_{bundle.model_name}_{bundle.school_code}.joblib"
     model_path = output_path / file_name
     joblib.dump(bundle, model_path)
     return model_path

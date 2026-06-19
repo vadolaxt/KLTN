@@ -1,6 +1,6 @@
 from .data import (
-    load_candidate_2025,
     load_historical_admissions,
+    load_historical_admissions_sgu,
     load_national_subject_stats,
 )
 from .evaluation import ExperimentReport
@@ -18,8 +18,8 @@ from .predictor import (
 __all__ = [
     "ExperimentReport",
     "ModelBundle",
-    "load_candidate_2025",
     "load_historical_admissions",
+    "load_historical_admissions_sgu",
     "load_national_subject_stats",
     "predict_admission",
     "predict_next_year_cutoffs",

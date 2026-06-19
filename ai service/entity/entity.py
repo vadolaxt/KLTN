@@ -13,10 +13,13 @@ class ChatResponse(BaseModel):
     answer: str
 
 class AdmissionPredictRequest(BaseModel):
+    school_code: Optional[str] = "NLU"
     major_code: str
     student_score: float
     subject_combination: str
     target_year: int
+    admission_method: Optional[str] = None
+    subject_scores: Optional[Dict[str, float]] = None
 
 class AdmissionPredictResponse(BaseModel):
     result: dict
