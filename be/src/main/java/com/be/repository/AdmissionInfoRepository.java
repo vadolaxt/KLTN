@@ -11,4 +11,6 @@ public interface AdmissionInfoRepository extends MongoRepository<AdmissionInfo, 
     List<AdmissionInfo> findByMajorCode(String majorCode);
 
     List<AdmissionInfo> findByYearAndMajorCode(int year, String majorCode);
+
+    List<AdmissionInfo> findByYearAndSchoolCodeAndMajorCode(int year, String schoolCode, String majorCode);
 }

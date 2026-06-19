@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { apiClient } from '@/lib/constants/api-client';
-import type { AdmissionMethod, Major, PredictionResultState } from '../types';
+import type { AdmissionMethod, Major, PredictionResultState, SchoolCode } from '../types';
 
 interface ApiResponse<T> {
   data: T;
@@ -15,16 +15,28 @@ interface PredictResponse {
 }
 
 interface PredictionInputPanelProps {
+  schoolCode: SchoolCode;
   onResult: (result: PredictionResultState) => void;
 }
 
 const TARGET_YEAR = 2026;
 
-const METHODS: Array<{ value: AdmissionMethod; label: string; detail: string }> = [
+const SCHOOL_LABEL: Record<SchoolCode, string> = {
+  NLU: 'Trường Đại học Nông Lâm TP.HCM',
+  SGU: 'Trường Đại học Sài Gòn',
+};
+
+const NLU_METHODS: Array<{ value: AdmissionMethod; label: string; detail: string }> = [
   { value: 'hb', label: 'Học bạ THPT', detail: '3 môn tổ hợp' },
   { value: 'thpt', label: 'Thi THPT Quốc gia', detail: '3 môn tổ hợp' },
   { value: 'dgnl', label: 'Đánh giá năng lực', detail: 'Quy đổi thang 30' },
   { value: 'kh', label: 'Kết hợp THPT & Học bạ', detail: '2 môn THPT + 1 môn học bạ' },
+];
+
+const SGU_METHODS: Array<{ value: AdmissionMethod; label: string; detail: string }> = [
+  { value: 'dgnl', label: 'DGNL DHQG TP.HCM', detail: 'Quy doi thang 30' },
+  { value: 'vsat', label: 'V-SAT', detail: 'Quy doi tu thang 150' },
+  { value: 'thpt', label: 'Thi THPT Quoc gia', detail: '3 mon to hop' },
 ];
 
 const METHOD_LABEL: Record<AdmissionMethod, string> = {
@@ -32,7 +44,49 @@ const METHOD_LABEL: Record<AdmissionMethod, string> = {
   thpt: 'Thi THPT Quốc gia',
   dgnl: 'Đánh giá năng lực',
   kh: 'Kết hợp THPT và Học bạ (2 THPT + 1 học bạ)',
+  vsat: 'V-SAT',
 };
+
+const VSAT_CONVERSION_SEGMENTS = [
+  { min: 132, max: 150, outMin: 8.5, outMax: 10 },
+  { min: 128.5, max: 132, outMin: 8.1, outMax: 8.5 },
+  { min: 122.5, max: 128.5, outMin: 7.75, outMax: 8.1 },
+  { min: 114.5, max: 122.5, outMin: 7, outMax: 7.75 },
+  { min: 108, max: 114.5, outMin: 6.6, outMax: 7 },
+  { min: 102.5, max: 108, outMin: 6.25, outMax: 6.6 },
+  { min: 97, max: 102.5, outMin: 6, outMax: 6.25 },
+  { min: 91, max: 97, outMin: 5.6, outMax: 6 },
+  { min: 85, max: 91, outMin: 5.25, outMax: 5.6 },
+  { min: 77, max: 85, outMin: 5, outMax: 5.25 },
+  { min: 68, max: 77, outMin: 4.5, outMax: 5 },
+  { min: 6, max: 68, outMin: 1.5, outMax: 4.5 },
+];
+
+const convertVsatToThptScore = (rawScore: number) => {
+  if (!Number.isFinite(rawScore) || rawScore <= 0) {
+    return 0;
+  }
+
+  const score = Math.min(Math.max(rawScore, 6), 150);
+  const segment = VSAT_CONVERSION_SEGMENTS.find((item) => score >= item.min && score <= item.max)
+    ?? VSAT_CONVERSION_SEGMENTS[VSAT_CONVERSION_SEGMENTS.length - 1];
+  const ratio = (score - segment.min) / (segment.max - segment.min);
+  return Number((segment.outMin + ratio * (segment.outMax - segment.outMin)).toFixed(2));
+};
+
+const isSguTeacherMajor = (schoolCode: SchoolCode, major?: Major) => schoolCode === 'SGU' && major?.code?.startsWith('714');
+
+const getAvailableMethods = (schoolCode: SchoolCode, major?: Major) => {
+  if (schoolCode === 'NLU') {
+    return NLU_METHODS;
+  }
+
+  return isSguTeacherMajor(schoolCode, major)
+    ? SGU_METHODS.filter((item) => item.value === 'thpt')
+    : SGU_METHODS;
+};
+
+const getDefaultMethod = (schoolCode: SchoolCode, major?: Major) => getAvailableMethods(schoolCode, major)[0]?.value ?? 'thpt';
 
 const scoreInputClass =
   'w-full rounded-lg border-1.5 border-gray-mid bg-[#fafafa] px-3 py-2.5 text-center text-[18px] font-extrabold text-green-main outline-none transition-all hover:border-green-light hover:bg-white focus:border-green-main focus:bg-white focus:shadow-[0_0_0_3px_rgba(45,122,45,0.12)]';
@@ -93,7 +147,7 @@ const normalizeNumericInput = (value: string, max: number) => {
   return normalized;
 };
 
-export default function PredictionInputPanel({ onResult }: PredictionInputPanelProps) {
+export default function PredictionInputPanel({ schoolCode, onResult }: PredictionInputPanelProps) {
   const [method, setMethod] = useState<AdmissionMethod>('hb');
   const [majors, setMajors] = useState<Major[]>([]);
   const [selectedMajorCode, setSelectedMajorCode] = useState('');
@@ -113,7 +167,9 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
     const loadMajors = async () => {
       try {
         setLoadingMajors(true);
-        const response = await apiClient.get<ApiResponse<Major[]>>('/predict/majors');
+        const response = await apiClient.get<ApiResponse<Major[]>>('/predict/majors', {
+          params: { schoolCode },
+        });
         const loadedMajors = response.data.data ?? [];
 
         if (!active) {
@@ -122,8 +178,12 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
 
         setMajors(loadedMajors);
         const firstMajor = loadedMajors[0];
+        setMethod(getDefaultMethod(schoolCode, firstMajor));
         setSelectedMajorCode(firstMajor?.code ?? '');
         setSelectedCombinationCode(firstMajor?.combinations?.[0]?.code ?? '');
+        setSubjectScores(Array(Math.max(firstMajor?.combinations?.[0]?.subjects?.length ?? 3, 3)).fill(''));
+        setCombinedThptScores({});
+        setCombinedTranscriptScores({});
       } catch (loadError) {
         if (!active) {
           return;
@@ -141,11 +201,16 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
     return () => {
       active = false;
     };
-  }, []);
+  }, [schoolCode]);
 
   const selectedMajor = useMemo(
     () => majors.find((major) => major.code === selectedMajorCode),
     [majors, selectedMajorCode],
+  );
+
+  const availableMethods = useMemo(
+    () => getAvailableMethods(schoolCode, selectedMajor),
+    [schoolCode, selectedMajor],
   );
 
   const selectedCombination = useMemo(
@@ -190,18 +255,11 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
     return subjectLabels.filter((subject) => subject !== hocBaSubject).slice(0, 2);
   }, [hocBaSubject, subjectLabels]);
 
-  useEffect(() => {
-    const availableCombinations = selectedMajor?.combinations ?? [];
-    if (!availableCombinations.some((combination) => combination.code === selectedCombinationCode)) {
-      setSelectedCombinationCode(availableCombinations[0]?.code ?? '');
-    }
-  }, [selectedCombinationCode, selectedMajor]);
-
-  useEffect(() => {
-    setSubjectScores(Array(Math.max(subjectLabels.length, 3)).fill(''));
+  const resetEnteredScores = (nextSubjectCount = subjectLabels.length) => {
+    setSubjectScores(Array(Math.max(nextSubjectCount, 3)).fill(''));
     setCombinedThptScores({});
     setCombinedTranscriptScores({});
-  }, [selectedCombinationCode, subjectLabels.length, method]);
+  };
 
   const dgnlMaxScore = 1200;
   const parsedDgnlScore = parseScore(dgnlScore);
@@ -219,7 +277,14 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
 
   const subjectTotal = subjectScores
     .slice(0, subjectLabels.length || 3)
-    .reduce((total, score) => total + (Number.isFinite(parseScore(score)) ? parseScore(score) : 0), 0);
+    .reduce((total, score) => {
+      const parsedScore = parseScore(score);
+      if (!Number.isFinite(parsedScore)) {
+        return total;
+      }
+
+      return total + (method === 'vsat' ? convertVsatToThptScore(parsedScore) : parsedScore);
+    }, 0);
 
   const displayScore = method === 'dgnl'
     ? convertedDgnlScore
@@ -228,7 +293,7 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
       : subjectTotal;
 
   const updateSubjectScore = (index: number, value: string) => {
-    const normalized = normalizeNumericInput(value, 9.99);
+    const normalized = normalizeNumericInput(value, method === 'vsat' ? 150 : 9.99);
     setSubjectScores((current) => {
       const next = [...current];
       next[index] = normalized;
@@ -254,8 +319,24 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
 
   const handleMajorChange = (majorCode: string) => {
     const nextMajor = majors.find((major) => major.code === majorCode);
+    const nextMethods = getAvailableMethods(schoolCode, nextMajor);
     setSelectedMajorCode(majorCode);
     setSelectedCombinationCode(nextMajor?.combinations?.[0]?.code ?? '');
+    if (!nextMethods.some((item) => item.value === method)) {
+      setMethod(nextMethods[0]?.value ?? 'thpt');
+    }
+    resetEnteredScores(nextMajor?.combinations?.[0]?.subjects?.length ?? 3);
+  };
+
+  const handleCombinationChange = (combinationCode: string) => {
+    const nextCombination = selectedMajor?.combinations?.find((combination) => combination.code === combinationCode);
+    setSelectedCombinationCode(combinationCode);
+    resetEnteredScores(nextCombination?.subjects?.length ?? 3);
+  };
+
+  const handleMethodChange = (nextMethod: AdmissionMethod) => {
+    setMethod(nextMethod);
+    resetEnteredScores();
   };
 
   const validateScores = () => {
@@ -267,6 +348,12 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
       const requiredScores = subjectScores.slice(0, subjectLabels.length || 3).map(parseScore);
       const invalidScore = requiredScores.some((score) => !Number.isFinite(score) || score < 0 || score >= 10);
       return invalidScore ? 'Mỗi môn cần nằm trong thang điểm 0 đến dưới 10.' : '';
+    }
+
+    if (method === 'vsat') {
+      const requiredScores = subjectScores.slice(0, subjectLabels.length || 3).map(parseScore);
+      const invalidScore = requiredScores.some((score) => !Number.isFinite(score) || score < 0 || score > 150);
+      return invalidScore ? 'Diem V-SAT moi mon can nam trong thang 0 den 150.' : '';
     }
 
     if (method === 'dgnl') {
@@ -301,10 +388,12 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
       return;
     }
 
-    const scores = method === 'hb' || method === 'thpt'
+    const scores = method === 'hb' || method === 'thpt' || method === 'vsat'
       ? subjectLabels.map((subjectName, index) => ({
           subject: { subjectName },
-          score: parseScore(subjectScores[index] ?? '0'),
+          score: method === 'vsat'
+            ? convertVsatToThptScore(parseScore(subjectScores[index] ?? '0'))
+            : parseScore(subjectScores[index] ?? '0'),
         }))
       : [{
           subject: {
@@ -318,6 +407,8 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
     try {
       setSubmitting(true);
       const response = await apiClient.post<ApiResponse<PredictResponse>>('/predict', {
+        schoolCode,
+        admissionMethod: method,
         majorCode: selectedMajor.code,
         subjectCombination: selectedCombination.code,
         targetYear: TARGET_YEAR,
@@ -329,8 +420,8 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
         studentScore: Number(displayScore.toFixed(2)),
         majorCode: selectedMajor.code,
         majorName: selectedMajor.name,
-        schoolCode: response.data.data.result.school_code ?? selectedMajor.schoolCode,
-        schoolName: response.data.data.result.school_name,
+        schoolCode: response.data.data.result.school_code ?? selectedMajor.schoolCode ?? schoolCode,
+        schoolName: response.data.data.result.school_name ?? SCHOOL_LABEL[schoolCode],
         combinationCode: selectedCombination.code,
         combinationName: selectedCombination.name,
         methodLabel: METHOD_LABEL[method],
@@ -347,7 +438,7 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
     <form onSubmit={handleSubmit} className="overflow-hidden rounded-[14px] border-1.5 border-gray-mid bg-white">
       <div className="bg-green-dark px-7 py-5">
         <h2 className="text-[16px] font-extrabold text-white">Thông tin xét tuyển</h2>
-        <p className="mt-1 text-[12px] text-white/75">Năm xét tuyển mặc định 2026</p>
+        <p className="mt-1 text-[12px] text-white/75">{SCHOOL_LABEL[schoolCode]} - năm xét tuyển 2026</p>
       </div>
 
       <div className="p-7">
@@ -367,7 +458,7 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
               >
                 <option value="">{loadingMajors ? 'Đang tải danh sách ngành...' : '-- Chọn ngành --'}</option>
                 {majors.map((major) => (
-                  <option key={major.code} value={major.code}>
+                  <option key={major.id ?? `${major.schoolCode ?? schoolCode}-${major.code}-${major.programType ?? ''}`} value={major.code}>
                     {major.code} - {major.name}
                   </option>
                 ))}
@@ -378,7 +469,7 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
               <label className={labelClass}>Tổ hợp xét tuyển <span className="text-[#e53935]">*</span></label>
               <select
                 value={selectedCombinationCode}
-                onChange={(event) => setSelectedCombinationCode(event.target.value)}
+                onChange={(event) => handleCombinationChange(event.target.value)}
                 className={selectClass}
               >
                 {(selectedMajor?.combinations ?? []).map((combination) => (
@@ -406,11 +497,11 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
           </div>
 
           <div className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            {METHODS.map((item) => (
+            {availableMethods.map((item) => (
               <button
                 key={item.value}
                 type="button"
-                onClick={() => setMethod(item.value)}
+                onClick={() => handleMethodChange(item.value)}
                 className={`rounded-lg border-2 px-3 py-3 text-left transition-all ${
                   method === item.value
                     ? 'border-green-main bg-green-main text-white'
@@ -426,7 +517,7 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
           <div className="rounded-[10px] border-1.5 border-gray-mid bg-gray-light p-5">
             <div className="mb-3 text-[11px] font-extrabold uppercase tracking-[1px] text-text-light">Điểm của thí sinh</div>
 
-            {(method === 'hb' || method === 'thpt') && (
+            {(method === 'hb' || method === 'thpt' || method === 'vsat') && (
               <div className="grid grid-cols-1 overflow-hidden rounded-lg border border-gray-mid bg-white sm:grid-cols-3">
                 {(subjectLabels.length ? subjectLabels : ['Môn 1', 'Môn 2', 'Môn 3']).map((subjectName, index) => (
                   <div key={`${subjectName}-${index}`} className="border-b border-gray-mid p-3 text-center sm:border-l sm:first:border-l-0">
@@ -438,7 +529,7 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
                       inputMode="decimal"
                       pattern="^[0-9]*[.,]?[0-9]{0,2}$"
                       min="0"
-                      max="9.99"
+                      max={method === 'vsat' ? '150' : '9.99'}
                       step="0.01"
                       value={subjectScores[index] ?? ''}
                       onChange={(event) => updateSubjectScore(index, event.target.value)}

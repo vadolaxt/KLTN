@@ -44,10 +44,14 @@ public class DataInit {
             Map.entry("A02", List.of("Toán", "Vật lý", "Sinh học")),
             Map.entry("A04", List.of("Toán", "Vật lý", "Địa lý")),
             Map.entry("B00", List.of("Toán", "Hóa học", "Sinh học")),
+            Map.entry("B01", List.of("Toán", "Sinh học", "Lịch sử")),
             Map.entry("B02", List.of("Toán", "Sinh học", "Địa lý")),
             Map.entry("B03", List.of("Toán", "Sinh học", "Ngữ văn")),
+            Map.entry("B08", List.of("Toán", "Sinh học", "Tiếng Anh")),
+            Map.entry("C00", List.of("Ngữ văn", "Lịch sử", "Địa lý")),
             Map.entry("C01", List.of("Ngữ văn", "Toán", "Vật lý")),
             Map.entry("C02", List.of("Ngữ văn", "Toán", "Hóa học")),
+            Map.entry("C03", List.of("Ngữ văn", "Toán", "Lịch sử")),
             Map.entry("C04", List.of("Ngữ văn", "Toán", "Địa lý")),
             Map.entry("D01", List.of("Ngữ văn", "Toán", "Tiếng Anh")),
             Map.entry("D07", List.of("Toán", "Hóa học", "Tiếng Anh")),
@@ -210,13 +214,21 @@ public class DataInit {
         admissionInfoRepository.deleteAll();
 
         List<AdmissionCsvRow> sourceRows = loadDatasetRows();
-        List<AdmissionCsvRow> rowsFor2026 = sourceRows.stream()
+        boolean hasTargetYearRows = sourceRows.stream()
+                .anyMatch(row -> row.year() == DEFAULT_TARGET_YEAR);
+        List<AdmissionCsvRow> rowsFor2026 = hasTargetYearRows
+                ? sourceRows.stream()
+                .filter(row -> row.year() == DEFAULT_TARGET_YEAR)
+                .toList()
+                : sourceRows.stream()
                 .filter(row -> row.year() == SOURCE_YEAR_FOR_2026)
                 .map(row -> row.withYear(DEFAULT_TARGET_YEAR))
                 .toList();
 
         List<AdmissionCsvRow> allRows = new ArrayList<>(sourceRows);
-        allRows.addAll(rowsFor2026);
+        if (!hasTargetYearRows) {
+            allRows.addAll(rowsFor2026);
+        }
 
 //        Map<String, Subject> subjectCache = new LinkedHashMap<>();
         Map<String, Subject> subjectCache = subjectRepository.findAll().stream()
@@ -264,21 +276,37 @@ public class DataInit {
                     subjectCombinationRepository
             );
 
-            majors.put(row.majorCode(), Major.builder()
-                    .schoolCode(row.schoolCode())
-                    .departmentCode(row.departmentCode())
-                    .code(row.majorCode())
-                    .name(row.majorName())
-                    .programType(row.programType())
-                    .admissionQuota(row.admissionQuota())
-                    .cutoffScore(row.cutoffScore())
-                    .combinations(combinations)
-                    .build());
+            String majorKey = row.schoolCode() + "|" + row.majorCode() + "|" + row.programType();
+            Major existingMajor = majors.get(majorKey);
+            if (existingMajor == null) {
+                majors.put(majorKey, Major.builder()
+                        .schoolCode(row.schoolCode())
+                        .departmentCode(row.departmentCode())
+                        .code(row.majorCode())
+                        .name(row.majorName())
+                        .programType(row.programType())
+                        .admissionQuota(row.admissionQuota())
+                        .cutoffScore(row.cutoffScore())
+                        .combinations(new ArrayList<>(combinations))
+                        .build());
+            } else {
+                List<SubjectCombination> mergedCombinations = new ArrayList<>(existingMajor.getCombinations());
+                for (SubjectCombination combination : combinations) {
+                    boolean exists = mergedCombinations.stream()
+                            .anyMatch(item -> item.getCode().equalsIgnoreCase(combination.getCode()));
+                    if (!exists) {
+                        mergedCombinations.add(combination);
+                    }
+                }
+                existingMajor.setCombinations(mergedCombinations);
+            }
         }
 
         majorRepository.saveAll(majors.values());
         System.out.printf(
-                "--- Đã gieo %d ngành năm %d và %d dòng thông tin tuyển sinh (%d-%d, %d dùng dữ liệu %d) ---%n",
+                hasTargetYearRows
+                        ? "--- Đã gieo %d ngành năm %d và %d dòng thông tin tuyển sinh (%d-%d, dùng dữ liệu %d có sẵn trong CSV) ---%n"
+                        : "--- Đã gieo %d ngành năm %d và %d dòng thông tin tuyển sinh (%d-%d, %d dùng dữ liệu %d) ---%n",
                 majors.size(),
                 DEFAULT_TARGET_YEAR,
                 admissionInfos.size(),
@@ -344,7 +372,9 @@ public class DataInit {
     }
 
     private List<AdmissionCsvRow> loadDatasetRows() throws IOException {
-        List<String> lines = readDatasetLines();
+        List<String> lines = new ArrayList<>();
+        lines.addAll(readDatasetRecords("dataset.csv"));
+        lines.addAll(readDatasetRecords("dataset_sgu.csv").stream().skip(1).toList());
         if (lines.size() <= 1) {
             return List.of();
         }
@@ -357,30 +387,45 @@ public class DataInit {
             }
 
             List<String> fields = parseCsvLine(line);
-            if (fields.size() < 10) {
+            if (fields.size() < 9) {
                 System.out.printf("--- Bỏ qua dòng dataset không hợp lệ: %s ---%n", line);
                 continue;
             }
 
-            rows.add(new AdmissionCsvRow(
-                    fields.get(0),
-                    parseInt(fields.get(1)),
-                    fields.get(2),
-                    fields.get(3),
-                    fields.get(4),
-                    parseInt(fields.get(5)),
-                    parseDouble(fields.get(6)),
-                    fields.get(7),
-                    fields.get(8),
-                    fields.get(9)
-            ));
+            if (fields.size() >= 10) {
+                rows.add(new AdmissionCsvRow(
+                        fields.get(0),
+                        parseInt(fields.get(1)),
+                        fields.get(2),
+                        fields.get(3),
+                        fields.get(4),
+                        parseInt(fields.get(5)),
+                        parseDouble(fields.get(6)),
+                        fields.get(7),
+                        fields.get(8),
+                        fields.get(9)
+                ));
+            } else {
+                rows.add(new AdmissionCsvRow(
+                        fields.get(0),
+                        parseInt(fields.get(1)),
+                        "Unknown",
+                        fields.get(3),
+                        fields.get(2),
+                        parseInt(fields.get(4)),
+                        parseDouble(fields.get(5)),
+                        fields.get(6),
+                        fields.get(7),
+                        fields.get(8)
+                ));
+            }
         }
 
         return rows;
     }
 
-    private List<String> readDatasetLines() throws IOException {
-        try (InputStream stream = getClass().getClassLoader().getResourceAsStream("dataset.csv")) {
+    private List<String> readDatasetLines(String resourceName) throws IOException {
+        try (InputStream stream = getClass().getClassLoader().getResourceAsStream(resourceName)) {
             if (stream != null) {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
                     return reader.lines().toList();
@@ -389,9 +434,9 @@ public class DataInit {
         }
 
         for (Path candidate : List.of(
-                Path.of("dataset.csv"),
-                Path.of("../dataset.csv"),
-                Path.of("../../dataset.csv")
+                Path.of(resourceName),
+                Path.of("../" + resourceName),
+                Path.of("../../" + resourceName)
         )) {
             if (Files.exists(candidate)) {
                 return Files.readAllLines(candidate, StandardCharsets.UTF_8);
@@ -399,6 +444,49 @@ public class DataInit {
         }
 
         throw new IOException("Không tìm thấy dataset.csv ở classpath hoặc thư mục chạy ứng dụng");
+    }
+
+    private List<String> readDatasetRecords(String resourceName) throws IOException {
+        List<String> lines = readDatasetLines(resourceName);
+        List<String> records = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (String line : lines) {
+            if (current.length() > 0) {
+                current.append('\n');
+            }
+            current.append(line);
+            inQuotes = updateQuoteState(line, inQuotes);
+
+            if (!inQuotes) {
+                records.add(current.toString());
+                current.setLength(0);
+            }
+        }
+
+        if (current.length() > 0) {
+            records.add(current.toString());
+        }
+
+        return records;
+    }
+
+    private boolean updateQuoteState(String line, boolean inQuotes) {
+        boolean state = inQuotes;
+        for (int i = 0; i < line.length(); i++) {
+            if (line.charAt(i) != '"') {
+                continue;
+            }
+
+            boolean escapedQuote = state && i + 1 < line.length() && line.charAt(i + 1) == '"';
+            if (escapedQuote) {
+                i++;
+            } else {
+                state = !state;
+            }
+        }
+        return state;
     }
 
     private List<String> parseCsvLine(String line) {

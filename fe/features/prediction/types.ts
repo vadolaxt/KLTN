@@ -1,7 +1,9 @@
-export type AdmissionMethod = 'hb' | 'thpt' | 'dgnl' | 'kh';
+export type AdmissionMethod = 'hb' | 'thpt' | 'dgnl' | 'kh' | 'vsat';
+export type SchoolCode = 'NLU' | 'SGU';
 
 export interface Subject {
   id?: string;
+  code?: string;
   subjectName: string;
 }
 
