@@ -28,6 +28,12 @@ public record PredictScoreResponse(
             @JsonProperty("subject_combination")
             String subjectCombination,
 
+            @JsonProperty("school_code")
+            String schoolCode,
+
+            @JsonProperty("school_name")
+            String schoolName,
+
             @JsonProperty("combination_matched")
             boolean combinationMatched,
 
@@ -39,6 +45,18 @@ public record PredictScoreResponse(
 
             @JsonProperty("admission_probability")
             double admissionProbability,
+
+            @JsonProperty("previous_year")
+            Integer previousYear,
+
+            @JsonProperty("previous_year_cutoff_score")
+            Double previousYearCutoffScore,
+
+            @JsonProperty("two_years_ago")
+            Integer twoYearsAgo,
+
+            @JsonProperty("two_years_ago_cutoff_score")
+            Double twoYearsAgoCutoffScore,
 
             @JsonProperty("model")
             String model,

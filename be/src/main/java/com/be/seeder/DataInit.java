@@ -57,9 +57,6 @@ public class DataInit {
             Map.entry("D14", List.of("Ngữ văn", "Lịch sử", "Tiếng Anh")),
             Map.entry("D15", List.of("Ngữ văn", "Địa lý", "Tiếng Anh")),
             Map.entry("D90", List.of("Toán", "Khoa học tự nhiên", "Tiếng Anh")),
-            Map.entry("T00", List.of("Toán", "Sinh học", "Năng khiếu Thể dục thể thao")),
-            Map.entry("T01", List.of("Toán", "Ngữ văn", "Năng khiếu Thể dục thể thao")),
-            Map.entry("T02", List.of("Ngữ văn", "Sinh học", "Năng khiếu Thể dục thể thao")),
             Map.entry("X01", List.of("Toán", "Ngữ văn", "Giáo dục Kinh tế và Pháp luật")),
             Map.entry("X02", List.of("Toán", "Ngữ văn", "Tin học")),
             Map.entry("X04", List.of("Toán", "Ngữ văn", "Công nghệ nông nghiệp")),
@@ -78,6 +75,27 @@ public class DataInit {
             Map.entry("X28", List.of("Toán", "Công nghệ nông nghiệp", "Tiếng Anh"))
     );
 
+    private static final Map<String, String> SUBJECT = Map.ofEntries(
+            Map.entry("TOAN", "Toán"),
+            Map.entry("VAN", "Ngữ văn"),
+            Map.entry("VAT_LI", "Vật lý"),
+            Map.entry("HOA_HOC", "Hóa học"),
+            Map.entry("SINH_HOC", "Sinh học"),
+            Map.entry("LICH_SU", "Lịch sử"),
+            Map.entry("DIA_LI", "Địa lý"),
+            Map.entry("KHTN", "Khoa học tự nhiên"),
+            Map.entry("GDKT_PL", "Giáo dục Kinh tế và Pháp luật"),
+            Map.entry("TIN_HOC", "Tin học"),
+            Map.entry("CN_CONG_NGHIEP", "Công nghệ công nghiệp"),
+            Map.entry("CN_NONG_NGHIEP", "Công nghệ nông nghiệp"),
+            Map.entry("NGOAI_NGU", "Tiếng Anh")
+    );
+
+    private static final List<String> SUBJECT_ORDER = List.of(
+            "TOAN", "VAN", "VAT_LI", "HOA_HOC", "SINH_HOC", "LICH_SU", "DIA_LI", "KHTN",
+            "GDKT_PL", "TIN_HOC", "CN_CONG_NGHIEP", "CN_NONG_NGHIEP", "NGOAI_NGU"
+    );
+
     @Bean
     CommandLineRunner initDatabase(
             UserRepository userRepository,
@@ -93,6 +111,12 @@ public class DataInit {
                 initSampleUsers(userRepository);
             } else {
                 System.out.println("--- Dữ liệu Users đã tồn tại, bỏ qua ---");
+            }
+
+            if (subjectRepository.count() == 0) {
+                initSubject(subjectRepository);
+            } else {
+                System.out.println("--- Dữ liệu Subject đã tồn tại, bỏ qua ---");
             }
 
             initAdmissionDataset(
@@ -125,6 +149,29 @@ public class DataInit {
         System.out.println("--- Đã thêm các User mẫu thành công! ---");
     }
 
+    private void initSubject(SubjectRepository subjectRepository) {
+        if (subjectRepository.count() > 0) {
+            System.out.println("--- Dữ liệu Subject đã tồn tại, bỏ qua ---");
+            return;
+        }
+
+        List<Subject> subjects = new ArrayList<>();
+        long index = 1; // Khởi tạo index từ 1
+
+        for (String code : SUBJECT_ORDER) {
+            Subject subject = Subject.builder()
+                    .code(code)
+                    .subjectName(SUBJECT.get(code))
+                    .index(index++) // Gán index hiện tại rồi mới tăng lên 1
+                    .build();
+
+            subjects.add(subject);
+        }
+
+        subjectRepository.saveAll(subjects);
+        System.out.printf("--- Đã seed %d môn học ---%n", subjects.size());
+    }
+
     private void initAdmissionDataset(
             MajorRepository majorRepository,
             SubjectRepository subjectRepository,
@@ -154,7 +201,7 @@ public class DataInit {
         }
 
         majorRepository.deleteAll();
-        subjectRepository.deleteAll();
+//        subjectRepository.deleteAll();
         subjectCombinationRepository.deleteAll();
         admissionInfoRepository.deleteAll();
 
@@ -167,7 +214,14 @@ public class DataInit {
         List<AdmissionCsvRow> allRows = new ArrayList<>(sourceRows);
         allRows.addAll(rowsFor2026);
 
-        Map<String, Subject> subjectCache = new LinkedHashMap<>();
+//        Map<String, Subject> subjectCache = new LinkedHashMap<>();
+        Map<String, Subject> subjectCache = subjectRepository.findAll().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Subject::getSubjectName,
+                        subject -> subject,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
         Map<String, SubjectCombination> combinationCache = new LinkedHashMap<>();
         List<AdmissionInfo> admissionInfos = new ArrayList<>();
 
@@ -253,11 +307,22 @@ public class DataInit {
             }
             List<String> combinationSubjectNames = subjectNames;
 
+//            List<Subject> subjects = combinationSubjectNames.stream()
+//                    .map(subjectName -> subjectCache.computeIfAbsent(
+//                            subjectName,
+//                            name -> subjectRepository.save(Subject.builder().subjectName(name).build())
+//                    ))
+//                    .toList();
             List<Subject> subjects = combinationSubjectNames.stream()
-                    .map(subjectName -> subjectCache.computeIfAbsent(
-                            subjectName,
-                            name -> subjectRepository.save(Subject.builder().subjectName(name).build())
-                    ))
+                    .map(subjectName -> {
+                        Subject existingSubject = subjectCache.get(subjectName);
+                        if (existingSubject == null) {
+                            System.out.printf("--- Cảnh báo: Khởi tạo môn học không có trong initSubject: %s ---%n", subjectName);
+                            existingSubject = subjectRepository.save(Subject.builder().subjectName(subjectName).build());
+                            subjectCache.put(subjectName, existingSubject);
+                        }
+                        return existingSubject;
+                    })
                     .toList();
 
             SubjectCombination combination = combinationCache.computeIfAbsent(code, combinationCode ->

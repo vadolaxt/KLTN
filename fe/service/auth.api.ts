@@ -1,5 +1,5 @@
 import {apiClient} from "@/lib/constants/api-client";
-import UserProfileResponse, {ApiResponse, AuthRequest, AuthResponse, ForgetPasswordRequest, RegisterRequest} from "@/types";
+import {ApiResponse, AuthRequest, AuthResponse, ForgetPasswordRequest, RegisterRequest} from "@/types";
 
 export const AuthService = {
 	login: async (request: AuthRequest): Promise<ApiResponse<AuthResponse>> => {
@@ -21,7 +21,7 @@ export const AuthService = {
 	},
 
 	sendOtp: async (email: string): Promise<ApiResponse<number>> => {
-		const response = await apiClient.post<ApiResponse<number>>("/auth/send-otp", { email });
+		const response = await apiClient.post<ApiResponse<number>>("/auth/send-otp", {email});
 		return response.data;
 	},
 
@@ -34,10 +34,4 @@ export const AuthService = {
 		const response = await apiClient.post<ApiResponse<void>>(`auth/forget-password`, request)
 		return response.data
 	},
-
-	me: async (): Promise<ApiResponse<UserProfileResponse>> => {
-		const response = await apiClient.get<ApiResponse<UserProfileResponse>>(`auth/me`)
-		return response.data
-	}
-
 }

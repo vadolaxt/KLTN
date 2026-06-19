@@ -26,10 +26,16 @@ export interface Major {
 
 export interface PredictApiResult {
   target_year: string;
+  school_code?: string;
+  school_name?: string;
   combination_matched: boolean;
   predicted_cutoff: number;
   margin: number;
   admission_probability: number;
+  previous_year?: number;
+  previous_year_cutoff_score?: number | null;
+  two_years_ago?: number;
+  two_years_ago_cutoff_score?: number | null;
 }
 
 export interface PredictionResultState {
@@ -37,6 +43,8 @@ export interface PredictionResultState {
   studentScore: number;
   majorCode: string;
   majorName: string;
+  schoolCode?: string;
+  schoolName?: string;
   combinationCode: string;
   combinationName: string;
   methodLabel: string;

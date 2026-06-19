@@ -5,19 +5,18 @@ import com.be.dto.request.AuthRequest;
 import com.be.dto.request.ForgetPasswordRequest;
 import com.be.dto.request.RegisterRequest;
 import com.be.dto.response.AuthResponse;
-import com.be.dto.response.UserProfileResponse;
 import com.be.service.AuthService;
 import com.be.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -83,6 +83,8 @@ public class AuthController {
         AuthResponse response = authService.loginGoogle(idToken);
         String accessCookie = authService.createAccessCookie(response.getAccessToken());
         String refreshCookie = authService.createRefreshCookie(response.getRefreshToken());
+        log.info("Access Token: " + response.getAccessToken());
+        log.info("Refresh Token: " + response.getRefreshToken());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie)
@@ -106,6 +108,8 @@ public class AuthController {
 
         String accessCookie = authService.createAccessCookie(response.getAccessToken());
         String refreshCookie = authService.createRefreshCookie(response.getRefreshToken());
+        log.info("Access Token: " + response.getAccessToken());
+        log.info("Refresh Token: " + response.getRefreshToken());
 
         return ResponseEntity
                 .ok()
@@ -158,21 +162,6 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, deleteAccessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, deleteRefreshCookie.toString())
                 .body(ApiResponse.success(HttpStatus.OK, "Đã xóa session", null));
-    }
-
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserProfileResponse>> getUserProfile(
-            @CookieValue(name = "accessToken", required = false) String accessToken
-    ) {
-
-        UserProfileResponse userProfileResponse = authService.getUserProfile(accessToken);
-
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        HttpStatus.OK,
-                        "Get user profile successfully",
-                        userProfileResponse)
-        );
     }
 
     @PostMapping("/forget-password")

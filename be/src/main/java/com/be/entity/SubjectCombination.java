@@ -25,4 +25,5 @@ public class SubjectCombination {
     String code;
     String name;
     List<Subject> subjects;
+    List<CombinationSubject> combinationSubjects;
 }

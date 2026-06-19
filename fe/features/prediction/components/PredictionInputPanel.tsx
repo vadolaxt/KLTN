@@ -56,6 +56,18 @@ const formatCombinedThptLabel = (subjectName: string) => {
   return 'THPT';
 };
 
+const normalizeSubjectName = (subjectName: string) =>
+  subjectName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('vi-VN')
+    .trim();
+
+const isRestrictedTranscriptSubject = (subjectName: string) => {
+  const normalizedSubject = normalizeSubjectName(subjectName);
+  return normalizedSubject === 'toan' || normalizedSubject === 'ngu van' || normalizedSubject === 'van';
+};
+
 const parseScore = (value: string) => Number(value.replace(',', '.'));
 const normalizeNumericInput = (value: string, max: number) => {
   const cleaned = value.replace(',', '.').replace(/[^\d.]/g, '');
@@ -89,9 +101,8 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
   const [subjectScores, setSubjectScores] = useState<string[]>(['', '', '']);
   const [dgnlProvider, setDgnlProvider] = useState<'hcm' | 'hn'>('hcm');
   const [dgnlScore, setDgnlScore] = useState('');
-  const [thptScoreA, setThptScoreA] = useState('');
-  const [thptScoreB, setThptScoreB] = useState('');
-  const [hocBaScore, setHocBaScore] = useState('');
+  const [combinedThptScores, setCombinedThptScores] = useState<Record<string, string>>({});
+  const [combinedTranscriptScores, setCombinedTranscriptScores] = useState<Record<string, string>>({});
   const [loadingMajors, setLoadingMajors] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -147,19 +158,37 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
     [selectedCombination],
   );
 
-  const hocBaSubject = useMemo(() => {
-    const hasToan = subjectLabels.includes('Toán');
-    const hasNguVan = subjectLabels.includes('Ngữ văn');
-    if (hasToan && hasNguVan) {
-      return subjectLabels.find((subject) => subject !== 'Toán' && subject !== 'Ngữ văn') ?? '';
-    }
-    return subjectLabels[2] ?? '';
-  }, [subjectLabels]);
-
-  const thptSubjects = useMemo(
-    () => subjectLabels.filter((subject) => subject !== hocBaSubject),
-    [hocBaSubject, subjectLabels],
+  const transcriptSubjects = useMemo(
+    () => subjectLabels.filter((subject) => !isRestrictedTranscriptSubject(subject)),
+    [subjectLabels],
   );
+
+  const hocBaSubject = useMemo(() => {
+    const scoredTranscriptSubjects = transcriptSubjects
+      .map((subject) => ({
+        subject,
+        score: parseScore(combinedTranscriptScores[subject] ?? ''),
+      }))
+      .filter((item) => Number.isFinite(item.score));
+
+    if (!scoredTranscriptSubjects.length) {
+      return transcriptSubjects[0] ?? '';
+    }
+
+    return scoredTranscriptSubjects.reduce((bestSubject, currentSubject) =>
+      currentSubject.score > bestSubject.score ? currentSubject : bestSubject,
+    ).subject;
+  }, [combinedTranscriptScores, transcriptSubjects]);
+
+  const hocBaScore = combinedTranscriptScores[hocBaSubject] ?? '';
+
+  const thptSubjects = useMemo(() => {
+    if (!hocBaSubject) {
+      return [];
+    }
+
+    return subjectLabels.filter((subject) => subject !== hocBaSubject).slice(0, 2);
+  }, [hocBaSubject, subjectLabels]);
 
   useEffect(() => {
     const availableCombinations = selectedMajor?.combinations ?? [];
@@ -170,6 +199,8 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
 
   useEffect(() => {
     setSubjectScores(Array(Math.max(subjectLabels.length, 3)).fill(''));
+    setCombinedThptScores({});
+    setCombinedTranscriptScores({});
   }, [selectedCombinationCode, subjectLabels.length, method]);
 
   const dgnlMaxScore = 1200;
@@ -178,11 +209,12 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
     ? Math.min((parsedDgnlScore / dgnlMaxScore) * 30, 30)
     : 0;
 
-  const parsedThptScoreA = parseScore(thptScoreA);
-  const parsedThptScoreB = parseScore(thptScoreB);
   const parsedHocBaScore = parseScore(hocBaScore);
-  const combinedScore = Number.isFinite(parsedThptScoreA) && Number.isFinite(parsedThptScoreB) && Number.isFinite(parsedHocBaScore)
-    ? parsedThptScoreA + parsedThptScoreB + parsedHocBaScore
+  const parsedThptScores = thptSubjects.map((subject) => parseScore(combinedThptScores[subject] ?? ''));
+  const combinedScore = parsedThptScores.length === 2
+    && parsedThptScores.every((score) => Number.isFinite(score))
+    && Number.isFinite(parsedHocBaScore)
+    ? parsedThptScores[0] + parsedThptScores[1] + parsedHocBaScore
     : 0;
 
   const subjectTotal = subjectScores
@@ -202,6 +234,22 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
       next[index] = normalized;
       return next;
     });
+  };
+
+  const updateCombinedThptScore = (subject: string, value: string) => {
+    const normalized = normalizeNumericInput(value, 9.99);
+    setCombinedThptScores((current) => ({
+      ...current,
+      [subject]: normalized,
+    }));
+  };
+
+  const updateCombinedTranscriptScore = (subject: string, value: string) => {
+    const normalized = normalizeNumericInput(value, 9.99);
+    setCombinedTranscriptScores((current) => ({
+      ...current,
+      [subject]: normalized,
+    }));
   };
 
   const handleMajorChange = (majorCode: string) => {
@@ -231,10 +279,12 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
       return 'Tổ hợp xét tuyển chưa xác định được môn học bạ hợp lệ.';
     }
 
-    const invalidCombinedScore = [parsedThptScoreA, parsedThptScoreB, parsedHocBaScore].some(
+    const invalidCombinedScore = [...parsedThptScores, parsedHocBaScore].some(
       (score) => !Number.isFinite(score) || score < 0 || score >= 10,
     );
-    return invalidCombinedScore ? 'Điểm THPT và học bạ cần nằm trong thang 0 đến dưới 10.' : '';
+    return invalidCombinedScore || parsedThptScores.length !== 2
+      ? 'Điểm THPT và học bạ cần nằm trong thang 0 đến dưới 10.'
+      : '';
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -279,6 +329,8 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
         studentScore: Number(displayScore.toFixed(2)),
         majorCode: selectedMajor.code,
         majorName: selectedMajor.name,
+        schoolCode: response.data.data.result.school_code ?? selectedMajor.schoolCode,
+        schoolName: response.data.data.result.school_name,
         combinationCode: selectedCombination.code,
         combinationName: selectedCombination.name,
         methodLabel: METHOD_LABEL[method],
@@ -430,55 +482,57 @@ export default function PredictionInputPanel({ onResult }: PredictionInputPanelP
             )}
 
             {method === 'kh' && (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className={labelClass}>Học bạ</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                    min="0"
-                    max="9.99"
-                    step="0.01"
-                    value={hocBaScore}
-                    onChange={(event) => setHocBaScore(normalizeNumericInput(event.target.value, 9.99))}
-                    className={scoreInputClass}
-                    placeholder="0.00"
-                  />
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {transcriptSubjects.map((subject) => {
+                    const isSelectedTranscriptSubject = subject === hocBaSubject;
+
+                    return (
+                      <div key={`hoc-ba-${subject}`} className="flex flex-col gap-1.5">
+                        <label className={labelClass}>
+                          Học bạ - {subject}{isSelectedTranscriptSubject ? ' (cao nhất)' : ''}
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          pattern="^[0-9]*[.,]?[0-9]{0,2}$"
+                          min="0"
+                          max="9.99"
+                          step="0.01"
+                          value={combinedTranscriptScores[subject] ?? ''}
+                          onChange={(event) => updateCombinedTranscriptScore(subject, event.target.value)}
+                          className={scoreInputClass}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className={labelClass}>
-                    {formatCombinedThptLabel(thptSubjects[0] ?? '')}
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                    min="0"
-                    max="9.99"
-                    step="0.01"
-                    value={thptScoreA}
-                    onChange={(event) => setThptScoreA(normalizeNumericInput(event.target.value, 9.99))}
-                    className={scoreInputClass}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className={labelClass}>
-                    {formatCombinedThptLabel(thptSubjects[1] ?? '')}
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                    min="0"
-                    max="9.99"
-                    step="0.01"
-                    value={thptScoreB}
-                    onChange={(event) => setThptScoreB(normalizeNumericInput(event.target.value, 9.99))}
-                    className={scoreInputClass}
-                    placeholder="0.00"
-                  />
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {thptSubjects.map((subject) => {
+                    const label = formatCombinedThptLabel(subject);
+
+                    return (
+                      <div key={`thpt-${subject}`} className="flex flex-col gap-1.5">
+                        <label className={labelClass}>
+                          {label === 'THPT' ? `THPT - ${subject}` : label}
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          pattern="^[0-9]*[.,]?[0-9]{0,2}$"
+                          min="0"
+                          max="9.99"
+                          step="0.01"
+                          value={combinedThptScores[subject] ?? ''}
+                          onChange={(event) => updateCombinedThptScore(subject, event.target.value)}
+                          className={scoreInputClass}
+                          placeholder="0.00"
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

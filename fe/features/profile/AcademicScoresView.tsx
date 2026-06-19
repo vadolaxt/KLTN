@@ -1,305 +1,362 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { Save, Loader2 } from 'lucide-react';
+import { useAcademicProfile, useAcademicFormSync } from "@/hooks/use-academic-score-profile";
+import { toast } from "sonner";
 
-type ScoreType = 'hb' | 'thpt' | 'dgnl' | 'kh';
+type ScoreSource = 'hoc_ba' | 'thpt' | 'dgnl';
 
-const tabs: Array<{ value: ScoreType; label: string }> = [
-  { value: 'hb', label: 'Điểm Học bạ THPT' },
-  { value: 'thpt', label: 'Điểm THPT Quốc gia' },
-  { value: 'dgnl', label: 'Điểm ĐGNL' },
-  { value: 'kh', label: 'Kết hợp THPT và Học bạ' },
+const scoreSources: Array<{ value: ScoreSource; label: string; description: string }> = [
+	{ value: 'hoc_ba', label: 'Học bạ', description: 'Điểm trung bình theo môn' },
+	{ value: 'thpt', label: 'THPT', description: 'Điểm thi tốt nghiệp' },
+	{ value: 'dgnl', label: 'ĐGNL (Điểm cao nhất)', description: 'Điểm đánh giá năng lực' },
 ];
 
-const subjects = ['Toán', 'Ngữ văn', 'Tiếng Anh', 'Vật lý', 'Hóa học', 'Sinh học', 'Lịch sử', 'Địa lý', 'GDKTPL', 'Tin học'];
-
 const inputClass =
-  'rounded-lg border-1.5 border-gray-mid bg-[#fafafa] px-[12px] py-[10px] text-center text-[15px] font-bold text-text-dark outline-none transition-all hover:border-green-light hover:bg-white focus:border-green-main focus:bg-white focus:shadow-[0_0_0_3px_rgba(45,122,45,0.12)]';
+	'w-full rounded-lg border-1.5 border-gray-mid bg-[#fafafa] px-3 py-2.5 text-[14px] font-bold text-text-dark outline-none transition-all hover:border-green-light hover:bg-white focus:border-green-main focus:bg-white focus:shadow-[0_0_0_3px_rgba(45,122,45,0.12)]';
 
-const labelClass = 'text-[11px] font-bold uppercase tracking-[0.7px] text-text-mid';
+const labelClass = 'text-[12px] font-extrabold uppercase tracking-[0.7px] text-text-light';
 
 const normalizeNumericInput = (value: string, max: number) => {
-  const cleaned = value.replace(',', '.').replace(/[^\d.]/g, '');
-  if (cleaned === '') {
-    return '';
-  }
+	const cleaned = value.replace(',', '.').replace(/[^\d.]/g, '');
+	if (cleaned === '') return '';
 
-  const hasTrailingDot = cleaned.endsWith('.') && cleaned.indexOf('.') === cleaned.length - 1;
-  const [rawInteger, rawFraction = ''] = cleaned.split('.');
-  const integerPart = rawInteger.replace(/^0+(?=\d)/, '');
-  const fractionPart = rawFraction.slice(0, 2);
-  const normalized = hasTrailingDot ? `${integerPart}.` : fractionPart ? `${integerPart}.${fractionPart}` : integerPart;
-  const parsed = Number(normalized);
+	const [rawInteger, ...fractionPieces] = cleaned.split('.');
+	const fraction = fractionPieces.join('').slice(0, 2);
+	const hasTrailingDot = cleaned.endsWith('.') && fractionPieces.length === 1;
+	const integer = rawInteger.replace(/^0+(?=\d)/, '') || '0';
+	const normalized = hasTrailingDot ? `${integer}.` : fraction ? `${integer}.${fraction}` : integer;
+	const parsed = Number(normalized);
 
-  if (!Number.isFinite(parsed)) {
-    return '';
-  }
+	if (!Number.isFinite(parsed)) return '';
+	if (parsed > max) return max.toString();
 
-  if (parsed > max) {
-    return max.toFixed(2);
-  }
-
-  return normalized;
+	return normalized;
 };
 
 export default function AcademicScoresView() {
-  const [activeTab, setActiveTab] = useState<ScoreType>('hb');
-  const [dgnlProvider, setDgnlProvider] = useState<'hcm' | 'hn'>('hcm');
-  const [dgnlScore, setDgnlScore] = useState('');
-  const [thptSubjectA, setThptSubjectA] = useState(subjects[0]);
-  const [thptSubjectB, setThptSubjectB] = useState(subjects[2]);
-  const [hocBaSubject, setHocBaSubject] = useState('Tiếng Anh');
-  const [thptScoreA, setThptScoreA] = useState('');
-  const [thptScoreB, setThptScoreB] = useState('');
-  const [hocBaScore, setHocBaScore] = useState('');
+	const [activeSource, setActiveSource] = useState<ScoreSource>('hoc_ba');
 
-  const dgnlMaxScore = 1200;
-  const dgnlConvertedScore = useMemo(() => {
-    const parsedScore = Number(dgnlScore);
-    return Number.isFinite(parsedScore) ? Math.min((parsedScore / dgnlMaxScore) * 30, 30) : 0;
-  }, [dgnlMaxScore, dgnlScore]);
+	const { data, loading, error, saveProfile, isSaving } = useAcademicProfile();
+	const profileData = data?.data;
 
-  const combinedScore = useMemo(() => {
-    const thptA = Number(thptScoreA);
-    const thptB = Number(thptScoreB);
-    const hocBa = Number(hocBaScore);
-    const total = thptA + thptB + hocBa;
-    return Number.isFinite(total) ? total : 0;
-  }, [hocBaScore, thptScoreA, thptScoreB]);
+	const {
+		localHocBa,
+		setLocalHocBa,
+		localThpt,
+		setLocalThpt,
+		localDgnl,
+		setLocalDgnl,
+		syncData
+	} = useAcademicFormSync(profileData);
 
-  return (
-    <div className="animate-fade-in">
-      <div className="mb-1.5 text-[13px] font-bold uppercase tracking-[2px] text-green-main">Hồ sơ thí sinh</div>
-      <div className="mb-1.5 border-l-5 border-gold pl-3.5 text-[22px] font-extrabold text-green-dark">Quản Lý Điểm</div>
-      <div className="mb-8 pl-[19px] text-[13px] text-text-light">
-        Nhập và cập nhật điểm theo các phương thức xét tuyển đang áp dụng cho năm tuyển sinh 2026.
-      </div>
+	const schoolRecords = profileData?.schoolRecord?.subjectScoreRecords || [];
+	const nationalRecords = profileData?.nationalExamResult?.subjectScores || [];
+	const schoolAvg = profileData?.schoolRecordAvg || {};
 
-      <div className="mb-7 flex flex-wrap gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => setActiveTab(tab.value)}
-            className={`rounded-full border-2 px-[18px] py-[8px] text-[13px] font-bold transition-all ${
-              activeTab === tab.value
-                ? 'border-green-main bg-green-main text-white'
-                : 'border-gray-mid bg-white text-text-mid hover:border-green-main hover:bg-green-pale hover:text-green-main'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+	useEffect(() => {
+		syncData();
+	}, [activeSource, syncData]);
 
-      {(activeTab === 'hb' || activeTab === 'thpt') && (
-        <section className="animate-fade-in">
-          <div className="rounded-t-[10px] bg-green-dark px-[24px] py-[18px] text-white">
-            <h3 className="text-[16px] font-extrabold">
-              {activeTab === 'hb' ? 'Điểm Học bạ THPT' : 'Điểm Thi THPT Quốc gia'}
-            </h3>
-            <p className="mt-[2px] text-[12px] opacity-85">
-              Nhập điểm từng môn theo thang 10. Hệ thống sử dụng điểm theo tổ hợp xét tuyển khi dự đoán.
-            </p>
-          </div>
+	const handleSave = async () => {
+		if (!profileData) return;
 
-          <div className="mb-[20px] rounded-b-[10px] border-1.5 border-t-0 border-gray-mid bg-white p-[28px]">
-            <div className="grid grid-cols-2 gap-[16px] lg:grid-cols-5">
-              {subjects.map((subject) => (
-                <label key={subject} className="flex flex-col gap-[5px]">
-                  <span className={labelClass}>{subject}</span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                    min="0"
-                    max="9.99"
-                    step="0.01"
-                    className={inputClass}
-                    placeholder="0.00"
-                    onChange={(event) => {
-                      event.currentTarget.value = normalizeNumericInput(event.currentTarget.value, 9.99);
-                    }}
-                  />
-                </label>
-              ))}
-            </div>
+		const payload: any = {
+			schoolRecord: {
+				subjectScoreRecords: schoolRecords.map((r: any) => ({
+					subject: { id: r.subject.id, code: r.subject.code, subjectName: r.subject.subjectName },
+					score: Number(localHocBa[r.subject.id]?.[`${r.gradeLevel}-${r.semester}`] || 0),
+					gradeLevel: r.gradeLevel,
+					semester: r.semester
+				}))
+			},
+			nationalExamResult: {
+				id: profileData.nationalExamResult?.id || null,
+				subjectScores: nationalRecords.map((r: any) => ({
+					subject: { id: r.subject.id, code: r.subject.code, subjectName: r.subject.subjectName },
+					score: Number(localThpt[r.subject.id] || 0),
+					gradeLevel: r.gradeLevel,
+					semester: r.semester
+				}))
+			},
+			competencyTestResult: {
+				score: Number(localDgnl || 0)
+			}
+		};
 
-            <div className="mt-[24px] grid grid-cols-1 gap-[16px] md:grid-cols-3">
-              {['A00 - Toán, Vật lý, Hóa học', 'B00 - Toán, Hóa học, Sinh học', 'D01 - Toán, Ngữ văn, Tiếng Anh'].map((combo) => (
-                <div key={combo} className="rounded-[10px] bg-green-pale p-[16px] text-center">
-                  <div className="text-[28px] font-extrabold leading-none text-green-main">-</div>
-                  <div className="mt-[6px] text-[11px] font-bold uppercase tracking-[0.5px] text-text-mid">{combo}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+		const result = await saveProfile(payload);
+		if (result.success) {
+			toast.success('Đã lưu dữ liệu thành công!');
+		} else {
+			toast.error('Có lỗi xảy ra khi lưu dữ liệu!');
+		}
+	};
 
-          <div className="flex justify-end gap-[12px]">
-            <button className="rounded-lg border-2 border-gray-mid bg-white px-[26px] py-[11px] text-[14px] font-semibold text-text-mid transition-all hover:bg-gray-light hover:text-text-dark">Hủy</button>
-            <button className="rounded-lg border-2 border-green-main bg-green-main px-[28px] py-[11px] text-[14px] font-bold text-white transition-all hover:border-green-dark hover:bg-green-dark">
-              {activeTab === 'hb' ? 'Lưu điểm học bạ' : 'Lưu điểm THPT'}
-            </button>
-          </div>
-        </section>
-      )}
+	const uniqueSubjectsHocBa = useMemo(() => {
+		const map = new Map();
+		schoolRecords.forEach((r: any) => {
+			if (!map.has(r.subject.id)) map.set(r.subject.id, r.subject);
+		});
+		return Array.from(map.values());
+	}, [schoolRecords]);
 
-      {activeTab === 'dgnl' && (
-        <section className="animate-fade-in">
-          <div className="rounded-t-[10px] bg-green-dark px-[24px] py-[18px] text-white">
-            <h3 className="text-[16px] font-extrabold">Điểm Đánh Giá Năng Lực</h3>
-            <p className="mt-[2px] text-[12px] opacity-85">Điểm được quy đổi tự động về thang 30 để phục vụ xét tuyển.</p>
-          </div>
+	const uniqueSemesters = useMemo(() => {
+		const set = new Set<string>();
+		schoolRecords.forEach((r: any) => {
+			set.add(`${r.gradeLevel}-${r.semester}`);
+		});
+		return Array.from(set).sort();
+	}, [schoolRecords]);
 
-          <div className="mb-[20px] rounded-b-[10px] border-1.5 border-t-0 border-gray-mid bg-white p-[28px]">
-            <div className="grid grid-cols-1 gap-[20px] md:grid-cols-2">
-              <label className="flex flex-col gap-[6px]">
-                <span className={labelClass}>Đơn vị tổ chức</span>
-                <select
-                  value={dgnlProvider}
-                  onChange={(event) => setDgnlProvider(event.target.value as 'hcm' | 'hn')}
-                  className="rounded-lg border-1.5 border-gray-mid bg-[#fafafa] px-[14px] py-[11px] text-[14px] text-text-dark outline-none transition-all hover:border-green-light hover:bg-white focus:border-green-main focus:bg-white"
-                >
-                  <option value="hcm">ĐHQG TP.HCM - thang 1200</option>
-                  <option value="hn">ĐHQG Hà Nội - thang 1200</option>
-                </select>
-              </label>
-              <label className="flex flex-col gap-[6px]">
-                <span className={labelClass}>Tổng điểm ĐGNL</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                  min="0"
-                  max={dgnlMaxScore}
-                  step="0.01"
-                  value={dgnlScore}
-                  onChange={(event) => setDgnlScore(normalizeNumericInput(event.target.value, dgnlMaxScore))}
-                  className={inputClass}
-                  placeholder="0"
-                />
-              </label>
-            </div>
+	const uniqueSubjectsThpt = useMemo(() => {
+		return nationalRecords.map((r: any) => r.subject);
+	}, [nationalRecords]);
 
-            <div className="mt-[24px] rounded-[10px] bg-green-pale p-[18px] text-center">
-              <div className="text-[30px] font-extrabold text-green-main">{dgnlConvertedScore.toFixed(2)}</div>
-              <div className="mt-[4px] text-[12px] font-bold uppercase tracking-[0.6px] text-text-mid">Điểm quy đổi thang 30</div>
-            </div>
-          </div>
+	const handleHocBaChange = (subjectId: string, semKey: string, value: string) => {
+		setLocalHocBa(prev => ({
+			...prev,
+			[subjectId]: {
+				...(prev[subjectId] || {}),
+				[semKey]: normalizeNumericInput(value, 10)
+			}
+		}));
+	};
 
-          <div className="flex justify-end gap-[12px]">
-            <button className="rounded-lg border-2 border-gray-mid bg-white px-[26px] py-[11px] text-[14px] font-semibold text-text-mid transition-all hover:bg-gray-light hover:text-text-dark">Hủy</button>
-            <button className="rounded-lg border-2 border-green-main bg-green-main px-[28px] py-[11px] text-[14px] font-bold text-white transition-all hover:border-green-dark hover:bg-green-dark">Lưu điểm ĐGNL</button>
-          </div>
-        </section>
-      )}
+	const handleThptChange = (subjectId: string, value: string) => {
+		setLocalThpt(prev => ({
+			...prev,
+			[subjectId]: normalizeNumericInput(value, 10)
+		}));
+	};
 
-      {activeTab === 'kh' && (
-        <section className="animate-fade-in">
-          <div className="rounded-t-[10px] bg-green-dark px-[24px] py-[18px] text-white">
-            <h3 className="text-[16px] font-extrabold">Kết hợp THPT và Học bạ</h3>
-            <p className="mt-[2px] text-[12px] opacity-85">
-              Xét 02 môn thi tốt nghiệp THPT 2026 trong tổ hợp và 01 môn học bạ (TB 6 học kỳ, làm tròn 2 chữ số)
-              để bổ sung hoặc thay thế; môn học bạ không được là Toán và Ngữ văn.
-            </p>
-          </div>
+	// Tính điểm trung bình động dựa trên dữ liệu đang gõ (chưa lưu)
+	const getDynamicAverage = (subjectId: string) => {
+		const scoresObj = localHocBa[subjectId];
 
-          <div className="mb-[20px] rounded-b-[10px] border-1.5 border-t-0 border-gray-mid bg-white p-[28px]">
-            <div className="grid grid-cols-1 gap-[20px] md:grid-cols-3">
-              <label className="flex flex-col gap-[6px]">
-                <span className={labelClass}>Môn thi THPT 1</span>
-                <select
-                  value={thptSubjectA}
-                  onChange={(event) => setThptSubjectA(event.target.value)}
-                  className="rounded-lg border-1.5 border-gray-mid bg-[#fafafa] px-[14px] py-[11px] text-[14px] text-text-dark outline-none transition-all hover:border-green-light hover:bg-white focus:border-green-main focus:bg-white"
-                >
-                  {subjects.map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                  min="0"
-                    max="9.99"
-                  step="0.01"
-                  value={thptScoreA}
-                  onChange={(event) => setThptScoreA(normalizeNumericInput(event.target.value, 9.99))}
-                  className={inputClass}
-                  placeholder="0.00"
-                />
-              </label>
-              <label className="flex flex-col gap-[6px]">
-                <span className={labelClass}>Môn thi THPT 2</span>
-                <select
-                  value={thptSubjectB}
-                  onChange={(event) => setThptSubjectB(event.target.value)}
-                  className="rounded-lg border-1.5 border-gray-mid bg-[#fafafa] px-[14px] py-[11px] text-[14px] text-text-dark outline-none transition-all hover:border-green-light hover:bg-white focus:border-green-main focus:bg-white"
-                >
-                  {subjects.map((subject) => (
-                    <option key={subject} value={subject}>
-                      {subject}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                  min="0"
-                    max="9.99"
-                  step="0.01"
-                  value={thptScoreB}
-                  onChange={(event) => setThptScoreB(normalizeNumericInput(event.target.value, 9.99))}
-                  className={inputClass}
-                  placeholder="0.00"
-                />
-              </label>
-              <label className="flex flex-col gap-[6px]">
-                <span className={labelClass}>Môn học bạ (TB 6 học kỳ)</span>
-                <select
-                  value={hocBaSubject}
-                  onChange={(event) => setHocBaSubject(event.target.value)}
-                  className="rounded-lg border-1.5 border-gray-mid bg-[#fafafa] px-[14px] py-[11px] text-[14px] text-text-dark outline-none transition-all hover:border-green-light hover:bg-white focus:border-green-main focus:bg-white"
-                >
-                  {subjects
-                    .filter((subject) => subject !== 'Toán' && subject !== 'Ngữ văn')
-                    .map((subject) => (
-                      <option key={subject} value={subject}>
-                        {subject}
-                      </option>
-                    ))}
-                </select>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                  min="0"
-                    max="9.99"
-                  step="0.01"
-                  value={hocBaScore}
-                  onChange={(event) => setHocBaScore(normalizeNumericInput(event.target.value, 9.99))}
-                  className={inputClass}
-                  placeholder="0.00"
-                />
-              </label>
-            </div>
+		if (!scoresObj) {
+			return schoolAvg[subjectId] && schoolAvg[subjectId] !== 0 ? schoolAvg[subjectId] : '';
+		}
 
-            <div className="mt-[24px] rounded-[10px] bg-green-pale p-[18px] text-center">
-              <div className="text-[30px] font-extrabold text-green-main">{combinedScore.toFixed(2)}</div>
-              <div className="mt-[4px] text-[12px] font-bold uppercase tracking-[0.6px] text-text-mid">Tổng điểm xét tuyển thang 30</div>
-            </div>
-          </div>
+		const enteredScores = uniqueSemesters
+			.map(semKey => scoresObj[semKey])
+			.filter(val => val !== undefined && val !== '');
 
-          <div className="flex justify-end gap-[12px]">
-            <button className="rounded-lg border-2 border-gray-mid bg-white px-[26px] py-[11px] text-[14px] font-semibold text-text-mid transition-all hover:bg-gray-light hover:text-text-dark">Hủy</button>
-            <button className="rounded-lg border-2 border-green-main bg-green-main px-[28px] py-[11px] text-[14px] font-bold text-white transition-all hover:border-green-dark hover:bg-green-dark">Lưu điểm kết hợp</button>
-          </div>
-        </section>
-      )}
-    </div>
-  );
+		if (enteredScores.length > 0) {
+			const sum = enteredScores.reduce((acc, val) => acc + Number(val), 0);
+
+			const avg = sum / enteredScores.length;
+
+			return (Math.round(avg * 100) / 100).toFixed(2);
+		}
+
+		return '0';
+	};
+
+	if (loading) {
+		return (
+			<div className="flex h-[300px] w-full items-center justify-center">
+				<Loader2 className="animate-spin text-green-main" size={40} />
+			</div>
+		);
+	}
+
+	if (error || !profileData) {
+		return <div className="p-4 text-red-500 font-bold">Không thể tải hồ sơ điểm của thí sinh.</div>;
+	}
+
+	return (
+		<div className="animate-fade-in">
+			<div className="mb-1.5 text-[13px] font-bold uppercase tracking-[2px] text-green-main">Hồ sơ thí sinh</div>
+			<div className="mb-7 border-l-5 border-gold pl-3.5 text-[22px] font-extrabold text-green-dark">Quản lý điểm</div>
+
+			{/* Tabs chọn nguồn điểm */}
+			<div className="mb-7 grid grid-cols-1 gap-3 md:grid-cols-3">
+				{scoreSources.map((source) => (
+					<button
+						key={source.value}
+						className={`rounded-lg border-2 px-4 py-3 text-left transition-all ${
+							activeSource === source.value
+								? 'border-green-main bg-green-pale text-green-dark shadow-[0_6px_18px_rgba(45,122,45,0.12)]'
+								: 'border-gray-mid bg-white text-text-mid hover:border-green-light hover:bg-green-pale'
+						}`}
+						onClick={() => setActiveSource(source.value)}
+						type="button"
+					>
+						<span className="block text-[15px] font-extrabold">{source.label}</span>
+						<span className="mt-1 block text-[11px] font-semibold text-text-light">{source.description}</span>
+					</button>
+				))}
+			</div>
+
+			<section>
+				{/* ======= TAB HỌC BẠ ======= */}
+				{activeSource === 'hoc_ba' && (
+					<div className="space-y-5">
+						<div className="overflow-x-auto rounded-lg border-1.5 border-gray-mid">
+							<table className="w-full min-w-[940px] border-collapse bg-white">
+								<thead>
+								<tr className="bg-gray-light">
+									<th className="w-[190px] px-3 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px] text-text-light">
+										Tên môn
+									</th>
+									{uniqueSemesters.map((semKey) => {
+										const [grade, sem] = semKey.split('-');
+										return (
+											<th key={semKey} className="w-[100px] px-2 py-3 text-center text-[11px] font-extrabold uppercase tracking-[0.4px] text-text-light">
+												HK{sem} L{grade}
+											</th>
+										);
+									})}
+									<th className="w-[120px] px-3 py-3 text-center text-[11px] font-extrabold uppercase tracking-[0.4px] text-text-light">
+										TB 6 HK
+									</th>
+								</tr>
+								</thead>
+								<tbody>
+								{uniqueSubjectsHocBa.map((subject: any) => (
+									<tr key={subject.id} className="border-t border-gray-mid">
+										<td className="px-3 py-2.5">
+											<div className="text-[13px] font-extrabold leading-snug text-text-dark">{subject.subjectName}</div>
+										</td>
+										{uniqueSemesters.map((semKey) => (
+											<td key={`${subject.id}-${semKey}`} className="px-2 py-2.5">
+												<input
+													className={`${inputClass} px-2 py-2 text-center text-[13px]`}
+													inputMode="decimal"
+													max="10"
+													min="0"
+													onChange={(e) => handleHocBaChange(subject.id, semKey, e.target.value)}
+													pattern="^[0-9]*[.,]?[0-9]{0,2}$"
+													placeholder="0.00"
+													step="0.01"
+													type="text"
+													value={localHocBa[subject.id]?.[semKey] ?? ''}
+												/>
+											</td>
+										))}
+										<td className="px-3 py-2.5">
+											{/* Sử dụng hàm getDynamicAverage để hiển thị giá trị */}
+											<input
+												className="w-full rounded-lg border-1.5 border-gray-mid bg-gray-light px-2 py-2 text-center text-[13px] font-extrabold text-green-main outline-none"
+												readOnly
+												value={getDynamicAverage(subject.id)}
+											/>
+										</td>
+									</tr>
+								))}
+								</tbody>
+							</table>
+						</div>
+
+						<div className="flex justify-end gap-3">
+							<button
+								onClick={syncData}
+								disabled={isSaving}
+								className="rounded-lg border-2 border-gray-mid bg-white px-6 py-2.5 text-[14px] font-semibold text-text-mid transition-all hover:bg-gray-light disabled:opacity-50"
+								type="button"
+							>
+								Hủy
+							</button>
+							<button
+								onClick={handleSave}
+								disabled={isSaving}
+								className="inline-flex items-center gap-2 rounded-lg border-2 border-green-main bg-green-main px-7 py-2.5 text-[14px] font-bold text-white transition-all hover:border-green-dark hover:bg-green-dark disabled:opacity-50"
+								type="button"
+							>
+								{isSaving ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
+								{isSaving ? 'Đang lưu...' : 'Lưu học bạ'}
+							</button>
+						</div>
+					</div>
+				)}
+
+				{/* ======= TAB ĐIỂM THPT ======= */}
+				{activeSource === 'thpt' && (
+					<div className="space-y-5">
+						<div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+							{uniqueSubjectsThpt.map((subject: any) => (
+								<label key={subject.id} className="flex flex-col gap-2 rounded-lg border-1.5 border-gray-mid bg-white p-3">
+									<span className="min-h-[36px] text-[13px] font-extrabold leading-snug text-text-dark">{subject.subjectName}</span>
+									<input
+										className={`${inputClass} text-center`}
+										inputMode="decimal"
+										max="10"
+										min="0"
+										onChange={(e) => handleThptChange(subject.id, e.target.value)}
+										pattern="^[0-9]*[.,]?[0-9]{0,2}$"
+										placeholder="0.00"
+										step="0.01"
+										type="text"
+										value={localThpt[subject.id] ?? ''}
+									/>
+								</label>
+							))}
+						</div>
+
+						<div className="flex justify-end gap-3">
+							<button
+								onClick={syncData}
+								disabled={isSaving}
+								className="rounded-lg border-2 border-gray-mid bg-white px-6 py-2.5 text-[14px] font-semibold text-text-mid transition-all hover:bg-gray-light disabled:opacity-50"
+								type="button"
+							>
+								Hủy
+							</button>
+							<button
+								onClick={handleSave}
+								disabled={isSaving}
+								className="inline-flex items-center gap-2 rounded-lg border-2 border-green-main bg-green-main px-7 py-2.5 text-[14px] font-bold text-white transition-all hover:border-green-dark hover:bg-green-dark disabled:opacity-50"
+								type="button"
+							>
+								{isSaving ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
+								{isSaving ? 'Đang lưu...' : 'Lưu điểm THPT'}
+							</button>
+						</div>
+					</div>
+				)}
+
+				{/* ======= TAB ĐIỂM ĐGNL ======= */}
+				{activeSource === 'dgnl' && (
+					<div className="space-y-5">
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+							<label className="flex flex-col gap-2 rounded-lg border-1.5 border-gray-mid bg-white p-4">
+								<span className={labelClass}>Điểm ĐGNL</span>
+								<input
+									className={`${inputClass} text-center`}
+									inputMode="decimal"
+									max="1200"
+									min="0"
+									onChange={(e) => setLocalDgnl(normalizeNumericInput(e.target.value, 1200))}
+									placeholder="0"
+									type="text"
+									value={localDgnl}
+								/>
+							</label>
+						</div>
+
+						<div className="flex justify-end gap-3">
+							<button
+								onClick={syncData}
+								disabled={isSaving}
+								className="rounded-lg border-2 border-gray-mid bg-white px-6 py-2.5 text-[14px] font-semibold text-text-mid transition-all hover:bg-gray-light disabled:opacity-50"
+								type="button"
+							>
+								Hủy
+							</button>
+							<button
+								onClick={handleSave}
+								disabled={isSaving}
+								className="inline-flex items-center gap-2 rounded-lg border-2 border-green-main bg-green-main px-7 py-2.5 text-[14px] font-bold text-white transition-all hover:border-green-dark hover:bg-green-dark disabled:opacity-50"
+								type="button"
+							>
+								{isSaving ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
+								{isSaving ? 'Đang lưu...' : 'Lưu điểm ĐGNL'}
+							</button>
+						</div>
+					</div>
+				)}
+			</section>
+		</div>
+	);
 }
