@@ -159,13 +159,6 @@ export default function PersonalInfoView() {
 					</div>
 				</section>
 
-				<section className="rounded-lg border-1.5 border-gray-mid bg-gray-light px-4 py-3">
-					<div className="flex flex-wrap items-center gap-3 text-[13px] font-semibold text-text-mid">
-						<CalendarDays size={17} className="text-green-main"/>
-						<span>Cập nhật lần cuối: Chưa có thay đổi mới.</span>
-					</div>
-				</section>
-
 				<div className="flex justify-end gap-3 border-t border-gray-mid pt-6">
 					<button
 						type="button"

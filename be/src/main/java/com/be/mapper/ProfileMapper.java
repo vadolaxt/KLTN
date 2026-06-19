@@ -21,6 +21,7 @@ public class ProfileMapper {
                 .graduateYear(profile.getGraduateYear())
                 .birthPlace(profile.getBirthPlace())
                 .identityCard(profile.getIdentityCard())
+                .dob(profile.getDOB())
                 .certificateResult(profile.getCertificateResult())
                 .build();
     }

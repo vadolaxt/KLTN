@@ -57,9 +57,6 @@ public class DataInit {
             Map.entry("D14", List.of("Ngữ văn", "Lịch sử", "Tiếng Anh")),
             Map.entry("D15", List.of("Ngữ văn", "Địa lý", "Tiếng Anh")),
             Map.entry("D90", List.of("Toán", "Khoa học tự nhiên", "Tiếng Anh")),
-            Map.entry("T00", List.of("Toán", "Sinh học", "Năng khiếu Thể dục thể thao")),
-            Map.entry("T01", List.of("Toán", "Ngữ văn", "Năng khiếu Thể dục thể thao")),
-            Map.entry("T02", List.of("Ngữ văn", "Sinh học", "Năng khiếu Thể dục thể thao")),
             Map.entry("X01", List.of("Toán", "Ngữ văn", "Giáo dục Kinh tế và Pháp luật")),
             Map.entry("X02", List.of("Toán", "Ngữ văn", "Tin học")),
             Map.entry("X04", List.of("Toán", "Ngữ văn", "Công nghệ nông nghiệp")),
@@ -91,13 +88,12 @@ public class DataInit {
             Map.entry("TIN_HOC", "Tin học"),
             Map.entry("CN_CONG_NGHIEP", "Công nghệ công nghiệp"),
             Map.entry("CN_NONG_NGHIEP", "Công nghệ nông nghiệp"),
-            Map.entry("NGOAI_NGU", "Tiếng Anh"),
-            Map.entry("NKTDTT", "Năng khiếu Thể dục thể thao")
+            Map.entry("NGOAI_NGU", "Tiếng Anh")
     );
 
     private static final List<String> SUBJECT_ORDER = List.of(
             "TOAN", "VAN", "VAT_LI", "HOA_HOC", "SINH_HOC", "LICH_SU", "DIA_LI", "KHTN",
-            "GDKT_PL", "TIN_HOC", "CN_CONG_NGHIEP", "CN_NONG_NGHIEP", "NGOAI_NGU", "NKTDTT"
+            "GDKT_PL", "TIN_HOC", "CN_CONG_NGHIEP", "CN_NONG_NGHIEP", "NGOAI_NGU"
     );
 
     @Bean
