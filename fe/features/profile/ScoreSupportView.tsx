@@ -1,7 +1,7 @@
 'use client';
 
 import MajorScoreSupportView from './components/score-support/MajorScoreSupportView';
-import MethodScoreSupportView from './components/score-support/MethodScoreSupportView';
+import MethodScoreSupportView from '@/features/profile/components/method-support/MethodScoreSupportView';
 import type { ScoreSupportMode } from './components/score-support/types';
 
 interface ScoreSupportViewProps {

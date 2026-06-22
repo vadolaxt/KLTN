@@ -1,157 +1,164 @@
-import type { MajorAdmissionResult, MajorMethodEvaluation } from '@/hooks/admission.types';
+import type {MajorScore, MethodScore} from '@/types/scoreSupport';
 import PredictionProbabilityCard from '../../../prediction/components/PredictionProbabilityCard';
 import EmptyScoreCell from './EmptyScoreCell';
 
 interface MajorMethodEvaluationPanelProps {
-  major?: MajorAdmissionResult;
-  embedded?: boolean;
+	major?: MajorScore;
+	methodScores?: MethodScore[];
+	embedded?: boolean;
 }
 
-const METHOD_ORDER = ['THPT', 'TRANSCRIPT', 'APTITUDE', 'COMBINED'];
-const FLOW_STEPS = ['Điểm môn', 'Tính tổ hợp', 'Chọn tổ hợp tốt nhất', 'Quy đổi điểm', 'Chọn phương thức', 'Tính xác suất'];
+const METHOD_ORDER = ['SCHOOL_RECORD', 'NATIONAL', 'COMBINE', 'COMPETENCY'];
+
+const METHOD_LABEL_BY_TYPE: Record<string, string> = {
+	SCHOOL_RECORD: 'Học bạ',
+	NATIONAL: 'THPT',
+	COMBINE: 'Kết hợp',
+	COMPETENCY: 'ĐGNL',
+};
 
 const formatNumber = (value: number | null | undefined) => {
-  if (value === null || value === undefined) {
-    return null;
-  }
+	if (value === null || value === undefined) {
+		return null;
+	}
 
-  return value.toLocaleString('vi-VN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+	return value.toLocaleString('vi-VN', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	});
 };
 
-const formatScoreWithScale = (score: number | null, scale: number) => {
-  const formattedScore = formatNumber(score);
+const getMethodLabel = (type: string | null | undefined) => {
+	if (!type) {
+		return '-';
+	}
 
-  if (!formattedScore) {
-    return null;
-  }
-
-  return `${formattedScore}/${scale}`;
+	return METHOD_LABEL_BY_TYPE[type] ?? type;
 };
 
-const sortMethodEvaluations = (evaluations: MajorMethodEvaluation[]) =>
-  [...evaluations].sort((current, next) => {
-    const scoreDiff =
-      (next.convertedScore ?? Number.NEGATIVE_INFINITY) - (current.convertedScore ?? Number.NEGATIVE_INFINITY);
+const getCombinationLabel = (methodScore: MethodScore) => {
+	if (methodScore.combination) {
+		return methodScore.combination;
+	}
 
-    if (scoreDiff !== 0) {
-      return scoreDiff;
-    }
+	return methodScore.type === 'COMPETENCY' ? 'Không có tổ hợp' : '-';
+};
 
-    return METHOD_ORDER.indexOf(current.methodCode) - METHOD_ORDER.indexOf(next.methodCode);
-  });
+const sortMethodScores = (methodScores: MethodScore[]) =>
+	[...methodScores].sort((current, next) => {
+		const currentOrder = METHOD_ORDER.indexOf(current.type);
+		const nextOrder = METHOD_ORDER.indexOf(next.type);
 
-export default function MajorMethodEvaluationPanel({ major, embedded = false }: MajorMethodEvaluationPanelProps) {
-  if (!major) {
-    return null;
-  }
+		return (currentOrder === -1 ? Number.MAX_SAFE_INTEGER : currentOrder) -
+			(nextOrder === -1 ? Number.MAX_SAFE_INTEGER : nextOrder);
+	});
 
-  const evaluations = sortMethodEvaluations(major.methodEvaluations ?? []);
-  const bestMethod = major.bestMethod;
-  const bestScore = formatNumber(bestMethod?.convertedScore) ?? '-';
+export default function MajorMethodEvaluationPanel({
+																		major,
+																		methodScores,
+																		embedded = false,
+																	}: MajorMethodEvaluationPanelProps) {
+	if (!major) {
+		return null;
+	}
 
-  return (
-    <div
-      className={`${embedded ? 'mb-0' : 'mb-5'} overflow-hidden rounded-[12px] border-1.5 border-green-light/50 bg-white shadow-[0_16px_34px_rgba(26,74,26,0.1)]`}
-    >
-      <div className="border-b border-green-light/30 bg-green-pale px-4 py-4">
-        <div className="flex flex-col gap-3">
-          <div>
-            <div className="text-[12px] font-black uppercase tracking-[0.8px] text-green-main">
-              Luồng tính điểm ngành
-            </div>
-            <div className="mt-1 text-[18px] font-black leading-[1.35] text-green-dark">{major.majorName}</div>
-          </div>
-        </div>
+	const allMethodScores = sortMethodScores(
+		major.scores && major.scores.length > 0 ? major.scores : methodScores ?? [],
+	);
+	const defaultMethodScore = major.scores?.[0] ?? allMethodScores[0];
+	const defaultScore = formatNumber(defaultMethodScore?.convertedScore) ?? '-';
+	const probability = (major as unknown as {probability?: number | null}).probability ?? null;
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {FLOW_STEPS.map((step, index) => (
-            <div key={step} className="flex items-center gap-2">
-              <span className="inline-flex h-8 items-center rounded-md border border-green-light/40 bg-white px-3 text-[12px] font-extrabold text-green-dark">
-                {step}
-              </span>
-              {index < FLOW_STEPS.length - 1 && <span className="text-[13px] font-black text-green-main">→</span>}
-            </div>
-          ))}
-        </div>
-      </div>
+	return (
+		<div
+			className={`${embedded ? 'mb-0' : 'mb-5'} overflow-hidden rounded-[12px] border-1.5 border-green-light/50 bg-white shadow-[0_16px_34px_rgba(26,74,26,0.1)]`}
+		>
+			<div className="border-b border-green-light/30 bg-green-pale px-4 py-4">
+				<div className="flex flex-col gap-3">
+					<div>
+						<div className="text-[12px] font-black uppercase tracking-[0.8px] text-green-main">
+							Tất cả phương thức xét tuyển
+						</div>
+						<div className="mt-1 text-[18px] font-black leading-[1.35] text-green-dark">{major.majorName}</div>
+					</div>
+				</div>
+			</div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse">
-          <thead>
-            <tr className="border-b border-gray-mid bg-white text-text-dark">
-              <th className="w-[160px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
-                Phương thức
-              </th>
-              <th className="w-[180px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
-                Tổ hợp tốt nhất
-              </th>
-              <th className="w-[160px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
-                Điểm gốc
-              </th>
-              <th className="w-[160px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
-                Điểm quy đổi
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {evaluations.map((evaluation) => {
-              const isBestMethod = evaluation.methodCode === bestMethod?.methodCode;
+			<div className="overflow-x-auto">
+				<table className="w-full min-w-[680px] border-collapse">
+					<thead>
+					<tr className="border-b border-gray-mid bg-white text-text-dark">
+						<th className="w-[180px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Phương thức
+						</th>
+						<th className="w-[180px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Mã tổ hợp
+						</th>
+						<th className="w-[160px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Điểm gốc
+						</th>
+						<th className="w-[160px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Điểm quy đổi
+						</th>
+					</tr>
+					</thead>
+					<tbody>
+					{allMethodScores.length === 0 && (
+						<tr>
+							<td colSpan={4} className="px-4 py-6 text-center text-[13px] font-bold text-text-mid">
+								Chưa có phương thức xét tuyển.
+							</td>
+						</tr>
+					)}
 
-              return (
-                <tr
-                  key={evaluation.methodCode}
-                  className={`border-b border-gray-mid transition-colors ${
-                    isBestMethod ? 'border-l-4 border-l-gold bg-[#fff8df]' : 'hover:bg-green-pale/35'
-                  }`}
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[13px] font-extrabold text-text-dark">{evaluation.methodName}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-[13px] font-semibold text-text-mid">
-                    {evaluation.combinationCode ?? 'Không có tổ hợp'}
-                  </td>
-                  <td className="px-4 py-3 text-[13px] font-semibold text-text-mid">
-                    {formatScoreWithScale(evaluation.rawScore, evaluation.rawScale) ?? <EmptyScoreCell label="Thiếu điểm" />}
-                  </td>
-                  <td className="px-4 py-3 text-left text-[15px] font-black text-green-dark">
-                    {formatNumber(evaluation.convertedScore) ?? <EmptyScoreCell label="-" />}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+					{allMethodScores.map((methodScore, index) => (
+						<tr key={`${methodScore.type}-${methodScore.combination ?? 'none'}-${index}`} className="border-b border-gray-mid transition-colors hover:bg-green-pale/35">
+							<td className="px-4 py-3">
+								<div className="flex flex-wrap items-center gap-2">
+									<span className="text-[13px] font-extrabold text-text-dark">{getMethodLabel(methodScore.type)}</span>
+								</div>
+							</td>
+							<td className="px-4 py-3 text-[13px] font-semibold text-text-mid">
+								{getCombinationLabel(methodScore)}
+							</td>
+							<td className="px-4 py-3 text-[13px] font-semibold text-text-mid">
+								{formatNumber(methodScore.rawScore) ?? <EmptyScoreCell label="Thiếu điểm"/>}
+							</td>
+							<td className="px-4 py-3 text-left text-[15px] font-black text-green-dark">
+								{formatNumber(methodScore.convertedScore) ?? <EmptyScoreCell label="-"/>}
+							</td>
+						</tr>
+					))}
+					</tbody>
+				</table>
+			</div>
 
-      <div className="m-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
-        <div className="rounded-[14px] border-1.5 border-green-light/35 bg-green-pale px-5 py-4">
-          <div className="text-[11px] font-black uppercase tracking-[0.7px] text-green-main">Kết quả tốt nhất</div>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div>
-              <div className="text-[12px] font-extrabold text-text-light">Phương thức</div>
-              <div className="mt-1 text-[20px] font-black text-green-dark">{bestMethod?.methodName ?? '-'}</div>
-            </div>
-            <div>
-              <div className="text-[12px] font-extrabold text-text-light">Điểm quy đổi</div>
-              <div className="mt-1 text-[28px] font-black leading-none text-green-dark">{bestScore}</div>
-            </div>
-          </div>
-        </div>
-        <PredictionProbabilityCard
-          probability={major.probability}
-          majorName={major.majorName}
-          hasResult={major.probability !== null && major.probability !== undefined}
-          title="Xác suất"
-          subtitle="Tính theo điểm quy đổi tốt nhất"
-          compact
-          mini
-        />
-      </div>
-    </div>
-  );
+			<div className="m-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
+				<div className="rounded-[14px] border-1.5 border-green-light/35 bg-green-pale px-5 py-4">
+					<div className="text-[11px] font-black uppercase tracking-[0.7px] text-green-main">Điểm mặc định ở bảng</div>
+					<div className="mt-3 grid gap-3 sm:grid-cols-2">
+						<div>
+							<div className="text-[12px] font-extrabold text-text-light">Phương thức</div>
+							<div className="mt-1 text-[20px] font-black text-green-dark">
+								{defaultMethodScore ? getMethodLabel(defaultMethodScore.type) : '-'}
+							</div>
+						</div>
+						<div>
+							<div className="text-[12px] font-extrabold text-text-light">Điểm quy đổi</div>
+							<div className="mt-1 text-[28px] font-black leading-none text-green-dark">{defaultScore}</div>
+						</div>
+					</div>
+				</div>
+				<PredictionProbabilityCard
+					probability={probability}
+					majorName={major.majorName}
+					hasResult={probability !== null && probability !== undefined}
+					title="Xác suất"
+					subtitle="Tính theo điểm quy đổi tốt nhất"
+					compact
+					mini
+				/>
+			</div>
+		</div>
+	);
 }

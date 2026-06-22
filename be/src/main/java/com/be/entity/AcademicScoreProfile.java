@@ -36,10 +36,4 @@ public class AcademicScoreProfile {
     SchoolRecord schoolRecord; // học bạ
     NationalExamResult nationalExamResult; // điểm thpt
     CompetencyTestResult competencyTestResult; // dgnl
-
-//    @Transient
-//    // annotation tạo khi có entity
-//    public double totalScore() {
-//        return 1.0;
-//    }
 }
