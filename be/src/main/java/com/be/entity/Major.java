@@ -30,4 +30,5 @@ public class Major {
     int admissionQuota;
     double cutoffScore;
     List<SubjectCombination> combinations; // nhung to hop nganh xet
+    List<String> coreSubject; // mon chung
 }

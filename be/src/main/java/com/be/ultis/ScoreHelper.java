@@ -2,6 +2,7 @@ package com.be.ultis;
 
 import com.be.entity.Subject;
 import com.be.entity.SubjectCombination;
+import com.be.entity.SubjectScore;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -9,9 +10,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -176,5 +180,107 @@ public class ScoreHelper {
         return Math.round(totalScore * 100.0) / 100.0;
     }
 
-    
+    public double calculateTotalScore(
+            SubjectCombination combination,
+            Map<String, Double> subjectScoreMap
+    ) {
+        if (combination == null || combination.getSubjects() == null) {
+            return 0.0;
+        }
+
+        double totalScore = combination.getSubjects().stream()
+                .filter(subject -> subject != null)
+                .mapToDouble(subject -> subjectScoreMap.getOrDefault(subject.getId(), 0.0))
+                .sum();
+
+        return roundToTwoDecimals(totalScore);
+    }
+
+    // dùng cho học bạ hoặc THPT
+    public double convertMajorScore(
+            SubjectCombination combination,
+            List<String> coreSubjectCodes,
+            Map<String, Double> subjectScoreMap
+    ) {
+        return convertMajorScoreByResolver(
+                combination,
+                coreSubjectCodes,
+                subject -> subjectScoreMap.getOrDefault(subject.getId(), 0.0)
+        );
+    }
+
+    // dùng cho phương thức kết hợp
+    public double convertMajorCombinedScore(
+            SubjectCombination combination,
+            List<String> coreSubjectCodes,
+            Subject replacementSubject,
+            Map<String, Double> schoolRecord,
+            Map<String, Double> nationalScoreMap
+    ) {
+        return convertMajorScoreByResolver(
+                combination,
+                coreSubjectCodes,
+                subject -> {
+                    if (replacementSubject != null
+                            && replacementSubject.getId().equals(subject.getId())) {
+                        return schoolRecord.getOrDefault(subject.getId(), 0.0);
+                    }
+
+                    return nationalScoreMap.getOrDefault(subject.getId(), 0.0);
+                }
+        );
+    }
+
+    private double convertMajorScoreByResolver(
+            SubjectCombination combination,
+            List<String> coreSubjectCodes,
+            Function<Subject, Double> scoreResolver
+    ) {
+        if (combination == null || combination.getSubjects() == null) {
+            return 0.0;
+        }
+
+        if (coreSubjectCodes == null || coreSubjectCodes.isEmpty()) {
+            double totalScore = combination.getSubjects().stream()
+                    .filter(subject -> subject != null)
+                    .mapToDouble(scoreResolver::apply)
+                    .sum();
+
+            return roundToTwoDecimals(totalScore);
+        }
+
+        Set<String> coreSubjectCodeSet = new HashSet<>(coreSubjectCodes);
+
+        double weightedTotalScore = 0.0;
+        int matchedCoreSubjectCount = 0;
+
+        for (Subject subject : combination.getSubjects()) {
+            if (subject == null) {
+                continue;
+            }
+
+            double subjectScore = scoreResolver.apply(subject);
+
+            boolean isCoreSubject = subject.getCode() != null
+                    && coreSubjectCodeSet.contains(subject.getCode());
+
+            if (isCoreSubject) {
+                // môn chung nhân hệ số 2
+                weightedTotalScore += subjectScore * 2;
+                matchedCoreSubjectCount++;
+            } else {
+                weightedTotalScore += subjectScore;
+            }
+        }
+
+        if (matchedCoreSubjectCount >= 2) {
+            return roundToTwoDecimals(weightedTotalScore * 30 / 50);
+        }
+
+        if (matchedCoreSubjectCount == 1) {
+            return roundToTwoDecimals(weightedTotalScore * 30 / 40);
+        }
+
+        return roundToTwoDecimals(weightedTotalScore);
+    }
 }
