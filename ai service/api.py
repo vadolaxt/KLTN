@@ -71,10 +71,10 @@ async def chat_endpoint(request: ChatRequest):
 
             context = get_relevant_context(
                 query=sub_question,
-                intent=[intent],  # quan trọng: truyền list để tránh duyệt từng ký tự
+                intent=[intent],
                 metadata_filter=metadata_filter,
-                top_k=5,
-                num_candidates=50
+                # top_k=5,
+                # num_candidates=50
             )
 
             print(f"[CONTEXT]: {context}")
