@@ -5,6 +5,7 @@ import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {LogOut, User, ChevronDown, Settings, LayoutDashboard} from "lucide-react";
 import {AuthService} from "@/service/auth.api";
+import {toast} from "sonner";
 
 export default function Header() {
 	const router = useRouter();
@@ -19,6 +20,7 @@ export default function Header() {
 	const handleLogout = async () => {
 		try {
 			await AuthService.logout();
+			toast.success("Đăng xuất thành công");
 		} catch (error) {
 			console.error("Logout error:", error);
 		} finally {

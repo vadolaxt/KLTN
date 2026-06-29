@@ -137,14 +137,14 @@ public class DataInit {
         User user1 = new User();
         user1.setLastName("Nguyen Van A");
         user1.setEmail("a@gmail.com");
-        user1.setPassword(encoder.encode("123456"));
-        user1.setRole(Role.USER);
+        user1.setPassword(encoder.encode("Abcd1234@"));
+        user1.setRole(Role.ROLE_USER);
 
         User user2 = new User();
         user2.setLastName("Admin Hệ Thống");
-        user2.setEmail("admin@be.com");
-        user2.setPassword(encoder.encode("123456"));
-        user2.setRole(Role.ADMIN);
+        user2.setEmail("admin@gamil.com");
+        user2.setPassword(encoder.encode("Abcd1234@"));
+        user2.setRole(Role.ROLE_ADMIN);
 
         userRepository.save(user1);
         userRepository.save(user2);

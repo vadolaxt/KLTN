@@ -12,6 +12,7 @@ import com.be.entity.NationalExamResult;
 import com.be.entity.SchoolRecord;
 import com.be.entity.SubjectScore;
 import com.be.entity.User;
+import com.be.enums.AccountStatus;
 import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
 import com.be.mapper.ProfileMapper;
@@ -57,7 +58,7 @@ public class AuthService {
     JwtDecoder jwtDecoder;
     StringRedisTemplate redisTemplate;
     SubjectRepository subjectRepository;
-    CandidateProfileRepository  candidateProfileRepository;
+    CandidateProfileRepository candidateProfileRepository;
 
     AcademicScoreProfileRepository academicScoreProfileRepository;
 
@@ -248,11 +249,16 @@ public class AuthService {
         String firstName = (String) payload.get("given_name");
         String lastName = (String) payload.get("family_name");
 
-        Optional<User> existingUserOpt = userRepository.findByEmail(email);
+        Optional<User> existingUserOpt = userRepository.findByEmailAndStatusNot(email, AccountStatus.INACTIVE);
         User user;
 
         if (existingUserOpt.isPresent()) {
             user = existingUserOpt.get();
+
+            if (user.getStatus() == AccountStatus.BANNED) {
+                throw new AppException(ErrorCode.ACCOUNT_BANNED);
+            }
+
         } else {
             User newUser = User.builder()
                     .email(email)
@@ -278,14 +284,19 @@ public class AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .authenticated(true)
+                .role(user.getRole().toString())
                 .build();
     }
 
     public AuthResponse login(AuthRequest request) {
         String email = request.getEmail();
         String password = request.getPassword();
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailAndStatusNot(email, AccountStatus.INACTIVE)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getStatus().toString().equalsIgnoreCase("BANNED")) {
+            throw new AppException(ErrorCode.ACCOUNT_BANNED);
+        }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             return AuthResponse.builder().
@@ -297,6 +308,7 @@ public class AuthService {
                 .accessToken(jwtService.generateToken(user, false))
                 .refreshToken(jwtService.generateToken(user, true))
                 .authenticated(true)
+                .role(user.getRole().toString())
                 .build();
     }
 
