@@ -1,4 +1,7 @@
+import {useEffect, useMemo, useState} from 'react';
+
 import type {MajorScore, MethodScore} from '@/types/scoreSupport';
+import {apiClient} from '@/lib/constants/api-client';
 import PredictionProbabilityCard from '../../../prediction/components/PredictionProbabilityCard';
 import EmptyScoreCell from './EmptyScoreCell';
 
@@ -9,6 +12,14 @@ interface MajorMethodEvaluationPanelProps {
 }
 
 const METHOD_ORDER = ['SCHOOL_RECORD', 'NATIONAL', 'COMBINE', 'COMPETENCY'];
+const TARGET_YEAR = 2026;
+
+const METHOD_TO_ADMISSION_METHOD: Record<string, string> = {
+	SCHOOL_RECORD: 'hb',
+	NATIONAL: 'thpt',
+	COMBINE: 'kh',
+	COMPETENCY: 'dgnl',
+};
 
 const METHOD_LABEL_BY_TYPE: Record<string, string> = {
 	SCHOOL_RECORD: 'Học bạ',
@@ -44,6 +55,48 @@ const getCombinationLabel = (methodScore: MethodScore) => {
 	return methodScore.type === 'COMPETENCY' ? 'Không có tổ hợp' : '-';
 };
 
+interface ApiResponse<T> {
+	data: T;
+	message: string;
+	status: string;
+}
+
+interface PredictResponse {
+	result: {
+		admission_probability: number;
+		predicted_cutoff: number;
+		margin: number;
+		student_score: number;
+	};
+}
+
+interface MethodPrediction {
+	probability: number | null;
+	predictedCutoff: number | null;
+	margin: number | null;
+	studentScore: number | null;
+	isLoading: boolean;
+	error: string;
+}
+
+const buildPredictionKey = (methodScore: MethodScore) =>
+	`${methodScore.type}-${methodScore.combination || 'NONE'}`;
+
+const createPendingPrediction = (): MethodPrediction => ({
+	probability: null,
+	predictedCutoff: null,
+	margin: null,
+	studentScore: null,
+	isLoading: true,
+	error: '',
+});
+
+const canPredictMethodScore = (methodScore: MethodScore) =>
+	Boolean(methodScore.combination) &&
+	Boolean(METHOD_TO_ADMISSION_METHOD[methodScore.type]) &&
+	Number.isFinite(methodScore.convertedScore) &&
+	methodScore.convertedScore > 0;
+
 const sortMethodScores = (methodScores: MethodScore[]) =>
 	[...methodScores].sort((current, next) => {
 		const currentOrder = METHOD_ORDER.indexOf(current.type);
@@ -58,16 +111,112 @@ export default function MajorMethodEvaluationPanel({
 																		methodScores,
 																		embedded = false,
 																	}: MajorMethodEvaluationPanelProps) {
+	const majorCode = major?.majorCode;
+	const allMethodScores = useMemo(
+		() => sortMethodScores(major?.scores && major.scores.length > 0 ? major.scores : methodScores ?? []),
+		[major, methodScores],
+	);
+	const [predictions, setPredictions] = useState<Record<string, MethodPrediction>>({});
+	const defaultMethodScore = major?.scores?.[0] ?? allMethodScores[0];
+	const defaultScore = formatNumber(defaultMethodScore?.convertedScore) ?? '-';
+
+	useEffect(() => {
+		let isMounted = true;
+
+		const fetchPredictions = async () => {
+			if (!majorCode) {
+				setPredictions({});
+				return;
+			}
+
+			const predictables = allMethodScores.filter(canPredictMethodScore);
+
+			if (predictables.length === 0) {
+				setPredictions({});
+				return;
+			}
+
+			const nextInitialPredictions = predictables.reduce<Record<string, MethodPrediction>>((result, methodScore) => {
+				result[buildPredictionKey(methodScore)] = createPendingPrediction();
+				return result;
+			}, {});
+
+			setPredictions(nextInitialPredictions);
+
+			await Promise.all(
+				predictables.map(async (methodScore) => {
+					const key = buildPredictionKey(methodScore);
+
+					try {
+						const response = await apiClient.post<ApiResponse<PredictResponse>>('/predict', {
+							schoolCode: 'NLU',
+							admissionMethod: METHOD_TO_ADMISSION_METHOD[methodScore.type],
+							majorCode,
+							subjectCombination: methodScore.combination,
+							targetYear: TARGET_YEAR,
+							scores: [
+								{
+									score: methodScore.convertedScore,
+								},
+							],
+						});
+
+						const result = response.data.data.result;
+
+						if (!isMounted) {
+							return;
+						}
+
+						setPredictions((current) => ({
+							...current,
+							[key]: {
+								probability: result.admission_probability,
+								predictedCutoff: result.predicted_cutoff,
+								margin: result.margin,
+								studentScore: result.student_score,
+								isLoading: false,
+								error: '',
+							},
+						}));
+					} catch {
+						if (!isMounted) {
+							return;
+						}
+
+						setPredictions((current) => ({
+							...current,
+							[key]: {
+								probability: null,
+								predictedCutoff: null,
+								margin: null,
+								studentScore: null,
+								isLoading: false,
+								error: 'Không thể dự đoán',
+							},
+						}));
+					}
+				}),
+			);
+		};
+
+		void fetchPredictions();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [allMethodScores, majorCode]);
+
+	const bestPrediction = useMemo(() => {
+		return Object.values(predictions)
+			.filter((prediction) => prediction.probability !== null && prediction.probability !== undefined)
+			.sort((current, next) => (next.probability ?? 0) - (current.probability ?? 0))[0];
+	}, [predictions]);
+
+	const probability = bestPrediction?.probability ?? null;
+
 	if (!major) {
 		return null;
 	}
-
-	const allMethodScores = sortMethodScores(
-		major.scores && major.scores.length > 0 ? major.scores : methodScores ?? [],
-	);
-	const defaultMethodScore = major.scores?.[0] ?? allMethodScores[0];
-	const defaultScore = formatNumber(defaultMethodScore?.convertedScore) ?? '-';
-	const probability = (major as unknown as {probability?: number | null}).probability ?? null;
 
 	return (
 		<div
@@ -100,18 +249,27 @@ export default function MajorMethodEvaluationPanel({
 						<th className="w-[160px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
 							Điểm quy đổi
 						</th>
+						<th className="w-[180px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Xác suất trúng tuyển
+						</th>
 					</tr>
 					</thead>
 					<tbody>
 					{allMethodScores.length === 0 && (
 						<tr>
-							<td colSpan={4} className="px-4 py-6 text-center text-[13px] font-bold text-text-mid">
+							<td colSpan={5} className="px-4 py-6 text-center text-[13px] font-bold text-text-mid">
 								Chưa có phương thức xét tuyển.
 							</td>
 						</tr>
 					)}
 
-					{allMethodScores.map((methodScore, index) => (
+					{allMethodScores.map((methodScore, index) => {
+						const prediction = predictions[buildPredictionKey(methodScore)];
+						const predictionLabel = prediction?.probability === null || prediction?.probability === undefined
+							? null
+							: `${prediction.probability.toFixed(0)}%`;
+
+						return (
 						<tr key={`${methodScore.type}-${methodScore.combination ?? 'none'}-${index}`} className="border-b border-gray-mid transition-colors hover:bg-green-pale/35">
 							<td className="px-4 py-3">
 								<div className="flex flex-wrap items-center gap-2">
@@ -127,8 +285,25 @@ export default function MajorMethodEvaluationPanel({
 							<td className="px-4 py-3 text-left text-[15px] font-black text-green-dark">
 								{formatNumber(methodScore.convertedScore) ?? <EmptyScoreCell label="-"/>}
 							</td>
+							<td className="px-4 py-3">
+								{prediction?.isLoading ? (
+									<span className="text-[12px] font-bold text-text-light">Đang dự đoán...</span>
+								) : prediction?.error ? (
+									<EmptyScoreCell label={prediction.error}/>
+								) : predictionLabel ? (
+									<div>
+										<div className="text-[16px] font-black text-green-dark">{predictionLabel}</div>
+										<div className="mt-0.5 text-[11px] font-semibold text-text-light">
+											Chuẩn dự kiến: {formatNumber(prediction.predictedCutoff) ?? '-'}
+										</div>
+									</div>
+								) : (
+									<EmptyScoreCell label="Chưa đủ dữ liệu"/>
+								)}
+							</td>
 						</tr>
-					))}
+						);
+					})}
 					</tbody>
 				</table>
 			</div>

@@ -416,11 +416,7 @@ public class ScoreService {
                                         .type("COMPETENCY")
                                         .combination(combinationCode)
                                         .rawScore(competency.getScore())
-////////////////////////////////
-////////////////////////////////
-////////////////////////////////       .convertedScore(competency.getConvertScore())
-////////////////////////////////
-////////////////////////////////
+                                        .convertedScore(competency.getConvertScore().get(combinationCode))
                                         .build()
                                 )
                                 .max(Comparator.comparingDouble(

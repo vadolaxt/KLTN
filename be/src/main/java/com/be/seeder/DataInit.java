@@ -15,6 +15,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -102,10 +106,13 @@ public class DataInit {
             MajorRepository majorRepository,
             SubjectRepository subjectRepository,
             SubjectCombinationRepository subjectCombinationRepository,
-            AdmissionInfoRepository admissionInfoRepository
+            AdmissionInfoRepository admissionInfoRepository,
+            MongoTemplate mongoTemplate
     ) {
         return args -> {
             System.out.println("--- Bắt đầu kiểm tra và khởi tạo dữ liệu mẫu ---");
+
+            migrateLegacyUserRoles(mongoTemplate);
 
             if (userRepository.count() == 0) {
                 initSampleUsers(userRepository);
@@ -130,6 +137,19 @@ public class DataInit {
 
             addCoreSubjectToMajor(majorRepository);
         };
+    }
+
+    private void migrateLegacyUserRoles(MongoTemplate mongoTemplate) {
+        mongoTemplate.updateMulti(
+                Query.query(Criteria.where("role").is("ADMIN")),
+                Update.update("role", Role.ROLE_ADMIN.name()),
+                "users"
+        );
+        mongoTemplate.updateMulti(
+                Query.query(Criteria.where("role").is("USER")),
+                Update.update("role", Role.ROLE_USER.name()),
+                "users"
+        );
     }
 
     private void initSampleUsers(UserRepository userRepository) {
@@ -159,8 +179,8 @@ public class DataInit {
         User existing = userRepository.findByEmail(email).orElse(null);
         if (existing != null) {
             boolean changed = false;
-            if (existing.getRole() != Role.ADMIN) {
-                existing.setRole(Role.ADMIN);
+            if (existing.getRole() != Role.ROLE_ADMIN) {
+                existing.setRole(Role.ROLE_ADMIN);
                 changed = true;
             }
             if (!encoder.matches("Admin@1234", existing.getPassword())) {
@@ -177,7 +197,7 @@ public class DataInit {
                 .lastName("Admin")
                 .email(email)
                 .password(encoder.encode("Admin@1234"))
-                .role(Role.ADMIN)
+                .role(Role.ROLE_ADMIN)
                 .build();
         userRepository.save(admin);
         System.out.println("--- Đã tạo tài khoản admin HCMUAF ---");
