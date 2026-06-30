@@ -13,7 +13,7 @@ import {
   DashboardStats,
 } from '@/service/admin.api';
 
-export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'news';
+export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'scores' | 'news';
 
 const DEFAULT_YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 const ADMIN_DEMO_MODE = false;
@@ -364,6 +364,9 @@ export function useAdmin() {
           case 'admissions':
             await fetchAdmissions(selectedYear);
             break;
+          case 'scores':
+            await fetchAdmissions(selectedYear);
+            break;
           case 'news':
             await fetchNews();
             break;
@@ -538,6 +541,13 @@ export function useAdmin() {
     });
   }, [updateAdmissionInfo]);
 
+  const updateCutoffScore = useCallback(async (id: string, cutoffScore: number, combinationCodes?: string[]) => {
+    await updateAdmissionInfo(id, {
+      cutoffScore,
+      ...(combinationCodes ? { combinationCodes } : {}),
+    });
+  }, [updateAdmissionInfo]);
+
   const createNewsArticle = useCallback(async (article: Omit<AdminNews, 'id' | 'views' | 'publishedAt'>) => {
     if (ADMIN_DEMO_MODE) {
       const newArticle: AdminNews = {
@@ -611,10 +621,13 @@ export function useAdmin() {
     return Array.from(codeSet).sort();
   }, [admissions]);
 
+  const scores = admissions;
+
   const refreshData = useCallback(async () => {
     if (activeTab === 'dashboard') await fetchStats();
     if (activeTab === 'users') await fetchUsers();
     if (activeTab === 'admissions') await fetchAdmissions(selectedYear);
+    if (activeTab === 'scores') await fetchAdmissions(selectedYear);
     if (activeTab === 'news') await fetchNews();
   }, [activeTab, fetchAdmissions, fetchNews, fetchStats, fetchUsers, selectedYear]);
 
@@ -638,6 +651,7 @@ export function useAdmin() {
 
     users,
     admissions,
+    scores,
     news,
     stats,
 
@@ -649,6 +663,7 @@ export function useAdmin() {
     createAdmissionInfo,
     deleteAdmissionInfo,
     updateAdmissionQuota,
+    updateCutoffScore,
     createNewsArticle,
     updateNewsArticle,
     deleteNewsArticle,

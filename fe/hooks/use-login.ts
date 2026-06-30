@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import {useState} from "react";
+import {useRouter} from "next/navigation";
 import axios from "axios";
-import { AuthService } from "@/service/auth.api";
+import {AuthService} from "@/service/auth.api";
 
 export const useLogin = () => {
 	const [email, setEmail] = useState("");
@@ -27,13 +27,18 @@ export const useLogin = () => {
 		setIsLoading(true);
 
 		try {
-			const result = await AuthService.login({ email, password });
+			const result = await AuthService.login({email, password});
 
 			if (result.status === "OK" || result.data?.authenticated) {
 				localStorage.setItem("isLogin", "true");
 
-				router.push("/homepage");
-				router.refresh();
+				if (result.data.role === "ROLE_USER") {
+					router.push("/homepage");
+					router.refresh();
+				} else if (result.data.role === "ROLE_ADMIN") {
+					router.push("/admin");
+					router.refresh();
+				}
 			} else {
 				setError(result.message || "Đăng nhập thất bại");
 			}

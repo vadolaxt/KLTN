@@ -1,4 +1,4 @@
-import type { ScoreMethod } from './types';
+import type { ScoreMethod } from '../score-support/types';
 
 export const METHODS: Array<{ value: ScoreMethod; label: string; shortLabel: string; description: string }> = [
   {

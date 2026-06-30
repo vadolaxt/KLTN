@@ -127,6 +127,8 @@ public class DataInit {
                     subjectCombinationRepository,
                     admissionInfoRepository
             );
+
+            addCoreSubjectToMajor(majorRepository);
         };
     }
 
@@ -137,14 +139,14 @@ public class DataInit {
         User user1 = new User();
         user1.setLastName("Nguyen Van A");
         user1.setEmail("a@gmail.com");
-        user1.setPassword(encoder.encode("123456"));
-        user1.setRole(Role.USER);
+        user1.setPassword(encoder.encode("Abcd1234@"));
+        user1.setRole(Role.ROLE_USER);
 
         User user2 = new User();
         user2.setLastName("Admin Hệ Thống");
-        user2.setEmail("admin@be.com");
-        user2.setPassword(encoder.encode("123456"));
-        user2.setRole(Role.ADMIN);
+        user2.setEmail("admin@gamil.com");
+        user2.setPassword(encoder.encode("Abcd1234@"));
+        user2.setRole(Role.ROLE_ADMIN);
 
         userRepository.save(user1);
         userRepository.save(user2);
@@ -619,6 +621,143 @@ public class DataInit {
                     programType,
                     note
             );
+        }
+    }
+
+    private void addCoreSubjectToMajor(MajorRepository majorRepository) {
+        List<String> coreSubjects = List.of("TOAN", "NGOAI_NGU", "SINH_HOC", "VAT_LI");
+
+        // nganh co mon chung la Toan
+        List<String> math = List.of(
+                "7140215",
+                "7310101",
+                "7310101C",
+                "7340101",
+                "7340101C",
+                "7340116",
+                "7340301",
+                "7440301",
+                "7340301",
+                "7440301",
+                "7480104",
+                "7480201",
+                "7480201C",
+                "7520320",
+                "7540101",
+                "7540101C",
+                "7540101T",
+                "7540106",
+                "7540105",
+                "7549001",
+                "7620105",
+                "7620105C",
+                "7620109",
+                "7620112",
+                "7620114",
+                "7620116",
+                "7620201",
+                "7620202",
+                "7620211",
+                "7620301",
+                "7640101",
+                "7640101T",
+                "7850101",
+                "7850103",
+                "7850103C",
+                "7859002",
+                "7859007"
+        );
+
+        // nganh co mon chung la Anh van
+        List<String> english = List.of(
+                "7220201"
+        );
+
+        // nganh co mon chung la toan va sinh
+        List<String> mathBio = List.of(
+                "7420201",
+                "7420201C"
+        );
+
+        // nganh co mon chung la toan va ly
+        List<String> mathPhysic = List.of(
+                "7510201",
+                "7510201C",
+                "7510203",
+                "7510205",
+                "7510206",
+                "7510401",
+                "7510401C",
+                "7519007",
+                "7520216"
+        );
+
+        Map<String, List<String>> coreSubjectByMajorCode = new LinkedHashMap<>();
+
+        math.forEach(code ->
+                coreSubjectByMajorCode.put(code, List.of("TOAN"))
+        );
+
+        english.forEach(code ->
+                coreSubjectByMajorCode.put(code, List.of("NGOAI_NGU"))
+        );
+
+        mathBio.forEach(code ->
+                coreSubjectByMajorCode.put(code, List.of("TOAN", "SINH_HOC"))
+        );
+
+        mathPhysic.forEach(code ->
+                coreSubjectByMajorCode.put(code, List.of("TOAN", "VAT_LI"))
+        );
+
+        List<Major> majors = majorRepository.findAll();
+        List<Major> majorsToUpdate = new ArrayList<>();
+        List<String> majorCodesInDb = new ArrayList<>();
+
+        for (Major major : majors) {
+            String majorCode = major.getCode();
+            majorCodesInDb.add(majorCode);
+
+            List<String> coreSubject = coreSubjectByMajorCode.get(majorCode);
+
+            if (coreSubject == null) {
+                continue;
+            }
+
+            major.setCoreSubject(coreSubject);
+            majorsToUpdate.add(major);
+        }
+
+        if (!majorsToUpdate.isEmpty()) {
+            majorRepository.saveAll(majorsToUpdate);
+        }
+
+        List<String> configuredMajorCodes = new ArrayList<>(coreSubjectByMajorCode.keySet());
+
+        List<String> missingInConfig = new ArrayList<>(majorCodesInDb);
+        missingInConfig.removeAll(configuredMajorCodes);
+
+        List<String> notExistInDb = new ArrayList<>(configuredMajorCodes);
+        notExistInDb.removeAll(majorCodesInDb);
+
+        System.out.printf(
+                "--- Đã cập nhật coreSubject cho %d/%d ngành trong collection Major ---%n",
+                majorsToUpdate.size(),
+                majors.size()
+        );
+
+        if (missingInConfig.isEmpty()) {
+            System.out.println("--- OK: Tất cả ngành trong Major đều đã có cấu hình coreSubject ---");
+        } else {
+            System.out.println("--- Các ngành có trong Major nhưng chưa có cấu hình coreSubject ---");
+            missingInConfig.forEach(code -> System.out.println("Missing in config: " + code));
+        }
+
+        if (notExistInDb.isEmpty()) {
+            System.out.println("--- OK: Không có mã ngành dư trong list cấu hình ---");
+        } else {
+            System.out.println("--- Các mã ngành có trong list nhưng không tồn tại trong collection Major ---");
+            notExistInDb.forEach(code -> System.out.println("Not exist in DB: " + code));
         }
     }
 }

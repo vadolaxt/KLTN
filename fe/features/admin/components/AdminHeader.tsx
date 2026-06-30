@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { 
-  Bell, 
-  Calendar, 
-  Menu, 
-  Search, 
-  User 
+import {
+  Bell,
+  Calendar,
+  Search,
+  User,
 } from 'lucide-react';
 import { AdminTab } from '@/hooks/use-admin';
 
@@ -20,31 +19,29 @@ const TAB_TITLES: Record<AdminTab, string> = {
   dashboard: 'Thống kê & Báo cáo tuyển sinh',
   users: 'Quản lý tài khoản & Người dùng',
   admissions: 'Đề án & Chỉ tiêu tuyển sinh',
-  news: 'Bản tin tuyển sinh & Sự kiện NLU'
+  scores: 'Điểm chuẩn các năm',
+  news: 'Bản tin tuyển sinh & Sự kiện NLU',
 };
 
-export default function AdminHeader({ 
-  activeTab, 
+export default function AdminHeader({
+  activeTab,
   adminName = 'Hệ thống Admin',
-  adminEmail = 'admin@nlu.edu.vn'
+  adminEmail = 'admin@nlu.edu.vn',
 }: AdminHeaderProps) {
-  
-  // Format current date: Thứ Sáu, Ngày 05/06/2026
   const getFormattedDate = () => {
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit' 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
     };
     return new Date().toLocaleDateString('vi-VN', options);
   };
 
   return (
     <header className="h-20 bg-white border-b border-gray-mid px-8 flex items-center justify-between shadow-sm">
-      {/* Title / Left */}
       <div className="flex items-center gap-3">
-        <div className="h-6 w-1 bg-green-main rounded-full"></div>
+        <div className="h-6 w-1 bg-green-main rounded-full" />
         <div>
           <h1 className="text-lg font-black text-text-dark leading-none">
             {TAB_TITLES[activeTab]}
@@ -56,9 +53,7 @@ export default function AdminHeader({
         </div>
       </div>
 
-      {/* Profile & Notifications / Right */}
       <div className="flex items-center gap-6">
-        {/* Mock Search Bar */}
         <div className="relative hidden md:block">
           <input
             type="text"
@@ -68,16 +63,13 @@ export default function AdminHeader({
           <Search size={14} className="absolute left-3.5 top-2.5 text-text-light" />
         </div>
 
-        {/* Notifications Icon */}
         <button className="relative p-2 text-text-light hover:text-green-main hover:bg-green-pale rounded-lg transition-all">
           <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#e53935] rounded-full ring-2 ring-white"></span>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#e53935] rounded-full ring-2 ring-white" />
         </button>
 
-        {/* Simple vertical divider */}
-        <div className="w-px h-8 bg-gray-mid"></div>
+        <div className="w-px h-8 bg-gray-mid" />
 
-        {/* Admin Profile */}
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <h4 className="text-xs font-black text-text-dark leading-tight">{adminName}</h4>

@@ -58,13 +58,6 @@ def intent_classifier(questions):
                 "conf": 0.0,
                 "message": f"Lỗi batch inference: {e}"}] * len(questions)
 
-# tiền xử lý query trước khi retrieve
-# 1/ viết thường, xóa tab dư
-# 2/ chuyển đổi các từ viết tắt thành viết đủ (bổ sung rule vào trong prompt)
-# 3/ tách câu nhiều ý thành các câu riêng biệt
-# 4/ trích xuất context từ query để dùng cho filter (nếu có)
-# 5/ gọi ic và phân loại, nếu conf thấp hơn threshold thì ko add vào result trả về
-
 def preprocess_query(text: str) -> str:
     text = text.lower().strip()
     return text

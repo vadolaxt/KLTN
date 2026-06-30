@@ -155,17 +155,19 @@ def get_relevant_context(
     return "\n\n---\n\n".join(context_parts)
 
 
-if __name__ == "__main__":
-    context = get_relevant_context(
-        query="tổ hợp xét tuyển ngành sư phạm kỹ thuật nông nghiệp",
-        intent="to_hop",
-        metadata_filter={
-            # "year": "2024",
-            "major": "sư phạm kỹ thuật nông nghiệp"
-        },
-        top_k=5,
-        num_candidates=50,
-    )
-
-    print("\n\n========== CONTEXT ==========\n")
-    print(context)
+# if __name__ == "__main__":
+#     result = get_relevant_context(
+#         query="tổ hợp xét tuyển ngành sư phạm kỹ thuật nông nghiệp",
+#         intent=["to_hop"],
+#         metadata_filter={
+#             # "year": "2024",
+#             # "major": "sư phạm kỹ thuật nông nghiệp"
+#         },
+#         top_k=5,
+#         num_candidates=50,
+#     )
+#
+    # context = context["context"]
+    # chunks = context["chunks"]
+    # # print(context)
+    # print(chunks)
