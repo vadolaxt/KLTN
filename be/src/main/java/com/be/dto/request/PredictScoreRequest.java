@@ -8,12 +8,17 @@ import java.util.List;
 
 @Builder
 public record PredictScoreRequest(
+        String schoolCode,
+
+        String admissionMethod,
+
         String majorCode,
 
         @NotEmpty(message = "Danh sách điểm không được để trống")
         List<SubjectScore> scores,
 
         String subjectCombination,
+        Double priorityScore,
         int targetYear
 ) {
 }

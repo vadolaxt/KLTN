@@ -49,7 +49,6 @@ export interface AdmissionInfo {
 }
 
 export type AdmissionMajor = AdmissionInfo;
-export type CutoffScore = AdmissionInfo;
 
 export interface AdmissionQueryParams {
   year?: number;
@@ -69,6 +68,19 @@ export interface AdmissionUpdateRequest {
   cutoffScore?: number;
   combinationCodes?: string[];
   programType?: string;
+  note?: string;
+}
+
+export interface AdmissionCreateRequest {
+  schoolCode: string;
+  year: number;
+  departmentCode: string;
+  majorName: string;
+  majorCode: string;
+  admissionQuota: number;
+  cutoffScore: number;
+  combinationCodes: string[];
+  programType: string;
   note?: string;
 }
 
@@ -174,6 +186,11 @@ export const AdminApiService = {
     return response.data;
   },
 
+  createAdmission: async (data: AdmissionCreateRequest): Promise<ApiResponse<AdmissionInfo>> => {
+    const response = await apiClient.post<ApiResponse<AdmissionInfo>>("/admin/admissions", data);
+    return response.data;
+  },
+
   updateAdmission: async (
     id: string,
     updatedFields: AdmissionUpdateRequest
@@ -185,16 +202,9 @@ export const AdminApiService = {
     return response.data;
   },
 
-  getScores: async (year: number): Promise<ApiResponse<AdmissionInfo[]>> => {
-    return AdminApiService.getAdmissions({ year });
-  },
-
-  updateScore: async (
-    id: string,
-    cutoffScore: number,
-    combinationCodes?: string[]
-  ): Promise<ApiResponse<AdmissionInfo>> => {
-    return AdminApiService.updateAdmission(id, { cutoffScore, combinationCodes });
+  deleteAdmission: async (id: string): Promise<ApiResponse<void>> => {
+    const response = await apiClient.delete<ApiResponse<void>>(`/admin/admissions/${id}`);
+    return response.data;
   },
 
   getNews: async (): Promise<ApiResponse<AdminNews[]>> => {

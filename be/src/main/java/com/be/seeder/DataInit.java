@@ -113,6 +113,8 @@ public class DataInit {
                 System.out.println("--- Dữ liệu Users đã tồn tại, bỏ qua ---");
             }
 
+            ensureRequestedAdmin(userRepository);
+
             if (subjectRepository.count() == 0) {
                 initSubject(subjectRepository);
             } else {
@@ -149,6 +151,36 @@ public class DataInit {
         System.out.println("--- Đã thêm các User mẫu thành công! ---");
     }
 
+    private void ensureRequestedAdmin(UserRepository userRepository) {
+        final String email = "admin@hcmuaf.edu.vn";
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        User existing = userRepository.findByEmail(email).orElse(null);
+        if (existing != null) {
+            boolean changed = false;
+            if (existing.getRole() != Role.ADMIN) {
+                existing.setRole(Role.ADMIN);
+                changed = true;
+            }
+            if (!encoder.matches("Admin@1234", existing.getPassword())) {
+                existing.setPassword(encoder.encode("Admin@1234"));
+                changed = true;
+            }
+            if (changed) userRepository.save(existing);
+            System.out.println("--- Đã đồng bộ tài khoản admin HCMUAF ---");
+            return;
+        }
+
+        User admin = User.builder()
+                .firstName("HCMUAF")
+                .lastName("Admin")
+                .email(email)
+                .password(encoder.encode("Admin@1234"))
+                .role(Role.ADMIN)
+                .build();
+        userRepository.save(admin);
+        System.out.println("--- Đã tạo tài khoản admin HCMUAF ---");
+    }
+
     private void initSubject(SubjectRepository subjectRepository) {
         if (subjectRepository.count() > 0) {
             System.out.println("--- Dữ liệu Subject đã tồn tại, bỏ qua ---");
@@ -180,14 +212,39 @@ public class DataInit {
     ) throws IOException {
         System.out.println("--- Đang gieo dữ liệu tuyển sinh từ dataset.csv ---");
 
+        List<AdmissionCsvRow> sourceRows = loadDatasetRows();
+        boolean hasTargetYearRows = sourceRows.stream()
+                .anyMatch(row -> row.year() == DEFAULT_TARGET_YEAR);
+        List<AdmissionCsvRow> rowsFor2026 = hasTargetYearRows
+                ? sourceRows.stream()
+                .filter(row -> row.year() == DEFAULT_TARGET_YEAR)
+                .toList()
+                : sourceRows.stream()
+                .filter(row -> row.year() == SOURCE_YEAR_FOR_2026)
+                .map(row -> row.withYear(DEFAULT_TARGET_YEAR))
+                .toList();
+
+        List<AdmissionCsvRow> allRows = new ArrayList<>(sourceRows);
+        if (!hasTargetYearRows) {
+            allRows.addAll(rowsFor2026);
+        }
+
+        long expectedMajorCount = rowsFor2026.stream()
+                .map(row -> row.schoolCode() + "|" + row.majorCode() + "|" + row.programType())
+                .distinct()
+                .count();
+
         long majorCount = majorRepository.count();
-        long subjectCount = subjectRepository.count();
+        List<Subject> existingSubjects = subjectRepository.findAll();
         long combinationCount = subjectCombinationRepository.count();
         long admissionInfoCount = admissionInfoRepository.count();
-        boolean admissionSeedExists = majorCount > 0
-                && subjectCount > 0
-                && combinationCount > 0
-                && admissionInfoCount > 0;
+        boolean hasLegacyPlaceholderSubjects = existingSubjects.stream()
+                .anyMatch(subject -> isLegacyPlaceholderSubject(subject.getSubjectName()));
+        boolean admissionSeedExists = majorCount == expectedMajorCount
+                && !existingSubjects.isEmpty()
+                && !hasLegacyPlaceholderSubjects
+                && combinationCount == BLOCK_MAP.size()
+                && admissionInfoCount == allRows.size();
 
         if (admissionSeedExists && !resetAdmissionSeed) {
             System.out.println("--- Dữ liệu tuyển sinh đã tồn tại, bỏ qua seed CSV ---");
@@ -205,14 +262,9 @@ public class DataInit {
         subjectCombinationRepository.deleteAll();
         admissionInfoRepository.deleteAll();
 
-        List<AdmissionCsvRow> sourceRows = loadDatasetRows();
-        List<AdmissionCsvRow> rowsFor2026 = sourceRows.stream()
-                .filter(row -> row.year() == SOURCE_YEAR_FOR_2026)
-                .map(row -> row.withYear(DEFAULT_TARGET_YEAR))
-                .toList();
-
-        List<AdmissionCsvRow> allRows = new ArrayList<>(sourceRows);
-        allRows.addAll(rowsFor2026);
+        subjectRepository.deleteAll(subjectRepository.findAll().stream()
+                .filter(subject -> isLegacyPlaceholderSubject(subject.getSubjectName()))
+                .toList());
 
 //        Map<String, Subject> subjectCache = new LinkedHashMap<>();
         Map<String, Subject> subjectCache = subjectRepository.findAll().stream()
@@ -224,6 +276,18 @@ public class DataInit {
                 ));
         Map<String, SubjectCombination> combinationCache = new LinkedHashMap<>();
         List<AdmissionInfo> admissionInfos = new ArrayList<>();
+
+        // Seed đúng 34 tổ hợp được backend hỗ trợ, không phụ thuộc tổ hợp có xuất hiện
+        // trong từng phiên bản dataset hay không.
+        for (String combinationCode : BLOCK_MAP.keySet()) {
+            resolveCombinations(
+                    combinationCode,
+                    subjectCache,
+                    combinationCache,
+                    subjectRepository,
+                    subjectCombinationRepository
+            );
+        }
 
         for (AdmissionCsvRow row : allRows) {
             List<SubjectCombination> combinations = resolveCombinations(
@@ -260,29 +324,47 @@ public class DataInit {
                     subjectCombinationRepository
             );
 
-            majors.put(row.majorCode(), Major.builder()
-                    .schoolCode(row.schoolCode())
-                    .departmentCode(row.departmentCode())
-                    .code(row.majorCode())
-                    .name(row.majorName())
-                    .programType(row.programType())
-                    .admissionQuota(row.admissionQuota())
-                    .cutoffScore(row.cutoffScore())
-                    .combinations(combinations)
-                    .build());
+            String majorKey = row.schoolCode() + "|" + row.majorCode() + "|" + row.programType();
+            Major existingMajor = majors.get(majorKey);
+            if (existingMajor == null) {
+                majors.put(majorKey, Major.builder()
+                        .schoolCode(row.schoolCode())
+                        .departmentCode(row.departmentCode())
+                        .code(row.majorCode())
+                        .name(row.majorName())
+                        .programType(row.programType())
+                        .admissionQuota(row.admissionQuota())
+                        .cutoffScore(row.cutoffScore())
+                        .combinations(new ArrayList<>(combinations))
+                        .build());
+            } else {
+                List<SubjectCombination> mergedCombinations = new ArrayList<>(existingMajor.getCombinations());
+                for (SubjectCombination combination : combinations) {
+                    boolean exists = mergedCombinations.stream()
+                            .anyMatch(item -> item.getCode().equalsIgnoreCase(combination.getCode()));
+                    if (!exists) {
+                        mergedCombinations.add(combination);
+                    }
+                }
+                existingMajor.setCombinations(mergedCombinations);
+            }
         }
 
         majorRepository.saveAll(majors.values());
-        System.out.printf(
-                "--- Đã gieo %d ngành năm %d và %d dòng thông tin tuyển sinh (%d-%d, %d dùng dữ liệu %d) ---%n",
-                majors.size(),
-                DEFAULT_TARGET_YEAR,
-                admissionInfos.size(),
-                sourceRows.stream().mapToInt(AdmissionCsvRow::year).min().orElse(SOURCE_YEAR_FOR_2026),
-                SOURCE_YEAR_FOR_2026,
-                DEFAULT_TARGET_YEAR,
-                SOURCE_YEAR_FOR_2026
-        );
+        int minYear = sourceRows.stream().mapToInt(AdmissionCsvRow::year).min().orElse(SOURCE_YEAR_FOR_2026);
+        int maxYear = sourceRows.stream().mapToInt(AdmissionCsvRow::year).max().orElse(SOURCE_YEAR_FOR_2026);
+        if (hasTargetYearRows) {
+            System.out.printf(
+                    "--- Đã gieo %d ngành năm %d và %d dòng thông tin tuyển sinh (%d-%d, dữ liệu %d có sẵn trong CSV) ---%n",
+                    majors.size(), DEFAULT_TARGET_YEAR, admissionInfos.size(), minYear, maxYear, DEFAULT_TARGET_YEAR
+            );
+        } else {
+            System.out.printf(
+                    "--- Đã gieo %d ngành năm %d và %d dòng thông tin tuyển sinh (%d-%d, năm %d dùng dữ liệu %d) ---%n",
+                    majors.size(), DEFAULT_TARGET_YEAR, admissionInfos.size(), minYear, maxYear,
+                    DEFAULT_TARGET_YEAR, SOURCE_YEAR_FOR_2026
+            );
+        }
     }
 
     private List<SubjectCombination> resolveCombinations(
@@ -294,16 +376,17 @@ public class DataInit {
     ) {
         List<SubjectCombination> combinations = new ArrayList<>();
 
-        for (String rawCode : rawCombinations.split(",")) {
-            String code = rawCode.trim();
-            if (code.isEmpty()) {
-                continue;
-            }
+        List<String> distinctCodes = java.util.Arrays.stream(rawCombinations.split(","))
+                .map(String::trim)
+                .filter(code -> !code.isEmpty())
+                .distinct()
+                .toList();
 
+        for (String code : distinctCodes) {
             List<String> subjectNames = BLOCK_MAP.get(code);
             if (subjectNames == null) {
-                subjectNames = List.of("Môn 1", "Môn 2", "Môn 3");
-                System.out.printf("--- Cảnh báo: chưa có ánh xạ môn cho tổ hợp %s ---%n", code);
+                System.out.printf("--- Cảnh báo: bỏ qua tổ hợp chưa có ánh xạ môn: %s ---%n", code);
+                continue;
             }
             List<String> combinationSubjectNames = subjectNames;
 
@@ -340,7 +423,7 @@ public class DataInit {
     }
 
     private List<AdmissionCsvRow> loadDatasetRows() throws IOException {
-        List<String> lines = readDatasetLines();
+        List<String> lines = readDatasetRecords("dataset.csv");
         if (lines.size() <= 1) {
             return List.of();
         }
@@ -353,30 +436,55 @@ public class DataInit {
             }
 
             List<String> fields = parseCsvLine(line);
-            if (fields.size() < 10) {
+            if (fields.size() < 9) {
                 System.out.printf("--- Bỏ qua dòng dataset không hợp lệ: %s ---%n", line);
                 continue;
             }
 
-            rows.add(new AdmissionCsvRow(
-                    fields.get(0),
-                    parseInt(fields.get(1)),
-                    fields.get(2),
-                    fields.get(3),
-                    fields.get(4),
-                    parseInt(fields.get(5)),
-                    parseDouble(fields.get(6)),
-                    fields.get(7),
-                    fields.get(8),
-                    fields.get(9)
-            ));
+            if (fields.size() >= 10) {
+                rows.add(new AdmissionCsvRow(
+                        fields.get(0),
+                        parseInt(fields.get(1)),
+                        fields.get(2),
+                        fields.get(3),
+                        fields.get(4),
+                        parseInt(fields.get(5)),
+                        parseDouble(fields.get(6)),
+                        fields.get(7),
+                        fields.get(8),
+                        fields.get(9)
+                ));
+            } else {
+                rows.add(new AdmissionCsvRow(
+                        fields.get(0),
+                        parseInt(fields.get(1)),
+                        "Unknown",
+                        fields.get(3),
+                        fields.get(2),
+                        parseInt(fields.get(4)),
+                        parseDouble(fields.get(5)),
+                        fields.get(6),
+                        fields.get(7),
+                        fields.get(8)
+                ));
+            }
         }
 
         return rows;
     }
 
-    private List<String> readDatasetLines() throws IOException {
-        try (InputStream stream = getClass().getClassLoader().getResourceAsStream("dataset.csv")) {
+    private boolean isLegacyPlaceholderSubject(String subjectName) {
+        if (subjectName == null) {
+            return false;
+        }
+        String normalized = subjectName.trim().toLowerCase(java.util.Locale.ROOT);
+        return normalized.equals("môn 1")
+                || normalized.equals("môn 2")
+                || normalized.equals("môn 3");
+    }
+
+    private List<String> readDatasetLines(String resourceName) throws IOException {
+        try (InputStream stream = getClass().getClassLoader().getResourceAsStream(resourceName)) {
             if (stream != null) {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
                     return reader.lines().toList();
@@ -385,9 +493,9 @@ public class DataInit {
         }
 
         for (Path candidate : List.of(
-                Path.of("dataset.csv"),
-                Path.of("../dataset.csv"),
-                Path.of("../../dataset.csv")
+                Path.of(resourceName),
+                Path.of("../" + resourceName),
+                Path.of("../../" + resourceName)
         )) {
             if (Files.exists(candidate)) {
                 return Files.readAllLines(candidate, StandardCharsets.UTF_8);
@@ -395,6 +503,49 @@ public class DataInit {
         }
 
         throw new IOException("Không tìm thấy dataset.csv ở classpath hoặc thư mục chạy ứng dụng");
+    }
+
+    private List<String> readDatasetRecords(String resourceName) throws IOException {
+        List<String> lines = readDatasetLines(resourceName);
+        List<String> records = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (String line : lines) {
+            if (current.length() > 0) {
+                current.append('\n');
+            }
+            current.append(line);
+            inQuotes = updateQuoteState(line, inQuotes);
+
+            if (!inQuotes) {
+                records.add(current.toString());
+                current.setLength(0);
+            }
+        }
+
+        if (current.length() > 0) {
+            records.add(current.toString());
+        }
+
+        return records;
+    }
+
+    private boolean updateQuoteState(String line, boolean inQuotes) {
+        boolean state = inQuotes;
+        for (int i = 0; i < line.length(); i++) {
+            if (line.charAt(i) != '"') {
+                continue;
+            }
+
+            boolean escapedQuote = state && i + 1 < line.length() && line.charAt(i + 1) == '"';
+            if (escapedQuote) {
+                i++;
+            } else {
+                state = !state;
+            }
+        }
+        return state;
     }
 
     private List<String> parseCsvLine(String line) {

@@ -5,6 +5,9 @@ import com.be.dto.request.AuthRequest;
 import com.be.dto.request.ForgetPasswordRequest;
 import com.be.dto.request.RegisterRequest;
 import com.be.dto.response.AuthResponse;
+import com.be.dto.response.AdminProfileResponse;
+import com.be.entity.User;
+import com.be.repository.UserRepository;
 import com.be.service.AuthService;
 import com.be.service.EmailService;
 import jakarta.validation.Valid;
@@ -17,12 +20,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import org.springframework.security.core.Authentication;
 
 @Slf4j
 @RestController
@@ -32,6 +37,23 @@ import java.util.Map;
 public class AuthController {
     AuthService authService;
     EmailService emailService;
+    UserRepository userRepository;
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<AdminProfileResponse>> me(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(HttpStatus.UNAUTHORIZED, "Chưa đăng nhập"));
+        }
+        User user = userRepository.findById(authentication.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(HttpStatus.UNAUTHORIZED, "Tài khoản không tồn tại"));
+        }
+        AdminProfileResponse profile = new AdminProfileResponse(
+                user.getFirstName(), user.getLastName(), user.getEmail(), user.getRole());
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "Lấy thông tin tài khoản thành công", profile));
+    }
 
     @PostMapping("/send-otp")
     public ResponseEntity<ApiResponse<Long>> sendOtp(

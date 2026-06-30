@@ -7,12 +7,12 @@ import com.be.entity.Major;
 import com.be.repository.MajorRepository;
 import com.be.service.PredictScoreService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,8 +29,13 @@ public class PredictController {
     MajorRepository majorRepository;
 
     @GetMapping("/majors")
-    public ResponseEntity<ApiResponse<List<Major>>> getMajors() {
-        List<Major> majors = majorRepository.findAll(Sort.by(Sort.Direction.ASC, "code"));
+    public ResponseEntity<ApiResponse<List<Major>>> getMajors(
+            @RequestParam(defaultValue = "NLU") String schoolCode
+    ) {
+        List<Major> majors = majorRepository.findBySchoolCode(schoolCode.trim().toUpperCase())
+                .stream()
+                .sorted((left, right) -> left.getCode().compareToIgnoreCase(right.getCode()))
+                .toList();
         return ResponseEntity.ok(
                 ApiResponse.success(HttpStatus.OK, "Majors loaded successfully", majors)
         );

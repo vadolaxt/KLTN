@@ -56,6 +56,18 @@ export default function PredictionResultPanel({ prediction }: PredictionResultPa
               <td className="px-4 py-3 text-[13px] font-extrabold text-green-main">{prediction?.combinationCode ?? '-'}</td>
             </tr>
             <tr className="border-b border-gray-mid">
+              <td className="px-4 py-3 text-[13px] font-bold text-text-dark">Điểm ưu tiên</td>
+              <td className="px-4 py-3 text-[15px] font-extrabold text-green-main">
+                {formatOptionalScore(prediction?.priorityScore)}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-mid">
+              <td className="px-4 py-3 text-[13px] font-bold text-text-dark">Điểm dùng dự đoán</td>
+              <td className="px-4 py-3 text-[15px] font-extrabold text-green-main">
+                {formatOptionalScore(prediction?.studentScore)}
+              </td>
+            </tr>
+            <tr className="border-b border-gray-mid">
               <td className="px-4 py-3 text-[13px] font-bold text-text-dark">Điểm chuẩn 2025</td>
               <td className="px-4 py-3 text-[15px] font-extrabold text-green-main">
                 {formatOptionalScore(prediction?.result.previous_year_cutoff_score)}

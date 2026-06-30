@@ -8,14 +8,15 @@ import {
   AdminProfile,
   AdminUser,
   AdmissionInfo,
+  AdmissionCreateRequest,
   AdmissionUpdateRequest,
   DashboardStats,
 } from '@/service/admin.api';
 
-export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'scores' | 'news';
+export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'news';
 
 const DEFAULT_YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
-const ADMIN_DEMO_MODE = true;
+const ADMIN_DEMO_MODE = false;
 const DEMO_ADMIN_PROFILE: AdminProfile = {
   firstName: 'Quản trị',
   lastName: 'Demo',
@@ -180,9 +181,6 @@ export function useAdmin() {
   const [admissions, setAdmissions] = useState<AdmissionInfo[]>(
     ADMIN_DEMO_MODE ? DEMO_ADMISSIONS.filter((item) => item.year === selectedYear) : []
   );
-  const [scores, setScores] = useState<AdmissionInfo[]>(
-    ADMIN_DEMO_MODE ? DEMO_ADMISSIONS.filter((item) => item.year === selectedYear) : []
-  );
   const [news, setNews] = useState<AdminNews[]>(ADMIN_DEMO_MODE ? DEMO_NEWS : []);
   const [stats, setStats] = useState<DashboardStats | null>(ADMIN_DEMO_MODE ? buildDemoStats() : null);
 
@@ -333,21 +331,6 @@ export function useAdmin() {
     if (res.status === 'OK') setAdmissions(res.data);
   }, []);
 
-  const fetchScores = useCallback(async (year: number) => {
-    if (ADMIN_DEMO_MODE) {
-      setScores((prev) => {
-        const currentItems = prev.filter((item) => item.year === year);
-        return currentItems.length > 0
-          ? currentItems
-          : DEMO_ADMISSIONS.filter((item) => item.year === year);
-      });
-      return;
-    }
-
-    const res = await AdminApiService.getScores(year);
-    if (res.status === 'OK') setScores(res.data);
-  }, []);
-
   const fetchNews = useCallback(async () => {
     if (ADMIN_DEMO_MODE) {
       setNews(DEMO_NEWS);
@@ -381,9 +364,6 @@ export function useAdmin() {
           case 'admissions':
             await fetchAdmissions(selectedYear);
             break;
-          case 'scores':
-            await fetchScores(selectedYear);
-            break;
           case 'news':
             await fetchNews();
             break;
@@ -402,7 +382,6 @@ export function useAdmin() {
     activeTab,
     fetchAdmissions,
     fetchNews,
-    fetchScores,
     fetchStats,
     fetchUsers,
     isAuthenticated,
@@ -506,7 +485,6 @@ export function useAdmin() {
       };
 
       setAdmissions((prev) => prev.map(applyUpdate));
-      setScores((prev) => prev.map(applyUpdate));
       toast.success('Demo: đã cập nhật thông tin tuyển sinh');
       return;
     }
@@ -516,7 +494,6 @@ export function useAdmin() {
 
       if (res.status === 'OK') {
         setAdmissions((prev) => upsertById(prev, res.data));
-        setScores((prev) => upsertById(prev, res.data));
         toast.success(`Đã cập nhật ngành ${res.data.majorCode}`);
         fetchStats();
       }
@@ -525,17 +502,39 @@ export function useAdmin() {
     }
   }, [fetchStats]);
 
+  const createAdmissionInfo = useCallback(async (data: AdmissionCreateRequest) => {
+    try {
+      const res = await AdminApiService.createAdmission(data);
+      if (res.status === 'CREATED') {
+        if (res.data.year === selectedYear) setAdmissions((prev) => upsertById(prev, res.data));
+        setAvailableYears((prev) => [...new Set([...prev, res.data.year])].sort((a, b) => b - a));
+        toast.success(`Đã thêm thông tin tuyển sinh ngành ${res.data.majorCode}`);
+        fetchStats();
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không thể thêm thông tin tuyển sinh');
+      throw err;
+    }
+  }, [fetchStats, selectedYear]);
+
+  const deleteAdmissionInfo = useCallback(async (id: string) => {
+    try {
+      const res = await AdminApiService.deleteAdmission(id);
+      if (res.status === 'OK') {
+        setAdmissions((prev) => prev.filter((item) => item.id !== id));
+        toast.success('Đã xóa thông tin tuyển sinh');
+        fetchStats();
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Không thể xóa thông tin tuyển sinh');
+      throw err;
+    }
+  }, [fetchStats]);
+
   const updateAdmissionQuota = useCallback(async (id: string, quota: number, methods: string[]) => {
     await updateAdmissionInfo(id, {
       admissionQuota: quota,
       combinationCodes: methods,
-    });
-  }, [updateAdmissionInfo]);
-
-  const updateCutoffScore = useCallback(async (id: string, cutoffScore: number, combinationCodes?: string[]) => {
-    await updateAdmissionInfo(id, {
-      cutoffScore,
-      combinationCodes,
     });
   }, [updateAdmissionInfo]);
 
@@ -606,19 +605,18 @@ export function useAdmin() {
 
   const availableCombinationCodes = useMemo(() => {
     const codeSet = new Set<string>();
-    [...admissions, ...scores].forEach((item) => {
+    admissions.forEach((item) => {
       item.combinations.forEach((combination) => codeSet.add(combination.code));
     });
     return Array.from(codeSet).sort();
-  }, [admissions, scores]);
+  }, [admissions]);
 
   const refreshData = useCallback(async () => {
     if (activeTab === 'dashboard') await fetchStats();
     if (activeTab === 'users') await fetchUsers();
     if (activeTab === 'admissions') await fetchAdmissions(selectedYear);
-    if (activeTab === 'scores') await fetchScores(selectedYear);
     if (activeTab === 'news') await fetchNews();
-  }, [activeTab, fetchAdmissions, fetchNews, fetchScores, fetchStats, fetchUsers, selectedYear]);
+  }, [activeTab, fetchAdmissions, fetchNews, fetchStats, fetchUsers, selectedYear]);
 
   return {
     isAuthenticated,
@@ -640,7 +638,6 @@ export function useAdmin() {
 
     users,
     admissions,
-    scores,
     news,
     stats,
 
@@ -649,8 +646,9 @@ export function useAdmin() {
     toggleUserStatus,
     deleteUser,
     updateAdmissionInfo,
+    createAdmissionInfo,
+    deleteAdmissionInfo,
     updateAdmissionQuota,
-    updateCutoffScore,
     createNewsArticle,
     updateNewsArticle,
     deleteNewsArticle,

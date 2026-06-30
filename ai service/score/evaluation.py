@@ -17,6 +17,8 @@ from .features import coerce_number, normalize_major_code
 
 @dataclass
 class ExperimentReport:
+    """Kết quả trả về sau một lần huấn luyện và đánh giá mô hình."""
+
     leaderboard: pd.DataFrame
     cutoff_predictions: pd.DataFrame
     candidate_predictions: pd.DataFrame
@@ -26,6 +28,7 @@ class ExperimentReport:
 
 
 def regression_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
+    """Tính các chỉ số sai số giữa điểm chuẩn thật và điểm chuẩn dự đoán."""
     return {
         "MAE": float(mean_absolute_error(y_true, y_pred)),
         "RMSE": float(np.sqrt(mean_squared_error(y_true, y_pred))),
@@ -37,6 +40,12 @@ def evaluate_candidate_admissions(
     candidate_df: pd.DataFrame | None,
     predicted_cutoffs: pd.DataFrame,
 ) -> tuple[dict[str, float], pd.DataFrame]:
+    """Đánh giá dự đoán đậu/rớt nếu có dữ liệu thí sinh thực tế.
+
+    Hàm này dùng trong giai đoạn thử nghiệm mô hình, không dùng trực tiếp cho API.
+    Nó ghép điểm thí sinh với điểm chuẩn dự đoán theo ngành và tổ hợp, sau đó
+    tính Accuracy/F1 cho quyết định đậu hoặc rớt.
+    """
     if candidate_df is None or candidate_df.empty:
         return {"Accuracy_2025": np.nan, "F1_2025": np.nan, "Candidate_Rows": 0}, pd.DataFrame()
 

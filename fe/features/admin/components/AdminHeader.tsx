@@ -20,7 +20,6 @@ const TAB_TITLES: Record<AdminTab, string> = {
   dashboard: 'Thống kê & Báo cáo tuyển sinh',
   users: 'Quản lý tài khoản & Người dùng',
   admissions: 'Đề án & Chỉ tiêu tuyển sinh',
-  scores: 'Điểm chuẩn xét tuyển các năm',
   news: 'Bản tin tuyển sinh & Sự kiện NLU'
 };
 

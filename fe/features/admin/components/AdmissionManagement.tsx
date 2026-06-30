@@ -5,13 +5,14 @@ import {
   BookOpenCheck,
   Check,
   Edit3,
-  FileText,
   Hash,
   Layers,
+  Plus,
   Search,
+  Trash2,
   X,
 } from 'lucide-react';
-import { AdmissionInfo, AdmissionUpdateRequest } from '@/service/admin.api';
+import { AdmissionCreateRequest, AdmissionInfo, AdmissionUpdateRequest } from '@/service/admin.api';
 
 interface AdmissionManagementProps {
   admissions: AdmissionInfo[];
@@ -20,6 +21,8 @@ interface AdmissionManagementProps {
   availableCombinationCodes: string[];
   setSelectedYear: (year: number) => void;
   updateAdmissionInfo: (id: string, payload: AdmissionUpdateRequest) => Promise<void>;
+  createAdmissionInfo: (payload: AdmissionCreateRequest) => Promise<void>;
+  deleteAdmissionInfo: (id: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -34,6 +37,8 @@ export default function AdmissionManagement({
   availableCombinationCodes,
   setSelectedYear,
   updateAdmissionInfo,
+  createAdmissionInfo,
+  deleteAdmissionInfo,
   isLoading,
 }: AdmissionManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -47,6 +52,11 @@ export default function AdmissionManagement({
   const [editNote, setEditNote] = useState('');
   const [editCombinationCodes, setEditCombinationCodes] = useState<string[]>([]);
   const [formError, setFormError] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState<AdmissionCreateRequest>({
+    schoolCode: 'NLU', year: selectedYear, departmentCode: '', majorName: '', majorCode: '',
+    admissionQuota: 1, cutoffScore: 0, combinationCodes: [], programType: 'Đại trà', note: '',
+  });
 
   const departments = useMemo(() => {
     return Array.from(new Set(admissions.map((item) => item.departmentCode).filter(Boolean))).sort();
@@ -122,16 +132,53 @@ export default function AdmissionManagement({
       admissionQuota: editQuota,
       cutoffScore: editCutoffScore,
       programType: editProgramType.trim(),
-      note: editNote.trim(),
       combinationCodes: editCombinationCodes,
+      note: editNote.trim(),
     });
     setEditItem(null);
   };
 
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    if (!createForm.departmentCode.trim() || !createForm.majorName.trim() || !createForm.majorCode.trim()) {
+      setFormError('Vui lòng nhập đầy đủ mã khoa, mã ngành và tên ngành');
+      return;
+    }
+    if (createForm.admissionQuota < 1 || createForm.cutoffScore < 0 || createForm.cutoffScore > 30) {
+      setFormError('Chỉ tiêu phải lớn hơn 0 và điểm chuẩn nằm trong khoảng 0 đến 30');
+      return;
+    }
+    if (createForm.combinationCodes.length === 0) {
+      setFormError('Vui lòng chọn ít nhất một tổ hợp môn');
+      return;
+    }
+    try {
+      await createAdmissionInfo(createForm);
+      setShowCreate(false);
+      setCreateForm((prev) => ({
+        ...prev,
+        departmentCode: '',
+        majorName: '',
+        majorCode: '',
+        combinationCodes: [],
+        note: '',
+      }));
+    } catch {
+      // API layer displays the server validation message.
+    }
+  };
+
+  const handleDelete = async (item: AdmissionInfo) => {
+    if (!window.confirm(`Xóa thông tin tuyển sinh ngành ${item.majorName} năm ${item.year}?`)) return;
+    await deleteAdmissionInfo(item.id);
+  };
+
   return (
     <div className="bg-white border border-gray-mid rounded-2xl p-6 shadow-sm">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between mb-6">
-        <div className="relative flex-1 max-w-xl">
+      <div className="mx-auto w-fit max-w-full">
+      <div className="flex w-full flex-col gap-4 xl:flex-row xl:items-center xl:justify-between mb-6">
+        <div className="relative w-full xl:w-[300px] xl:flex-none">
           <input
             type="text"
             placeholder="Tìm theo tên ngành, mã ngành, mã khoa..."
@@ -143,6 +190,17 @@ export default function AdmissionManagement({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setCreateForm((prev) => ({ ...prev, year: selectedYear }));
+              setFormError('');
+              setShowCreate(true);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-green-main px-3 py-2 text-xs font-bold text-white hover:bg-green-dark"
+          >
+            <Plus size={14} /> Thêm mới
+          </button>
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -183,10 +241,10 @@ export default function AdmissionManagement({
         </div>
       </div>
 
-      <div className="overflow-x-auto border border-gray-mid rounded-xl">
-        <table className="min-w-[1180px] w-full divide-y divide-gray-mid text-left">
-          <thead className="bg-gray-light text-[10px] font-black uppercase tracking-[1.5px] text-text-light">
-            <tr>
+      <div className="w-fit max-w-full overflow-x-auto border border-gray-mid rounded-xl">
+        <table className="w-max min-w-[820px] table-auto divide-y divide-gray-mid text-left [&_th:first-child]:!pl-8 [&_td:first-child]:!pl-8 [&_td:nth-child(1)]:text-center [&_th:nth-child(2)]:!w-[120px] [&_td:nth-child(2)]:!w-[120px] [&_th:nth-child(2)]:!pl-5 [&_td:nth-child(2)]:!pl-5 [&_td:nth-child(2)]:text-center [&_th:nth-child(4)]:!w-[90px] [&_td:nth-child(4)]:!w-[90px] [&_td:nth-child(4)]:text-center [&_td:nth-child(5)]:text-center [&_td:nth-child(6)]:text-center [&_td:nth-child(7)]:text-center [&_th:nth-child(8)]:!w-[140px] [&_td:nth-child(8)]:!w-[140px] [&_td:nth-child(8)]:!max-w-[140px] [&_th:last-child]:!pr-8 [&_td:last-child]:!pr-8">
+          <thead className="bg-gray-light text-[11px] font-black uppercase tracking-[0.3px] text-text-light [&_th]:!px-2 [&_th]:text-center">
+            <tr className="whitespace-nowrap">
               <th className="px-4 py-4">Năm</th>
               <th className="px-4 py-4">Mã ngành</th>
               <th className="px-4 py-4">Tên ngành đào tạo</th>
@@ -195,20 +253,19 @@ export default function AdmissionManagement({
               <th className="px-4 py-4">Chỉ tiêu</th>
               <th className="px-4 py-4">Điểm chuẩn</th>
               <th className="px-4 py-4">Tổ hợp môn</th>
-              <th className="px-4 py-4">Ghi chú</th>
               <th className="px-4 py-4 text-center">Cập nhật</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-mid bg-white text-xs">
+          <tbody className="divide-y divide-gray-mid bg-white text-xs [&_td]:!px-1">
             {isLoading ? (
               <tr>
-                <td colSpan={10} className="text-center py-10 text-text-light font-medium">
+                <td colSpan={9} className="text-center py-10 text-text-light font-medium">
                   Đang tải thông tin tuyển sinh năm {selectedYear}...
                 </td>
               </tr>
             ) : filteredAdmissions.length === 0 ? (
               <tr>
-                <td colSpan={10} className="text-center py-10 text-text-light font-medium">
+                <td colSpan={9} className="text-center py-10 text-text-light font-medium">
                   Không tìm thấy dòng tuyển sinh phù hợp.
                 </td>
               </tr>
@@ -219,8 +276,8 @@ export default function AdmissionManagement({
                   <td className="px-4 py-4 whitespace-nowrap font-mono font-bold text-text-mid">
                     {item.majorCode}
                   </td>
-                  <td className="px-4 py-4 min-w-[240px] font-extrabold text-text-dark">
-                    {item.majorName}
+                  <td className="w-[220px] max-w-[220px] px-3 py-4 font-extrabold text-text-dark">
+                    <span className="line-clamp-2 leading-5" title={item.majorName}>{item.majorName}</span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-text-mid font-bold">
                     {item.departmentCode}
@@ -232,8 +289,8 @@ export default function AdmissionManagement({
                   <td className="px-4 py-4 whitespace-nowrap font-extrabold text-green-dark">
                     {item.cutoffScore.toFixed(2)}
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="flex flex-wrap gap-1.5 max-w-[260px]">
+                  <td className="w-[140px] max-w-[140px] px-4 py-4 text-center">
+                    <div className="flex flex-wrap justify-center gap-1.5">
                       {getCombinationCodes(item).map((code) => (
                         <span
                           key={code}
@@ -244,16 +301,20 @@ export default function AdmissionManagement({
                       ))}
                     </div>
                   </td>
-                  <td className="px-4 py-4 max-w-[220px] text-text-light">
-                    <span className="line-clamp-2">{item.note || '-'}</span>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                  <td className="px-2 py-4 whitespace-nowrap text-center">
                     <button
                       onClick={() => openEditModal(item)}
                       className="p-1.5 rounded-lg border border-gray-mid text-text-mid hover:bg-green-pale hover:text-green-dark hover:border-green-main/30 transition-all inline-flex items-center gap-1.5"
                     >
                       <Edit3 size={13} />
                       <span className="text-[11px] font-bold">Sửa</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item)}
+                      className="ml-2 inline-flex items-center gap-1.5 rounded-lg border border-red-200 p-1.5 text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 size={13} />
+                      <span className="text-[11px] font-bold">Xóa</span>
                     </button>
                   </td>
                 </tr>
@@ -262,6 +323,77 @@ export default function AdmissionManagement({
           </tbody>
         </table>
       </div>
+      </div>
+
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-3xl rounded-2xl border border-gray-mid bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-center justify-between border-b border-gray-light pb-4">
+              <h3 className="text-sm font-black uppercase text-text-dark">Thêm thông tin tuyển sinh</h3>
+              <button type="button" onClick={() => setShowCreate(false)}><X size={18} /></button>
+            </div>
+            {formError && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600">{formError}</div>}
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <input required placeholder="Mã trường" value={createForm.schoolCode} onChange={(e) => setCreateForm({ ...createForm, schoolCode: e.target.value })} className="rounded-xl border border-gray-mid px-3 py-2.5 text-xs" />
+                <input required type="number" placeholder="Năm" value={createForm.year} onChange={(e) => setCreateForm({ ...createForm, year: Number(e.target.value) })} className="rounded-xl border border-gray-mid px-3 py-2.5 text-xs" />
+                <input required placeholder="Mã khoa" value={createForm.departmentCode} onChange={(e) => setCreateForm({ ...createForm, departmentCode: e.target.value })} className="rounded-xl border border-gray-mid px-3 py-2.5 text-xs" />
+                <input required placeholder="Mã ngành" value={createForm.majorCode} onChange={(e) => setCreateForm({ ...createForm, majorCode: e.target.value })} className="rounded-xl border border-gray-mid px-3 py-2.5 text-xs" />
+              </div>
+              <input required placeholder="Tên ngành" value={createForm.majorName} onChange={(e) => setCreateForm({ ...createForm, majorName: e.target.value })} className="w-full rounded-xl border border-gray-mid px-3 py-2.5 text-xs" />
+
+              <fieldset className="rounded-xl border border-gray-mid px-4 pb-4 pt-2">
+                <legend className="mx-auto px-3 text-[11px] font-extrabold uppercase tracking-[0.5px] text-text-mid">
+                  Chương trình, chỉ tiêu & điểm chuẩn
+                </legend>
+                <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-3">
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase text-text-light">Chương trình đào tạo</span>
+                    <select required value={createForm.programType} onChange={(e) => setCreateForm({ ...createForm, programType: e.target.value })} className="rounded-xl border border-gray-mid bg-white px-3 py-2.5 text-xs">
+                      <option value="Đại trà">Đại trà</option>
+                      <option value="Nâng cao">Nâng cao</option>
+                      <option value="Tiên tiến">Tiên tiến</option>
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase text-text-light">Chỉ tiêu</span>
+                    <input required min={1} type="number" value={createForm.admissionQuota} onChange={(e) => setCreateForm({ ...createForm, admissionQuota: Number(e.target.value) })} className="rounded-xl border border-gray-mid px-3 py-2.5 text-xs" />
+                  </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase text-text-light">Điểm chuẩn</span>
+                    <input required min={0} max={30} step="0.01" type="number" value={createForm.cutoffScore} onChange={(e) => setCreateForm({ ...createForm, cutoffScore: Number(e.target.value) })} className="rounded-xl border border-gray-mid px-3 py-2.5 text-xs" />
+                  </label>
+                </div>
+              </fieldset>
+              <div>
+                <p className="mb-2 text-[11px] font-extrabold uppercase text-text-mid">Tổ hợp môn</p>
+                <div className="flex max-h-32 flex-wrap gap-2 overflow-y-auto rounded-xl border border-gray-mid p-3">
+                  {combinationOptions.map((code) => (
+                    <label key={code} className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-gray-light px-2 py-1.5 text-xs font-bold">
+                      <input type="checkbox" checked={createForm.combinationCodes.includes(code)} onChange={() => setCreateForm((prev) => ({ ...prev, combinationCodes: prev.combinationCodes.includes(code) ? prev.combinationCodes.filter((item) => item !== code) : [...prev.combinationCodes, code] }))} />
+                      {code}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-extrabold uppercase text-text-mid">Ghi chú</span>
+                <textarea
+                  value={createForm.note ?? ''}
+                  onChange={(e) => setCreateForm({ ...createForm, note: e.target.value })}
+                  rows={2}
+                  placeholder="Nhập ghi chú tuyển sinh (nếu có)..."
+                  className="w-full resize-none rounded-xl border border-gray-mid px-3 py-2.5 text-xs outline-none focus:border-green-main"
+                />
+              </label>
+              <div className="flex justify-end gap-3 border-t border-gray-light pt-4">
+                <button type="button" onClick={() => setShowCreate(false)} className="rounded-xl border border-gray-mid px-4 py-2 text-xs font-bold">Hủy</button>
+                <button type="submit" className="rounded-xl bg-green-main px-4 py-2 text-xs font-bold text-white">Thêm thông tin</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {editItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
@@ -370,18 +502,16 @@ export default function AdmissionManagement({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[11px] font-extrabold uppercase tracking-[0.5px] text-text-mid flex items-center gap-1">
-                  <FileText size={13} className="text-green-main" />
-                  Ghi chú
-                </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-extrabold uppercase text-text-mid">Ghi chú</span>
                 <textarea
                   value={editNote}
                   onChange={(e) => setEditNote(e.target.value)}
                   rows={3}
-                  className="w-full rounded-xl border border-gray-mid px-4 py-3 text-xs font-medium text-text-dark outline-none bg-gray-light/20 focus:border-green-main focus:bg-white resize-none"
+                  placeholder="Nhập ghi chú tuyển sinh (nếu có)..."
+                  className="w-full resize-none rounded-xl border border-gray-mid px-4 py-3 text-xs text-text-dark outline-none focus:border-green-main"
                 />
-              </div>
+              </label>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-light">
                 <button

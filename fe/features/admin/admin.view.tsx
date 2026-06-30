@@ -13,7 +13,6 @@ import AdminRegister from './components/AdminRegister';
 import DashboardOverview from './components/DashboardOverview';
 import UserManagement from './components/UserManagement';
 import AdmissionManagement from './components/AdmissionManagement';
-import ScoreManagement from './components/ScoreManagement';
 import NewsManagement from './components/NewsManagement';
 
 export default function AdminView() {
@@ -40,7 +39,6 @@ export default function AdminView() {
     // Data List State
     users,
     admissions,
-    scores,
     news,
     stats,
 
@@ -50,7 +48,8 @@ export default function AdminView() {
     toggleUserStatus,
     deleteUser,
     updateAdmissionInfo,
-    updateCutoffScore,
+    createAdmissionInfo,
+    deleteAdmissionInfo,
     createNewsArticle,
     updateNewsArticle,
     deleteNewsArticle
@@ -147,18 +146,8 @@ export default function AdminView() {
                 availableCombinationCodes={availableCombinationCodes}
                 setSelectedYear={setSelectedYear}
                 updateAdmissionInfo={updateAdmissionInfo}
-                isLoading={isLoading} 
-              />
-            )}
-
-            {activeTab === 'scores' && (
-              <ScoreManagement 
-                scores={scores} 
-                selectedYear={selectedYear} 
-                availableYears={availableYears}
-                availableCombinationCodes={availableCombinationCodes}
-                setSelectedYear={setSelectedYear} 
-                updateCutoffScore={updateCutoffScore} 
+                createAdmissionInfo={createAdmissionInfo}
+                deleteAdmissionInfo={deleteAdmissionInfo}
                 isLoading={isLoading} 
               />
             )}

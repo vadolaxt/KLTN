@@ -56,7 +56,13 @@ const processQueue = (error: unknown, token: string | null = null) => {
 };
 
 apiClient.interceptors.response.use(
-	(response) => response,
+	(response) => {
+		const apiStatus = response.data?.status;
+		if (typeof apiStatus === "string" && /^\d{3}\s/.test(apiStatus)) {
+			response.data.status = apiStatus.replace(/^\d{3}\s+/, "");
+		}
+		return response;
+	},
 	async (error) => {
 		const originalRequest = error.config;
 

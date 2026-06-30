@@ -13,7 +13,6 @@ if hasattr(sys.stderr, "reconfigure"):
 warnings.filterwarnings("ignore", category=UserWarning)
 
 from score import (
-    load_candidate_2025,
     load_historical_admissions,
     load_national_subject_stats,
     predict_admission,
@@ -34,12 +33,10 @@ def print_table(title: str, df: pd.DataFrame, max_rows: int = 10) -> None:
 def main() -> None:
     historical_df = load_historical_admissions()
     national_stats = load_national_subject_stats()
-    candidate_2025_df = load_candidate_2025()
 
     report = run_nlu_experiment(
         historical_df=historical_df,
         national_subject_stats=national_stats,
-        candidate_2025_df=candidate_2025_df,
         train_end_year=2024,
         test_year=2025,
         retrain_final=True,
@@ -62,14 +59,12 @@ def main() -> None:
     print_table("COLAB-COMPATIBLE MODEL LEADERBOARD", leaderboard[metric_cols], max_rows=12)
 
     best = report.best_bundle
-    print("\n===== BEST MODEL ON 2025 TEST =====")
+    print("\n===== BEST MODEL =====")
     print(f"Pipeline: {best.pipeline_name}")
     print(f"Model: {best.model_name}")
-    print(f"MAE: {best.metrics['MAE']:.4f}")
-    print(f"RMSE: {best.metrics['RMSE']:.4f}")
-    print(f"R2: {best.metrics['R2']:.4f}")
-    print(f"Accuracy 2025: {best.metrics['Accuracy_2025']:.4f}")
-    print(f"F1 2025: {best.metrics['F1_2025']:.4f}")
+    print(f"MAE: {best.metrics.get('MAE', float('nan')):.4f}")
+    print(f"RMSE: {best.metrics.get('RMSE', float('nan')):.4f}")
+    print(f"R2: {best.metrics.get('R2', float('nan')):.4f}")
 
     # Lấy mô hình tốt nhất
     final_bundle = report.final_bundle or report.best_bundle
@@ -89,8 +84,9 @@ def main() -> None:
     sample_prediction = predict_admission(
         final_bundle,
         major_code="7480201",
-        student_score=24.0,
+        student_score=21.0,
         subject_combination="A00",
+        subject_scores={"Toan": 8.0, "Vat_li": 7.0, "Hoa_hoc": 6.0},
         target_year=2026,
     )
     print("\n===== SAMPLE 2026 ADMISSION PREDICTION =====")
