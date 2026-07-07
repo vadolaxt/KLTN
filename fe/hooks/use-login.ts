@@ -31,6 +31,7 @@ export const useLogin = () => {
 
 			if (result.status === "OK" || result.data?.authenticated) {
 				localStorage.setItem("isLogin", "true");
+				localStorage.setItem("userName", result.data.userName);
 
 				if (result.data.role === "ROLE_USER") {
 					router.push("/homepage");

@@ -280,12 +280,16 @@ public class AuthService {
 
         initAcademicScoreProfile(user.getId());
 
-        return AuthResponse.builder()
+        AuthResponse response = AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .authenticated(true)
                 .role(user.getRole().toString())
+                .userName(user.getFirstName() + " " + user.getLastName())
                 .build();
+        log.info(response.getUserName());
+
+        return response;
     }
 
     public AuthResponse login(AuthRequest request) {
@@ -309,6 +313,7 @@ public class AuthService {
                 .refreshToken(jwtService.generateToken(user, true))
                 .authenticated(true)
                 .role(user.getRole().toString())
+                .userName(user.getFirstName() + " " + user.getLastName())
                 .build();
     }
 

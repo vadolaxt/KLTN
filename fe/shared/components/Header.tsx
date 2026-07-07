@@ -25,6 +25,7 @@ export default function Header() {
 			console.error("Logout error:", error);
 		} finally {
 			localStorage.removeItem("isLogin");
+			localStorage.removeItem("userName");
 			setIsLoggedIn(false);
 			setIsDropdownOpen(false);
 			router.push("/homepage");

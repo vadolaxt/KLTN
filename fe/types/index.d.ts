@@ -14,6 +14,7 @@ export interface AuthResponse {
 	refreshToken: string;
 	authenticated: boolean;
 	role: string;
+	userName: string;
 }
 
 export interface RegisterRequest {

@@ -78,7 +78,7 @@ public class ChatService {
                     .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
                         throw new AppException(ErrorCode.AI_PROCESSING_ERROR);
                     })
-                    // Bắt lỗi 404 nếu sai endpoint
+                    // lỗi sai endpoint
                     .onStatus(status -> status.value() == 404, (req, res) -> {
                         throw new AppException(ErrorCode.FASTAPI_CONNECTION_FAILED);
                     })

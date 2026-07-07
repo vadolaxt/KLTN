@@ -7,7 +7,7 @@ load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 llm = ChatOpenAI(
     model="meta/llama-3.1-8b-instruct",
-    openai_api_key=os.environ.get("API_KEY"),
+    openai_api_key="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",
     openai_api_base="https://integrate.api.nvidia.com/v1",
     temperature=0
 )
@@ -330,7 +330,7 @@ if __name__ == "__main__":
 
     retrieve_metrics = evaluate_at_k(
         context_result=context,
-        expected_chunk_indexes=[21, 23],
+        expected_chunk_indexes=[21, 22, 23],
         k=5,
     )
 

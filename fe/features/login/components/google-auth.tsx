@@ -24,6 +24,8 @@ export default function GoogleAuthButton() {
 
 			if (res.status === 200) {
 				localStorage.setItem("isLogin", "true");
+				console.log(res);
+				localStorage.setItem("userName", res.data.data.userName);
 				toast.success("Đăng nhập thành công!");
 				router.push("/homepage");
 				router.refresh();

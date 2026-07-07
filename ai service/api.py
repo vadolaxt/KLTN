@@ -2,22 +2,22 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import sys
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# Chatbot/RAG imports are disabled while testing the admission prediction API.
-# RAG_DIR = BASE_DIR / "rag"
-# if str(RAG_DIR) not in sys.path:
-#     sys.path.append(str(RAG_DIR))
-# from rag.retriever import get_relevant_context
-# from rag.generator import generate_response
-# from rag.classifier import *
+RAG_DIR = BASE_DIR / "rag"
+if str(RAG_DIR) not in sys.path:
+    sys.path.append(str(RAG_DIR))
+from rag.retriever import get_relevant_context
+from rag.generator import generate_response
+from rag.classifier import *
 
-from entity.entity import AdmissionPredictResponse, AdmissionPredictRequest
+from entity.entity import AdmissionPredictResponse, AdmissionPredictRequest, ChatRequest, ChatResponse
 from score import predict_admission
 from config.rag_config import admission_bundles
-# from entity.entity import ChatResponse, ChatRequest
-# from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from entity.entity import ChatResponse, ChatRequest
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 
 app = FastAPI()
 app.add_middleware(
@@ -28,7 +28,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-'''
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3.1-flash-lite",
+    google_api_key=os.getenv("API_KEY"),
+    temperature=0,
+)
+
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     user_query = request.query.strip()
@@ -131,7 +136,7 @@ async def chat_endpoint(request: ChatRequest):
             detail="Lỗi xử lý hệ thống nội bộ."
         )
 
-'''
+
 
 @app.post("/api/predict-admission", response_model=AdmissionPredictResponse)
 async def predict_admission_endpoint(request: AdmissionPredictRequest):

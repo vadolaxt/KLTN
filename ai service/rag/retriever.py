@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
 
 from dotenv import load_dotenv
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 
 from utils.helper import *
@@ -14,13 +15,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
 
 MONGO_VECTOR_INDEX_NAME = get_mongo_vector_index_name()
+EMBEDDING_DIMENSIONS = get_embedding_dimensions()
 
 
-def embedding_client() -> NVIDIAEmbeddings:
-    return NVIDIAEmbeddings(
-        model=get_embedding_model(),
-        api_key=os.getenv("API_KEY"),
-        base_url="https://integrate.api.nvidia.com/v1",
+# def embedding_client() -> NVIDIAEmbeddings:
+#     return NVIDIAEmbeddings(
+#         model=get_embedding_model(),
+#         api_key=os.getenv("API_KEY"),
+#         base_url="https://integrate.api.nvidia.com/v1",
+#     )
+def embedding_client() -> GoogleGenerativeAIEmbeddings:
+    return GoogleGenerativeAIEmbeddings(
+        model="models/gemini-embedding-001",
+        google_api_key=os.getenv("API_KEY"),
+        output_dimensionality=EMBEDDING_DIMENSIONS,
     )
 
 
@@ -166,8 +174,4 @@ def get_relevant_context(
 #         top_k=5,
 #         num_candidates=50,
 #     )
-#
-    # context = context["context"]
-    # chunks = context["chunks"]
-    # # print(context)
-    # print(chunks)
+#     print(result)

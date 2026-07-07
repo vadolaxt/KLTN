@@ -352,17 +352,17 @@ public class ScoreService {
                                         nationalScoreMap
                                 );
 
-                                double convertedScore = scoreHelper.convertMajorScore(
-                                        combination,
-                                        major.getCoreSubject(),
-                                        nationalScoreMap
-                                );
+//                                double convertedScore = scoreHelper.convertMajorScore(
+//                                        combination,
+//                                        major.getCoreSubject(),
+//                                        nationalScoreMap
+//                                );
 
                                 return MajorScoreResponse.MethodScoreDTO.builder()
                                         .type("NATIONAL")
                                         .combination(combination.getCode())
                                         .rawScore(rawScore)
-                                        .convertedScore(convertedScore)
+                                        .convertedScore(rawScore)
                                         .build();
                             })
                             .max(Comparator.comparingDouble(

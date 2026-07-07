@@ -19,4 +19,5 @@ public class AuthResponse {
     String refreshToken;
     boolean authenticated;
     String role;
+    String userName;
 }

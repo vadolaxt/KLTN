@@ -1,5 +1,7 @@
 import time
 from datetime import datetime, timezone
+
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 
 from entity.entity import KnowledgeChunk
@@ -28,13 +30,18 @@ RESET_COLLECTION = reset_collection()
 
 
 # gọi embedding model từ api
-def embedding_client() -> NVIDIAEmbeddings:
-    return NVIDIAEmbeddings(
+# def embedding_client() -> NVIDIAEmbeddings:
+#     return NVIDIAEmbeddings(
+#         model=EMBEDDING_MODEL,
+#         api_key=API_KEY,
+#         base_url="https://integrate.api.nvidia.com/v1",
+#     )
+def embedding_client() -> GoogleGenerativeAIEmbeddings:
+    return GoogleGenerativeAIEmbeddings(
         model=EMBEDDING_MODEL,
-        api_key=API_KEY,
-        base_url="https://integrate.api.nvidia.com/v1",
+        google_api_key=API_KEY,
+        output_dimensionality=EMBEDDING_DIMENSIONS,
     )
-
 
 # đọc file .md từ assets
 # hàm trả về global metadata và raw text
@@ -190,10 +197,10 @@ def create_vector_stores() -> None:
     print("[COLLECTION]", collection.name)
     print("[COUNT BEFORE]", collection.count_documents({}))
 
-    if RESET_COLLECTION:
-        print(f"[RESET] Xóa toàn bộ collection: {MONGO_COLLECTION_NAME}")
-        collection.delete_many({})
-        print("[COUNT AFTER RESET]", collection.count_documents({}))
+    # if RESET_COLLECTION:
+    #     print(f"[RESET] Xóa toàn bộ collection: {MONGO_COLLECTION_NAME}")
+    #     collection.delete_many({})
+    #     print("[COUNT AFTER RESET]", collection.count_documents({}))
 
     embeddings = embedding_client()
 
@@ -278,13 +285,13 @@ def create_vector_stores() -> None:
                 print("[SKIP] Không có chunk hợp lệ để lưu.")
                 continue
 
-            delete_result = collection.delete_many(
-                {
-                    "source_path": str(file_path)
-                }
-            )
-
-            print(f"[CLEAN] Đã xóa {delete_result.deleted_count} chunk cũ của file này.")
+            # delete_result = collection.delete_many(
+            #     {
+            #         "source_path": str(file_path)
+            #     }
+            # )
+            #
+            # print(f"[CLEAN] Đã xóa {delete_result.deleted_count} chunk cũ của file này.")
 
             mongo_docs = [
                 chunk.to_mongo_doc()

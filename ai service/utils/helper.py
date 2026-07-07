@@ -286,7 +286,8 @@ def llm_call():
     return ChatOpenAI(
         # model="meta/llama-3.1-8b-instruct",
         model="qwen/qwen3-next-80b-a3b-instruct",
-        openai_api_key=os.environ.get("API_KEY"),
+        # openai_api_key=os.environ.get("API_KEY"),
+        openai_api_key="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",
         openai_api_base="https://integrate.api.nvidia.com/v1",
         temperature=0
     )
