@@ -277,20 +277,20 @@ def decode_label(raw_label, le=None):
 
 # gọi llm
 def llm_call():
-    # return ChatGoogleGenerativeAI(
-    #     model="gemini-2.5-flash",
-    #     temperature=0.1,
-    #     google_api_key=os.getenv("GOOGLE_API_KEY")
-    # )
-
-    return ChatOpenAI(
-        # model="meta/llama-3.1-8b-instruct",
-        model="qwen/qwen3-next-80b-a3b-instruct",
-        # openai_api_key=os.environ.get("API_KEY"),
-        openai_api_key="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",
-        openai_api_base="https://integrate.api.nvidia.com/v1",
-        temperature=0
+    return ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        temperature=0.1,
+        google_api_key=os.getenv("API_KEY")
     )
+
+    # return ChatOpenAI(
+    #     # model="meta/llama-3.1-8b-instruct",
+    #     model="qwen/qwen3-next-80b-a3b-instruct",
+    #     # openai_api_key=os.environ.get("API_KEY"),
+    #     openai_api_key="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",
+    #     openai_api_base="https://integrate.api.nvidia.com/v1",
+    #     temperature=0
+    # )
 
 
 # dùng cho
@@ -323,3 +323,19 @@ def parse_llm_json(text: str) -> List[str]:
 
 if __name__ == "__main__":
     create_vector_search_index(get_collection())
+
+    # print("--- Đang khởi tạo LLM Model... ---")
+    # # 1. Gọi hàm để lấy đối tượng llm
+    # llm = llm_call()
+    #
+    # print("--- Đang gửi câu hỏi test... ---")
+    # try:
+    #     # 2. Sử dụng phương thức .invoke() để gọi model (chuẩn LangChain)
+    #     response = llm.invoke("Xin chào, bạn là AI nào và thuộc phiên bản nào?")
+    #
+    #     # 3. In kết quả ra màn hình
+    #     print("\n[KẾT QUẢ PHẢN HỒI]:")
+    #     print(response.content)
+    #
+    # except Exception as e:
+    #     print(f"\n[LỖI RỒI]: Kết nối API thất bại. Chi tiết: {e}")

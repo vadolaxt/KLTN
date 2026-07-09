@@ -1,0 +1,36 @@
+services:
+  be:
+    build:
+      context: ./be
+    container_name: springboot-be
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./be/.env
+    depends_on:
+      - ai-service
+      - redis
+    networks:
+      - app-network
+
+  ai-service:
+    build:
+      context: ./ai-service
+    container_name: fastapi-ai-service
+    restart: unless-stopped
+    env_file:
+      - ./ai-service/.env
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

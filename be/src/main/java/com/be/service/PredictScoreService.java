@@ -264,7 +264,7 @@ public class PredictScoreService {
         try {
             String body = OBJECT_MAPPER.writeValueAsString(requestBody);
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(normalizeFastApiBaseUrl() + "/api/predict-admission"))
+                    .uri(URI.create(normalizeFastApiBaseUrl() + "/predict-admission"))
                     .version(HttpClient.Version.HTTP_1_1)
                     .timeout(Duration.ofSeconds(30))
                     .header("Content-Type", "application/json")

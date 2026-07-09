@@ -1,12 +1,6 @@
-import os
-from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
-
-from dotenv import load_dotenv
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_nvidia_ai_endpoints import NVIDIAEmbeddings
 
-from utils.helper import *
 from metadata_process import clean_metadata_value
 from classifier import *
 
@@ -163,15 +157,15 @@ def get_relevant_context(
     return "\n\n---\n\n".join(context_parts)
 
 
-# if __name__ == "__main__":
-#     result = get_relevant_context(
-#         query="tổ hợp xét tuyển ngành sư phạm kỹ thuật nông nghiệp",
-#         intent=["to_hop"],
-#         metadata_filter={
-#             # "year": "2024",
-#             # "major": "sư phạm kỹ thuật nông nghiệp"
-#         },
-#         top_k=5,
-#         num_candidates=50,
-#     )
-#     print(result)
+if __name__ == "__main__":
+    result = get_relevant_context(
+        query="tổ hợp xét tuyển ngành sư phạm kỹ thuật nông nghiệp",
+        intent=["to_hop"],
+        metadata_filter={
+            # "year": "2024",
+            # "major": "sư phạm kỹ thuật nông nghiệp"
+        },
+        top_k=5,
+        num_candidates=50,
+    )
+    print(result)

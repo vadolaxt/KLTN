@@ -1,8 +1,11 @@
+import os
 from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import sys
+
+from utils import libs_setup
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -13,11 +16,13 @@ from rag.retriever import get_relevant_context
 from rag.generator import generate_response
 from rag.classifier import *
 
-from entity.entity import AdmissionPredictResponse, AdmissionPredictRequest, ChatRequest, ChatResponse
+from entity.entity import AdmissionPredictResponse, AdmissionPredictRequest
 from score import predict_admission
 from config.rag_config import admission_bundles
 from entity.entity import ChatResponse, ChatRequest
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+libs_setup.install_libs()
 
 app = FastAPI()
 app.add_middleware(

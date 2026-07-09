@@ -117,7 +117,13 @@ export default function MajorMethodEvaluationPanel({
 		[major, methodScores],
 	);
 	const [predictions, setPredictions] = useState<Record<string, MethodPrediction>>({});
-	const defaultMethodScore = major?.scores?.[0] ?? allMethodScores[0];
+	// const defaultMethodScore = major?.scores?.[0] ?? allMethodScores[0];
+	const defaultMethodScore = useMemo(() => {
+		if (!allMethodScores || allMethodScores.length === 0) return undefined;
+		return allMethodScores.reduce((max, current) =>
+			current.convertedScore > max.convertedScore ? current : max
+		);
+	}, [allMethodScores]);
 	const defaultScore = formatNumber(defaultMethodScore?.convertedScore) ?? '-';
 
 	useEffect(() => {
