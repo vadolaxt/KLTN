@@ -1,6 +1,6 @@
 assets/models/best_phobert
 
 .idea/
-.env
+#.env
 __pycache__/
 .venv/
