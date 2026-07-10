@@ -222,7 +222,8 @@ public class AuthService {
 //                .sameSite("Lax")
                 .secure(true)
                 .sameSite("None")
-                .path("/api/auth/refresh")
+//                .path("/api/auth/refresh")
+                .path("/")
                 .maxAge(30 * 24 * 60 * 60)
                 .build();
 
