@@ -1,8 +1,15 @@
-export type AdmissionMethod = 'hb' | 'thpt' | 'dgnl' | 'kh';
+export type AdmissionMethod = 'hb' | 'thpt' | 'dgnl' | 'kh' | 'vsat';
+export type SchoolCode = 'NLU' | 'SGU';
 
 export interface Subject {
   id?: string;
+  code?: string;
   subjectName: string;
+}
+
+export interface SubCombination {
+  code: string;
+  subjects: Subject[];
 }
 
 export interface SubjectCombination {
@@ -10,6 +17,7 @@ export interface SubjectCombination {
   code: string;
   name: string;
   subjects: Subject[];
+  subCombinations?: SubCombination[];
 }
 
 export interface Major {
@@ -26,6 +34,7 @@ export interface Major {
 
 export interface PredictApiResult {
   target_year: string;
+  student_score?: number;
   school_code?: string;
   school_name?: string;
   combination_matched: boolean;
@@ -41,6 +50,8 @@ export interface PredictApiResult {
 export interface PredictionResultState {
   result: PredictApiResult;
   studentScore: number;
+  baseScore?: number;
+  priorityScore?: number;
   majorCode: string;
   majorName: string;
   schoolCode?: string;

@@ -1,1 +1,0 @@
-## Xem hướng dẫn của BDG

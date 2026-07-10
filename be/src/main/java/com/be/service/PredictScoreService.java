@@ -4,6 +4,8 @@ import com.be.dto.request.PredictScoreRequest;
 import com.be.dto.response.PredictScoreResponse;
 import com.be.entity.AdmissionInfo;
 import com.be.entity.Major;
+import com.be.entity.Subject;
+import com.be.entity.SubjectCombination;
 import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
 import com.be.repository.AdmissionInfoRepository;
@@ -23,8 +25,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -42,23 +46,27 @@ public class PredictScoreService {
     @Autowired
     AdmissionInfoRepository admissionInfoRepository;
 
-    @Value("${FASTAPI_BASE_URL}")
+    @Value("${FASTAPI_BASE_URL:http://127.0.0.1:8000}")
     String fastapiBaseUrl;
 
     public PredictScoreResponse predictScore(PredictScoreRequest request) {
 
+        String schoolCode = normalizeSchoolCode(request.schoolCode());
         String majorCode = request.majorCode();
         String combination = request.subjectCombination();
 
-        Major major = majorRepository.findByCode(majorCode)
+        Major major = majorRepository.findBySchoolCodeAndCode(schoolCode, majorCode)
                 .orElseThrow(() -> new AppException(ErrorCode.MAJOR_NOT_FOUND));
 
-        boolean isValidCombination = major.getCombinations() != null
-                && major.getCombinations()
+        SubjectCombination selectedCombination = major.getCombinations() == null
+                ? null
+                : major.getCombinations()
                 .stream()
-                .anyMatch(c -> c.getCode().equalsIgnoreCase(combination));
+                .filter(c -> c.getCode().equalsIgnoreCase(combination))
+                .findFirst()
+                .orElse(null);
 
-        if (!isValidCombination) {
+        if (selectedCombination == null) {
             throw new AppException(ErrorCode.SUBJECT_COMBINATION_NOT_SUPPORTED);
         }
 
@@ -68,31 +76,140 @@ public class PredictScoreService {
             throw new AppException(ErrorCode.SCORE_LIST_EMPTY);
         }
 
-
         double totalScore = scores.stream()
                 .mapToDouble(SubjectScore::getScore)
                 .sum();
 
         int targetYear = request.targetYear() > 0 ? request.targetYear() : DEFAULT_TARGET_YEAR;
 
-        Map<String, Object> requestBody = Map.of(
-                "major_code", majorCode,
-                "student_score", totalScore,
-                "subject_combination", combination,
-                "target_year", targetYear
-        );
+        Map<String, Object> requestBody = new LinkedHashMap<>();
+        requestBody.put("school_code", schoolCode);
+        requestBody.put("major_code", majorCode);
+        requestBody.put("student_score", totalScore);
+        requestBody.put("subject_combination", combination);
+        requestBody.put("target_year", targetYear);
+        if (request.priorityScore() != null && request.priorityScore() > 0) {
+            requestBody.put("priority_score", request.priorityScore());
+        }
+        if (request.admissionMethod() != null && !request.admissionMethod().isBlank()) {
+            requestBody.put("admission_method", request.admissionMethod().trim().toLowerCase());
+        }
+
+        Map<String, Double> subjectScores = buildSubjectScores(scores, selectedCombination);
+        if (!subjectScores.isEmpty()) {
+            requestBody.put("subject_scores", subjectScores);
+        }
 
         PredictScoreResponse response = callFastApi(requestBody);
-        return enrichWithAdmissionHistory(response, major, targetYear);
+        return enrichWithAdmissionHistory(response, major, targetYear, schoolCode);
     }
 
-    private PredictScoreResponse enrichWithAdmissionHistory(PredictScoreResponse response, Major major, int targetYear) {
+    private String normalizeSchoolCode(String schoolCode) {
+        if (schoolCode == null || schoolCode.isBlank()) {
+            return "NLU";
+        }
+        return schoolCode.trim().toUpperCase();
+    }
+
+    private Map<String, Double> buildSubjectScores(List<SubjectScore> scores, SubjectCombination selectedCombination) {
+        List<Subject> combinationSubjects = selectedCombination.getSubjects();
+        if (combinationSubjects == null || combinationSubjects.isEmpty() || scores.size() < combinationSubjects.size()) {
+            return Map.of();
+        }
+
+        Map<String, Double> scoreBySubject = new LinkedHashMap<>();
+        for (SubjectScore score : scores) {
+            if (score == null || score.getSubject() == null) {
+                continue;
+            }
+
+            String subjectKey = toPredictSubjectKey(score.getSubject());
+            if (subjectKey != null) {
+                scoreBySubject.put(subjectKey, score.getScore());
+            }
+        }
+
+        boolean hasAllCombinationSubjects = combinationSubjects.stream()
+                .filter(Objects::nonNull)
+                .map(this::toPredictSubjectKey)
+                .filter(Objects::nonNull)
+                .allMatch(scoreBySubject::containsKey);
+
+        return hasAllCombinationSubjects ? scoreBySubject : Map.of();
+    }
+
+    private String toPredictSubjectKey(Subject subject) {
+        if (subject == null) {
+            return null;
+        }
+
+        String code = firstNonBlank(subject.getCode());
+        if (code != null) {
+            return switch (code.trim().toUpperCase()) {
+                case "TOAN" -> "Toan";
+                case "VAN" -> "Ngu_van";
+                case "VAT_LI" -> "Vat_li";
+                case "HOA_HOC" -> "Hoa_hoc";
+                case "SINH_HOC" -> "Sinh_hoc";
+                case "LICH_SU" -> "Lich_su";
+                case "DIA_LI" -> "Dia_li";
+                case "NGOAI_NGU" -> "Tieng_Anh";
+                case "GDKT_PL" -> "GDKT_PL";
+                case "TIN_HOC" -> "TIN_HOC";
+                case "CN_CONG_NGHIEP" -> "CN_CONG_NGHIEP";
+                case "CN_NONG_NGHIEP" -> "CN_NONG_NGHIEP";
+                default -> null;
+            };
+        }
+
+        String subjectName = firstNonBlank(subject.getSubjectName());
+        if (subjectName == null) {
+            return null;
+        }
+
+        return switch (normalizeVietnameseSubject(subjectName)) {
+            case "toan" -> "Toan";
+            case "ngu van", "van" -> "Ngu_van";
+            case "vat ly", "vat li", "ly" -> "Vat_li";
+            case "hoa hoc", "hoa" -> "Hoa_hoc";
+            case "sinh hoc", "sinh" -> "Sinh_hoc";
+            case "lich su", "su" -> "Lich_su";
+            case "dia ly", "dia li", "dia" -> "Dia_li";
+            case "tieng anh", "anh" -> "Tieng_Anh";
+            case "giao duc kt&pl", "giao duc kinh te va phap luat", "kinh te va phap luat" -> "GDKT_PL";
+            case "tin hoc" -> "TIN_HOC";
+            case "cong nghe cong nghiep" -> "CN_CONG_NGHIEP";
+            case "cong nghe nong nghiep" -> "CN_NONG_NGHIEP";
+            default -> null;
+        };
+    }
+
+    private String normalizeVietnameseSubject(String value) {
+        String normalized = java.text.Normalizer.normalize(value, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D')
+                .toLowerCase()
+                .trim();
+        return normalized.replaceAll("\\s+", " ");
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value.trim();
+            }
+        }
+        return null;
+    }
+
+    private PredictScoreResponse enrichWithAdmissionHistory(PredictScoreResponse response, Major major, int targetYear, String schoolCode) {
         PredictScoreResponse.PredictResult result = response.result();
         int previousYear = targetYear - 1;
         int twoYearsAgo = targetYear - 2;
 
-        Double previousYearCutoffScore = findCutoffScore(previousYear, major);
-        Double twoYearsAgoCutoffScore = findCutoffScore(twoYearsAgo, major);
+        Double previousYearCutoffScore = findCutoffScore(previousYear, major, schoolCode);
+        Double twoYearsAgoCutoffScore = findCutoffScore(twoYearsAgo, major, schoolCode);
 
         return PredictScoreResponse.builder()
                 .result(PredictScoreResponse.PredictResult.builder()
@@ -101,8 +218,8 @@ public class PredictScoreService {
                         .targetYear(result.targetYear())
                         .studentScore(result.studentScore())
                         .subjectCombination(result.subjectCombination())
-                        .schoolCode(major.getSchoolCode())
-                        .schoolName("Trường Đại học Nông Lâm TP.HCM")
+                        .schoolCode(schoolCode)
+                        .schoolName(resolveSchoolName(schoolCode))
                         .combinationMatched(result.combinationMatched())
                         .predictCutOff(result.predictCutOff())
                         .margin(result.margin())
@@ -117,15 +234,23 @@ public class PredictScoreService {
                 .build();
     }
 
-    private Double findCutoffScore(int year, Major major) {
-        return admissionInfoRepository.findByYearAndMajorCode(year, major.getCode())
+    private Double findCutoffScore(int year, Major major, String schoolCode) {
+        return admissionInfoRepository.findByYearAndSchoolCodeAndMajorCode(year, schoolCode, major.getCode())
                 .stream()
                 .filter(info -> sameText(info.getMajorName(), major.getName()))
                 .filter(info -> sameText(info.getProgramType(), major.getProgramType()))
                 .findFirst()
-                .or(() -> admissionInfoRepository.findByYearAndMajorCode(year, major.getCode()).stream().findFirst())
+                .or(() -> admissionInfoRepository.findByYearAndSchoolCodeAndMajorCode(year, schoolCode, major.getCode()).stream().findFirst())
                 .map(AdmissionInfo::getCutoffScore)
                 .orElse(null);
+    }
+
+    private String resolveSchoolName(String schoolCode) {
+        return switch (schoolCode) {
+            case "SGU" -> "Trường Đại học Sài Gòn";
+            case "NLU" -> "Trường Đại học Nông Lâm TP.HCM";
+            default -> schoolCode;
+        };
     }
 
     private boolean sameText(String left, String right) {

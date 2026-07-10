@@ -58,10 +58,10 @@ export default function ProfileSidebar() {
             </svg>
           </div>
         </div>
-        <div className="mb-0.5 text-[15px] font-extrabold text-text-dark">Nguyễn Văn An</div>
-        <div className="mb-2 inline-block rounded-full bg-green-pale px-2.5 py-0.5 text-[12px] font-semibold text-text-light">
-          15/03/2008
-        </div>
+        <div className="mb-0.5 text-[15px] font-extrabold text-text-dark">{localStorage.getItem("userName")}</div>
+        {/*<div className="mb-2 inline-block rounded-full bg-green-pale px-2.5 py-0.5 text-[12px] font-semibold text-text-light">*/}
+        {/*  15/03/2008*/}
+        {/*</div>*/}
       </div>
 
       <div className="px-6 pb-1.5 pt-4 text-[10px] font-extrabold uppercase tracking-[1.5px] text-text-light">

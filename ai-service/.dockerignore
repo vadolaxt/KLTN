@@ -1,0 +1,63 @@
+# Python virtual environments
+.venv
+venv
+env
+ENV
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# IDE/editor
+.idea
+.vscode
+
+# Git
+.git
+.gitignore
+
+## Env/secrets
+.env
+*.env
+
+# Logs
+logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package/build artifacts
+build
+dist
+*.egg-info
+
+# HuggingFace / Torch / model cache
+.cache
+.huggingface
+.torch
+torch
+huggingface
+
+# Optional heavy files - chỉ bỏ comment nếu app KHÔNG cần chúng khi chạy
+# data
+# dataset
+# datasets
+# models
+# model
+# checkpoints
+# checkpoint
+# outputs
+# chroma_db
+# faiss_index
+# *.pt
+# *.pth
+# *.bin
+# *.onnx
+# *.safetensors

@@ -1,5 +1,6 @@
 package com.be.entity;
 
+import com.be.enums.AccountStatus;
 import com.be.enums.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -39,5 +40,8 @@ public class User {
     String password;
 
     @Builder.Default
-    Role role = Role.USER;
+    Role role = Role.ROLE_USER;
+
+    @Builder.Default
+    AccountStatus status = AccountStatus.ACTIVE;
 }

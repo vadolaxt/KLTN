@@ -2,7 +2,7 @@
 **/.idea/
 
 # Spring Boot local config
-be/src/main/resources/application.properties
+# be/src/main/resources/application.properties
 
 # AI datasets
 /ai service/assets/score-data/

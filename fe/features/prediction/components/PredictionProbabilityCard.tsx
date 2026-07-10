@@ -21,19 +21,11 @@ const normalizeProbability = (value: number) => {
 };
 
 const getLevel = (probability: number) => {
-  if (probability >= 65) {
+  if (probability >= 50) {
     return {
       label: 'Khả quan',
       color: '#2e7d32',
       text: 'Điểm hiện tại có lợi thế so với điểm chuẩn dự kiến.',
-    };
-  }
-
-  if (probability >= 45) {
-    return {
-      label: 'Cần cân nhắc',
-      color: '#c9a227',
-      text: 'Điểm hiện tại sát ngưỡng dự kiến, nên theo dõi thêm biến động chỉ tiêu và phổ điểm.',
     };
   }
 
@@ -61,9 +53,9 @@ export default function PredictionProbabilityCard({
 
   return (
     <div className="h-full overflow-hidden rounded-[14px] border-1.5 border-gray-mid bg-white">
-      <div className={`bg-green-dark ${mini ? 'px-4 py-3' : 'px-6 py-4'}`}>
-        <h3 className="text-[14px] font-extrabold text-white">{title}</h3>
-        {!mini && <p className="mt-0.5 text-[11px] text-white/75">{subtitle}</p>}
+      <div className={`bg-green-dark ${mini ? 'px-4 py-3' : 'px-7 py-5'}`}>
+        <h3 className={`${mini ? 'text-[14px]' : 'text-[16px]'} font-extrabold text-white`}>{title}</h3>
+        {!mini && <p className="mt-1 text-[12px] text-white/75">{subtitle}</p>}
       </div>
 
       <div className={`${mini ? 'px-4 py-4' : compact ? 'px-5 py-5' : 'px-6 py-7'} text-center`}>

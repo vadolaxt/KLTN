@@ -18,4 +18,6 @@ public class AuthResponse {
     String accessToken;
     String refreshToken;
     boolean authenticated;
+    String role;
+    String userName;
 }

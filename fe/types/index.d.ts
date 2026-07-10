@@ -13,6 +13,8 @@ export interface AuthResponse {
 	accessToken: string;
 	refreshToken: string;
 	authenticated: boolean;
+	role: string;
+	userName: string;
 }
 
 export interface RegisterRequest {

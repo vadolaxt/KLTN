@@ -14,6 +14,9 @@ public class SubjectScore {
     @Builder.Default
     double score = 0;
 
-    int gradeLevel;
-    int semester;
+    @Builder.Default
+    Integer gradeLevel = 0;
+
+    @Builder.Default
+    Integer semester = 0;
 }

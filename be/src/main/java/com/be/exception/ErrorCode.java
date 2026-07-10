@@ -14,6 +14,7 @@ public enum ErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden"),
     USER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "Tài khoản đã tồn tại"),
     BAD_CREDENTIALS(HttpStatus.BAD_REQUEST, "Email hoặc mật khẩu sai"),
+    ACCOUNT_BANNED(HttpStatus.FORBIDDEN, "Tài khoản đã bị khóa"),
 
     // ==== TOKEN ====
     INVALID_TOKEN(HttpStatus.BAD_REQUEST, "Invalid token"),
