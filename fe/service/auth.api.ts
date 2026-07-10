@@ -27,6 +27,7 @@ export const AuthService = {
 
 	logout: async () => {
 		const response = await apiClient.post(`/auth/logout`);
+		delete apiClient.defaults.headers.common.Authorization;
 		return response.status;
 	},
 

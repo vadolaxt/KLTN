@@ -26,6 +26,10 @@ export default function Header() {
 		} finally {
 			localStorage.removeItem("isLogin");
 			localStorage.removeItem("userName");
+			localStorage.removeItem("accessToken");
+			localStorage.removeItem("role");
+			localStorage.removeItem("isAdminLogin");
+			localStorage.removeItem("adminProfile");
 			setIsLoggedIn(false);
 			setIsDropdownOpen(false);
 			router.push("/homepage");

@@ -254,6 +254,7 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
         const majorsEndpoint = schoolCode === 'SGU' ? '/predict/sgu/majors' : '/predict/majors';
         const response = await apiClient.get<ApiResponse<Major[]>>(majorsEndpoint, {
           params: schoolCode === 'NLU' ? { schoolCode } : undefined,
+          headers: { 'X-Skip-Auth': 'true' },
         });
         const loadedMajors = response.data.data ?? [];
 
@@ -605,6 +606,8 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
             targetYear: TARGET_YEAR,
             priorityScore,
             scores,
+          }, {
+            headers: { 'X-Skip-Auth': 'true' },
           })).data.data.result;
 
       onResult({

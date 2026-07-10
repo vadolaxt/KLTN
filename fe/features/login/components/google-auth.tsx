@@ -7,6 +7,7 @@ import {useState} from 'react';
 import {ENV_CONFIG} from "@/core";
 import {toast} from "sonner";
 import {Loader2} from "lucide-react";
+import {apiClient} from "@/lib/constants/api-client";
 
 export default function GoogleAuthButton() {
 	const router = useRouter();
@@ -26,6 +27,9 @@ export default function GoogleAuthButton() {
 				localStorage.setItem("isLogin", "true");
 				console.log(res);
 				localStorage.setItem("userName", res.data.data.userName);
+				localStorage.setItem("accessToken", res.data.data.accessToken);
+				localStorage.setItem("role", res.data.data.role);
+				apiClient.defaults.headers.common.Authorization = `Bearer ${res.data.data.accessToken}`;
 				toast.success("Đăng nhập thành công!");
 				router.push("/homepage");
 				router.refresh();

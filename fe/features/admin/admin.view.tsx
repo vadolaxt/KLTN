@@ -1,31 +1,26 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/hooks/use-admin';
 
 // Layout & Authentication Components
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
-import AdminLogin from './components/AdminLogin';
-import AdminRegister from './components/AdminRegister';
 
-// Dashboard Tab Components
-import DashboardOverview from './components/DashboardOverview';
 import UserManagement from './components/user-manage/UserManagement';
 import AdmissionManagement from './components/AdmissionManagement';
 import ScoreManagement from './components/ScoreManagement';
 import NewsManagement from './components/NewsManagement';
+import DashboardOverview from './components/DashboardOverview';
 
 export default function AdminView() {
   const {
     // Auth State
     isAuthenticated,
-    isRegisterMode,
-    setIsRegisterMode,
+    isCheckingAuth,
+    isForbidden,
     currentUser,
-    login,
-    register,
     logout,
 
     // Layout State
@@ -56,35 +51,41 @@ export default function AdminView() {
 
   const router = useRouter();
 
+  useEffect(() => {
+    if (!isCheckingAuth && !isAuthenticated) {
+      router.replace(isForbidden ? '/homepage' : '/login');
+    }
+  }, [isAuthenticated, isCheckingAuth, isForbidden, router]);
+
   const handleLogout = async () => {
     await logout();
     router.push('/homepage');
     router.refresh();
   };
 
-  if (!isAuthenticated) {
+  if (isCheckingAuth || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center font-vietnam bg-[linear-gradient(135deg,#f4f9f4_0%,#ffffff_50%,#f0f7f0_100%)] relative px-4 overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(45,122,45,0.04)_1px,transparent_1px),linear-gradient(180deg,rgba(45,122,45,0.04)_1px,transparent_1px)] bg-[size:32px_32px]" />
         <div className="absolute -left-40 -top-40 w-96 h-96 rounded-full bg-green-light/5 blur-3xl" />
         <div className="absolute -right-40 -bottom-40 w-96 h-96 rounded-full bg-green-main/5 blur-3xl" />
 
-        <div className="relative z-10 w-full flex justify-center">
-          {isRegisterMode ? (
-            <AdminRegister
-              register={register}
-              isLoading={isLoading}
-              error={error}
-              switchToLogin={() => setIsRegisterMode(false)}
-            />
-          ) : (
-            <AdminLogin
-              login={login}
-              isLoading={isLoading}
-              error={error}
-              switchToRegister={() => setIsRegisterMode(true)}
-            />
-          )}
+        <div className="relative z-10 rounded-3xl border border-green-main/10 bg-white/90 px-8 py-6 shadow-xl text-center">
+          <div className="text-sm font-bold text-green-main uppercase tracking-[0.2em]">
+            Hệ thống quản trị
+          </div>
+          <div className="mt-3 text-2xl font-black text-green-dark">
+            {isCheckingAuth
+              ? 'Đang kiểm tra đăng nhập...'
+              : isForbidden
+                ? 'Không có quyền quản trị'
+                : 'Đang chuyển đến trang đăng nhập...'}
+          </div>
+          <p className="mt-2 text-sm text-text-light">
+            {isForbidden
+              ? 'Tài khoản hiện tại không có quyền quản trị.'
+              : 'Admin dùng chung tài khoản đăng nhập của hệ thống.'}
+          </p>
         </div>
       </div>
     );
@@ -118,6 +119,9 @@ export default function AdminView() {
               <DashboardOverview
                 stats={stats}
                 isLoading={isLoading}
+                selectedYear={selectedYear}
+                setSelectedYear={setSelectedYear}
+                availableYears={availableYears}
               />
             )}
 

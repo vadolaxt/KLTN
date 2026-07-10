@@ -39,9 +39,11 @@ public class SguPredictController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<PredictScoreResponse>> predict(@RequestBody PredictScoreRequest request) {
+    public ResponseEntity<ApiResponse<PredictScoreResponse>> predict(
+            @RequestBody PredictScoreRequest request) {
+        PredictScoreResponse response = predictService.predict(request);
         return ResponseEntity.ok(
-                ApiResponse.success(HttpStatus.OK, "SGU prediction completed", predictService.predict(request))
+                ApiResponse.success(HttpStatus.OK, "SGU prediction completed", response)
         );
     }
 }

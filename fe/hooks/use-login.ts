@@ -2,6 +2,7 @@ import {useState} from "react";
 import {useRouter} from "next/navigation";
 import axios from "axios";
 import {AuthService} from "@/service/auth.api";
+import {apiClient} from "@/lib/constants/api-client";
 
 export const useLogin = () => {
 	const [email, setEmail] = useState("");
@@ -32,6 +33,9 @@ export const useLogin = () => {
 			if (result.status === "OK" || result.data?.authenticated) {
 				localStorage.setItem("isLogin", "true");
 				localStorage.setItem("userName", result.data.userName);
+				localStorage.setItem("accessToken", result.data.accessToken);
+				localStorage.setItem("role", result.data.role);
+				apiClient.defaults.headers.common.Authorization = `Bearer ${result.data.accessToken}`;
 
 				if (result.data.role === "ROLE_USER") {
 					router.push("/homepage");

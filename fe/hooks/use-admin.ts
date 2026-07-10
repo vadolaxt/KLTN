@@ -18,7 +18,7 @@ export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'scores' | 'news';
 const DEFAULT_YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 const ADMIN_DEMO_MODE = false;
 const DEMO_ADMIN_PROFILE: AdminProfile = {
-  firstName: 'Quản trị',
+  firstName: 'Quáº£n trá»‹',
   lastName: 'Demo',
   email: 'admin@nlu.edu.vn',
   role: 'ADMIN',
@@ -35,25 +35,25 @@ const DEMO_ADMISSIONS: AdmissionInfo[] = [
     schoolCode: 'NLU',
     year: 2026,
     departmentCode: 'CNTT',
-    majorName: 'Công nghệ thông tin',
+    majorName: 'CĂ´ng nghá»‡ thĂ´ng tin',
     majorCode: '7480201',
     admissionQuota: 240,
     cutoffScore: 24.5,
     combinations: ['A00', 'A01', 'D07'].map(makeCombination),
-    programType: 'Đại trà',
-    note: 'Dữ liệu demo lấy theo cấu trúc dataset.csv',
+    programType: 'Äáº¡i trĂ ',
+    note: 'Dá»¯ liá»‡u demo láº¥y theo cáº¥u trĂºc dataset.csv',
   },
   {
     id: 'adm-2026-7640101',
     schoolCode: 'NLU',
     year: 2026,
     departmentCode: 'CNTY',
-    majorName: 'Thú y',
+    majorName: 'ThĂº y',
     majorCode: '7640101',
     admissionQuota: 180,
     cutoffScore: 24.75,
     combinations: ['A00', 'B00', 'D07', 'D08'].map(makeCombination),
-    programType: 'Đại trà',
+    programType: 'Äáº¡i trĂ ',
     note: '',
   },
   {
@@ -61,12 +61,12 @@ const DEMO_ADMISSIONS: AdmissionInfo[] = [
     schoolCode: 'NLU',
     year: 2026,
     departmentCode: 'CNHHTP',
-    majorName: 'Công nghệ thực phẩm',
+    majorName: 'CĂ´ng nghá»‡ thá»±c pháº©m',
     majorCode: '7540101',
     admissionQuota: 220,
     cutoffScore: 23,
     combinations: ['A00', 'A01', 'B00', 'D08'].map(makeCombination),
-    programType: 'Đại trà',
+    programType: 'Äáº¡i trĂ ',
     note: '',
   },
   {
@@ -74,25 +74,25 @@ const DEMO_ADMISSIONS: AdmissionInfo[] = [
     schoolCode: 'NLU',
     year: 2026,
     departmentCode: 'CK',
-    majorName: 'Công nghệ kỹ thuật cơ khí',
+    majorName: 'CĂ´ng nghá»‡ ká»¹ thuáº­t cÆ¡ khĂ­',
     majorCode: '7510201',
     admissionQuota: 120,
     cutoffScore: 21,
     combinations: ['A00', 'A01', 'D07'].map(makeCombination),
     programType: 'CLC',
-    note: 'Chương trình chất lượng cao',
+    note: 'ChÆ°Æ¡ng trĂ¬nh cháº¥t lÆ°á»£ng cao',
   },
   {
     id: 'adm-2025-7480201',
     schoolCode: 'NLU',
     year: 2025,
     departmentCode: 'CNTT',
-    majorName: 'Công nghệ thông tin',
+    majorName: 'CĂ´ng nghá»‡ thĂ´ng tin',
     majorCode: '7480201',
     admissionQuota: 210,
     cutoffScore: 23.75,
     combinations: ['A00', 'A01', 'D07'].map(makeCombination),
-    programType: 'Đại trà',
+    programType: 'Äáº¡i trĂ ',
     note: '',
   },
 ];
@@ -101,7 +101,7 @@ const DEMO_USERS: AdminUser[] = [
   {
     id: 'user-demo-1',
     firstName: 'An',
-    lastName: 'Nguyễn Văn',
+    lastName: 'Nguyá»…n VÄƒn',
     email: 'an.nguyen@student.nlu.edu.vn',
     identity: '079204001234',
     role: 'USER',
@@ -110,7 +110,7 @@ const DEMO_USERS: AdminUser[] = [
   },
   {
     id: 'user-demo-2',
-    firstName: 'Quản trị',
+    firstName: 'Quáº£n trá»‹',
     lastName: 'Demo',
     email: 'admin@nlu.edu.vn',
     identity: '079204009999',
@@ -123,41 +123,47 @@ const DEMO_USERS: AdminUser[] = [
 const DEMO_NEWS: AdminNews[] = [
   {
     id: 'news-demo-1',
-    title: 'Thông báo tuyển sinh đại học chính quy năm 2026',
-    summary: 'Cập nhật chỉ tiêu, tổ hợp môn và điểm chuẩn tham khảo cho các ngành đào tạo.',
-    content: 'Nội dung demo phục vụ kiểm thử giao diện quản trị tuyển sinh.',
+    title: 'ThĂ´ng bĂ¡o tuyá»ƒn sinh Ä‘áº¡i há»c chĂ­nh quy nÄƒm 2026',
+    summary: 'Cáº­p nháº­t chá»‰ tiĂªu, tá»• há»£p mĂ´n vĂ  Ä‘iá»ƒm chuáº©n tham kháº£o cho cĂ¡c ngĂ nh Ä‘Ă o táº¡o.',
+    content: 'Ná»™i dung demo phá»¥c vá»¥ kiá»ƒm thá»­ giao diá»‡n quáº£n trá»‹ tuyá»ƒn sinh.',
     category: 'ANNOUNCEMENT',
     status: 'PUBLISHED',
     publishedAt: '2026-05-01',
-    emoji: '📢',
+    emoji: 'đŸ“¢',
     views: 1540,
   },
 ];
 
 const buildDemoStats = (): DashboardStats => ({
-  totalUsers: DEMO_USERS.length,
-  totalAdmissions: DEMO_ADMISSIONS
-    .filter((item) => item.year === 2026)
-    .reduce((sum, item) => sum + item.admissionQuota, 0),
-  totalNews: DEMO_NEWS.length,
-  activeUsers: DEMO_USERS.filter((user) => user.status === 'ACTIVE').length,
-  approvedApplicationsRate: 78.4,
-  applicationsByMethod: [
-    { method: 'Xét học bạ THPT', count: 1840 },
-    { method: 'Xét điểm thi THPT', count: 2450 },
-    { method: 'Xét điểm ĐGNL', count: 680 },
-    { method: 'Xét tuyển thẳng', count: 120 },
+  totalMajors: new Set(DEMO_ADMISSIONS.filter((item) => item.year === 2026).map((item) => item.majorCode)).size,
+  totalDepartments: new Set(DEMO_ADMISSIONS.filter((item) => item.year === 2026).map((item) => item.departmentCode)).size,
+  totalQuota: DEMO_ADMISSIONS.filter((item) => item.year === 2026).reduce((sum, item) => sum + item.admissionQuota, 0),
+  totalAdmissionRecords: DEMO_ADMISSIONS.filter((item) => item.year === 2026).length,
+  averageCutoffScore: 23.31,
+  highestCutoffScore: 24.75,
+  lowestCutoffScore: 21,
+  latestYear: 2026,
+  quotaByDepartment: [
+    { label: 'CNTT', count: 240 },
+    { label: 'CNHHTP', count: 220 },
+    { label: 'CNTY', count: 180 },
+    { label: 'CK', count: 120 },
   ],
-  registrationsByMonth: [
-    { month: 'T1', count: 110 },
-    { month: 'T2', count: 140 },
-    { month: 'T3', count: 290 },
-    { month: 'T4', count: 650 },
-    { month: 'T5', count: 1200 },
-    { month: 'T6', count: 1540 },
+  majorsByDepartment: [
+    { label: 'CNTT', count: 1 },
+    { label: 'CNHHTP', count: 1 },
+    { label: 'CNTY', count: 1 },
+    { label: 'CK', count: 1 },
+  ],
+  majorsByProgramType: [
+    { label: 'Đ?i trà', count: 3 },
+    { label: 'CLC', count: 1 },
+  ],
+  quotaByYear: [
+    { label: '2026', count: 760 },
+    { label: '2025', count: 210 },
   ],
 });
-
 const upsertById = <T extends { id: string }>(items: T[], nextItem: T) => {
   const exists = items.some((item) => item.id === nextItem.id);
   if (!exists) return [...items, nextItem];
@@ -166,6 +172,8 @@ const upsertById = <T extends { id: string }>(items: T[], nextItem: T) => {
 
 export function useAdmin() {
   const [isAuthenticated, setIsAuthenticated] = useState(ADMIN_DEMO_MODE);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(!ADMIN_DEMO_MODE);
+  const [isForbidden, setIsForbidden] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [currentUser, setCurrentUser] = useState<AdminProfile | null>(
     ADMIN_DEMO_MODE ? DEMO_ADMIN_PROFILE : null
@@ -190,8 +198,42 @@ export function useAdmin() {
       localStorage.setItem('adminProfile', JSON.stringify(DEMO_ADMIN_PROFILE));
       setIsAuthenticated(true);
       setCurrentUser(DEMO_ADMIN_PROFILE);
+      setIsCheckingAuth(false);
       return;
     }
+
+    const verifyAdminSession = async () => {
+      try {
+        const response = await AdminApiService.getCurrentProfile();
+        const profile = response.data;
+        const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'ROLE_ADMIN';
+
+        if (response.status === 'OK' && isAdmin) {
+          localStorage.setItem('isAdminLogin', 'true');
+          localStorage.setItem('adminProfile', JSON.stringify(profile));
+          setIsAuthenticated(true);
+          setIsForbidden(false);
+          setCurrentUser(profile);
+          setIsCheckingAuth(false);
+          return;
+        }
+
+        if (response.status === 'OK' && profile) {
+          setIsForbidden(true);
+        }
+      } catch {
+        // The admin page will redirect to the shared login page after this check finishes.
+        setIsForbidden(false);
+      }
+
+      localStorage.removeItem('isAdminLogin');
+      localStorage.removeItem('adminProfile');
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setIsCheckingAuth(false);
+    };
+
+    verifyAdminSession();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -200,7 +242,7 @@ export function useAdmin() {
       localStorage.setItem('adminProfile', JSON.stringify(DEMO_ADMIN_PROFILE));
       setIsAuthenticated(true);
       setCurrentUser(DEMO_ADMIN_PROFILE);
-      toast.success('Đã vào chế độ demo Admin');
+      toast.success('Ä Ă£ vĂ o cháº¿ Ä‘á»™ demo Admin');
       return;
     }
 
@@ -215,10 +257,10 @@ export function useAdmin() {
         localStorage.setItem('adminProfile', JSON.stringify(response.data.profile));
         setIsAuthenticated(true);
         setCurrentUser(response.data.profile);
-        toast.success('Đăng nhập quản trị viên thành công');
+        toast.success('Ä Äƒng nháº­p quáº£n trá»‹ viĂªn thĂ nh cĂ´ng');
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Không thể đăng nhập hệ thống quản trị';
+      const msg = err instanceof Error ? err.message : 'KhĂ´ng thá»ƒ Ä‘Äƒng nháº­p há»‡ thá»‘ng quáº£n trá»‹';
       setError(msg);
       toast.error(msg);
     } finally {
@@ -233,7 +275,7 @@ export function useAdmin() {
     identity: string;
   }) => {
     if (ADMIN_DEMO_MODE) {
-      toast.success(`Demo: đã nhận yêu cầu tạo Admin cho ${data.email}`);
+      toast.success(`Demo: Ä‘Ă£ nháº­n yĂªu cáº§u táº¡o Admin cho ${data.email}`);
       setIsRegisterMode(false);
       return;
     }
@@ -245,11 +287,11 @@ export function useAdmin() {
       const response = await AdminApiService.register(data);
 
       if (response.status === 'OK') {
-        toast.success('Đã gửi yêu cầu tạo tài khoản Admin');
+        toast.success('Ä Ă£ gá»­i yĂªu cáº§u táº¡o tĂ i khoáº£n Admin');
         setIsRegisterMode(false);
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Không thể tạo tài khoản Admin';
+      const msg = err instanceof Error ? err.message : 'KhĂ´ng thá»ƒ táº¡o tĂ i khoáº£n Admin';
       setError(msg);
       toast.error(msg);
     } finally {
@@ -263,7 +305,7 @@ export function useAdmin() {
       localStorage.setItem('adminProfile', JSON.stringify(DEMO_ADMIN_PROFILE));
       setIsAuthenticated(true);
       setCurrentUser(DEMO_ADMIN_PROFILE);
-      toast.success('Đang bật chế độ demo Admin');
+      toast.success('Ä ang báº­t cháº¿ Ä‘á»™ demo Admin');
       return;
     }
 
@@ -274,9 +316,14 @@ export function useAdmin() {
     } finally {
       localStorage.removeItem('isAdminLogin');
       localStorage.removeItem('adminProfile');
+      localStorage.removeItem('isLogin');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('role');
       setIsAuthenticated(false);
+      setIsForbidden(false);
       setCurrentUser(null);
-      toast.success('Đã đăng xuất tài khoản quản trị');
+      toast.success('Ä Ă£ Ä‘Äƒng xuáº¥t tĂ i khoáº£n quáº£n trá»‹');
     }
   }, []);
 
@@ -296,15 +343,15 @@ export function useAdmin() {
     }
   }, []);
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (year: number = selectedYear) => {
     if (ADMIN_DEMO_MODE) {
       setStats(buildDemoStats());
       return;
     }
 
-    const res = await AdminApiService.getStats();
+    const res = await AdminApiService.getStats(year);
     if (res.status === 'OK') setStats(res.data);
-  }, []);
+  }, [selectedYear]);
 
   const fetchUsers = useCallback(async () => {
     if (ADMIN_DEMO_MODE) {
@@ -372,7 +419,7 @@ export function useAdmin() {
             break;
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Không thể đồng bộ dữ liệu quản trị';
+        const msg = err instanceof Error ? err.message : 'KhĂ´ng thá»ƒ Ä‘á»“ng bá»™ dá»¯ liá»‡u quáº£n trá»‹';
         setError(msg);
         toast.error(msg);
       } finally {
@@ -400,7 +447,7 @@ export function useAdmin() {
       };
 
       setUsers((prev) => [...prev, newUser]);
-      toast.success(`Demo: đã thêm người dùng ${newUser.email}`);
+      toast.success(`Demo: Ä‘Ă£ thĂªm ngÆ°á»i dĂ¹ng ${newUser.email}`);
       return;
     }
 
@@ -408,18 +455,18 @@ export function useAdmin() {
       const res = await AdminApiService.createUser(user);
       if (res.status === 'OK') {
         setUsers((prev) => [...prev, res.data]);
-        toast.success(`Đã thêm người dùng: ${res.data.lastName} ${res.data.firstName}`);
+        toast.success(`ÄĂ£ thĂªm ngÆ°á»i dĂ¹ng: ${res.data.lastName} ${res.data.firstName}`);
         fetchStats();
       }
     } catch {
-      toast.error('Không thể thêm người dùng mới');
+      toast.error('KhĂ´ng thá»ƒ thĂªm ngÆ°á»i dĂ¹ng má»›i');
     }
   }, [fetchStats]);
 
   const updateUserRole = useCallback(async (id: string, role: AdminUser['role']) => {
     if (ADMIN_DEMO_MODE) {
       setUsers((prev) => prev.map((user) => (user.id === id ? { ...user, role } : user)));
-      toast.success(`Demo: đã đổi vai trò sang ${role}`);
+      toast.success(`Demo: Ä‘Ă£ Ä‘á»•i vai trĂ² sang ${role}`);
       return;
     }
 
@@ -427,10 +474,10 @@ export function useAdmin() {
       const res = await AdminApiService.updateUser(id, { role });
       if (res.status === 'OK') {
         setUsers((prev) => prev.map((user) => (user.id === id ? res.data : user)));
-        toast.success(`Đã đổi vai trò sang ${role}`);
+        toast.success(`ÄĂ£ Ä‘á»•i vai trĂ² sang ${role}`);
       }
     } catch {
-      toast.error('Không thể cập nhật vai trò người dùng');
+      toast.error('KhĂ´ng thá»ƒ cáº­p nháº­t vai trĂ² ngÆ°á»i dĂ¹ng');
     }
   }, []);
 
@@ -439,7 +486,7 @@ export function useAdmin() {
 
     if (ADMIN_DEMO_MODE) {
       setUsers((prev) => prev.map((user) => (user.id === id ? { ...user, status: nextStatus } : user)));
-      toast.success(nextStatus === 'ACTIVE' ? 'Demo: đã mở khóa tài khoản' : 'Demo: đã khóa tài khoản');
+      toast.success(nextStatus === 'ACTIVE' ? 'Demo: Ä‘Ă£ má»Ÿ khĂ³a tĂ i khoáº£n' : 'Demo: Ä‘Ă£ khĂ³a tĂ i khoáº£n');
       return;
     }
 
@@ -447,18 +494,18 @@ export function useAdmin() {
       const res = await AdminApiService.updateUser(id, { status: nextStatus });
       if (res.status === 'OK') {
         setUsers((prev) => prev.map((user) => (user.id === id ? res.data : user)));
-        toast.success(nextStatus === 'ACTIVE' ? 'Đã mở khóa tài khoản' : 'Đã khóa tài khoản');
+        toast.success(nextStatus === 'ACTIVE' ? 'ÄĂ£ má»Ÿ khĂ³a tĂ i khoáº£n' : 'ÄĂ£ khĂ³a tĂ i khoáº£n');
         fetchStats();
       }
     } catch {
-      toast.error('Không thể cập nhật trạng thái tài khoản');
+      toast.error('KhĂ´ng thá»ƒ cáº­p nháº­t tráº¡ng thĂ¡i tĂ i khoáº£n');
     }
   }, [fetchStats]);
 
   const deleteUser = useCallback(async (id: string) => {
     if (ADMIN_DEMO_MODE) {
       setUsers((prev) => prev.filter((user) => user.id !== id));
-      toast.success('Demo: đã xóa tài khoản khỏi danh sách');
+      toast.success('Demo: Ä‘Ă£ xĂ³a tĂ i khoáº£n khá»i danh sĂ¡ch');
       return;
     }
 
@@ -466,11 +513,11 @@ export function useAdmin() {
       const res = await AdminApiService.deleteUser(id);
       if (res.status === 'OK') {
         setUsers((prev) => prev.filter((user) => user.id !== id));
-        toast.success('Đã xóa tài khoản khỏi hệ thống');
+        toast.success('ÄĂ£ xĂ³a tĂ i khoáº£n khá»i há»‡ thá»‘ng');
         fetchStats();
       }
     } catch {
-      toast.error('Không thể xóa tài khoản');
+      toast.error('KhĂ´ng thá»ƒ xĂ³a tĂ i khoáº£n');
     }
   }, [fetchStats]);
 
@@ -488,7 +535,7 @@ export function useAdmin() {
       };
 
       setAdmissions((prev) => prev.map(applyUpdate));
-      toast.success('Demo: đã cập nhật thông tin tuyển sinh');
+      toast.success('Demo: Ä‘Ă£ cáº­p nháº­t thĂ´ng tin tuyá»ƒn sinh');
       return;
     }
 
@@ -497,11 +544,11 @@ export function useAdmin() {
 
       if (res.status === 'OK') {
         setAdmissions((prev) => upsertById(prev, res.data));
-        toast.success(`Đã cập nhật ngành ${res.data.majorCode}`);
+        toast.success(`ÄĂ£ cáº­p nháº­t ngĂ nh ${res.data.majorCode}`);
         fetchStats();
       }
     } catch {
-      toast.error('Không thể cập nhật thông tin tuyển sinh');
+      toast.error('KhĂ´ng thá»ƒ cáº­p nháº­t thĂ´ng tin tuyá»ƒn sinh');
     }
   }, [fetchStats]);
 
@@ -511,11 +558,11 @@ export function useAdmin() {
       if (res.status === 'CREATED') {
         if (res.data.year === selectedYear) setAdmissions((prev) => upsertById(prev, res.data));
         setAvailableYears((prev) => [...new Set([...prev, res.data.year])].sort((a, b) => b - a));
-        toast.success(`Đã thêm thông tin tuyển sinh ngành ${res.data.majorCode}`);
+        toast.success(`ÄĂ£ thĂªm thĂ´ng tin tuyá»ƒn sinh ngĂ nh ${res.data.majorCode}`);
         fetchStats();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Không thể thêm thông tin tuyển sinh');
+      toast.error(err instanceof Error ? err.message : 'KhĂ´ng thá»ƒ thĂªm thĂ´ng tin tuyá»ƒn sinh');
       throw err;
     }
   }, [fetchStats, selectedYear]);
@@ -525,11 +572,11 @@ export function useAdmin() {
       const res = await AdminApiService.deleteAdmission(id);
       if (res.status === 'OK') {
         setAdmissions((prev) => prev.filter((item) => item.id !== id));
-        toast.success('Đã xóa thông tin tuyển sinh');
+        toast.success('ÄĂ£ xĂ³a thĂ´ng tin tuyá»ƒn sinh');
         fetchStats();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Không thể xóa thông tin tuyển sinh');
+      toast.error(err instanceof Error ? err.message : 'KhĂ´ng thá»ƒ xĂ³a thĂ´ng tin tuyá»ƒn sinh');
       throw err;
     }
   }, [fetchStats]);
@@ -558,7 +605,7 @@ export function useAdmin() {
       };
 
       setNews((prev) => [...prev, newArticle]);
-      toast.success('Demo: đã đăng bài viết tuyển sinh');
+      toast.success('Demo: Ä‘Ă£ Ä‘Äƒng bĂ i viáº¿t tuyá»ƒn sinh');
       return;
     }
 
@@ -566,11 +613,11 @@ export function useAdmin() {
       const res = await AdminApiService.createNews(article);
       if (res.status === 'OK') {
         setNews((prev) => [...prev, res.data]);
-        toast.success('Đã đăng bài viết tuyển sinh');
+        toast.success('ÄĂ£ Ä‘Äƒng bĂ i viáº¿t tuyá»ƒn sinh');
         fetchStats();
       }
     } catch {
-      toast.error('Không thể đăng tin tức');
+      toast.error('KhĂ´ng thá»ƒ Ä‘Äƒng tin tá»©c');
     }
   }, [fetchStats]);
 
@@ -579,7 +626,7 @@ export function useAdmin() {
       setNews((prev) => prev.map((article) => (
         article.id === id ? { ...article, ...updatedFields } : article
       )));
-      toast.success('Demo: đã cập nhật tin tức');
+      toast.success('Demo: Ä‘Ă£ cáº­p nháº­t tin tá»©c');
       return;
     }
 
@@ -587,17 +634,17 @@ export function useAdmin() {
       const res = await AdminApiService.updateNews(id, updatedFields);
       if (res.status === 'OK') {
         setNews((prev) => prev.map((article) => (article.id === id ? res.data : article)));
-        toast.success('Đã cập nhật tin tức');
+        toast.success('ÄĂ£ cáº­p nháº­t tin tá»©c');
       }
     } catch {
-      toast.error('Không thể cập nhật tin tức');
+      toast.error('KhĂ´ng thá»ƒ cáº­p nháº­t tin tá»©c');
     }
   }, []);
 
   const deleteNewsArticle = useCallback(async (id: string) => {
     if (ADMIN_DEMO_MODE) {
       setNews((prev) => prev.filter((article) => article.id !== id));
-      toast.success('Demo: đã xóa bài viết');
+      toast.success('Demo: Ä‘Ă£ xĂ³a bĂ i viáº¿t');
       return;
     }
 
@@ -605,11 +652,11 @@ export function useAdmin() {
       const res = await AdminApiService.deleteNews(id);
       if (res.status === 'OK') {
         setNews((prev) => prev.filter((article) => article.id !== id));
-        toast.success('Đã xóa bài viết tin tức');
+        toast.success('ÄĂ£ xĂ³a bĂ i viáº¿t tin tá»©c');
         fetchStats();
       }
     } catch {
-      toast.error('Không thể xóa bài viết');
+      toast.error('KhĂ´ng thá»ƒ xĂ³a bĂ i viáº¿t');
     }
   }, [fetchStats]);
 
@@ -633,6 +680,8 @@ export function useAdmin() {
 
   return {
     isAuthenticated,
+    isCheckingAuth,
+    isForbidden,
     isRegisterMode,
     setIsRegisterMode,
     currentUser,
