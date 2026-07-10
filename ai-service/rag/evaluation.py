@@ -5,11 +5,17 @@ from retriever import *
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
-llm = ChatOpenAI(
-    model="meta/llama-3.1-8b-instruct",
-    openai_api_key="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",
-    openai_api_base="https://integrate.api.nvidia.com/v1",
-    temperature=0
+# llm = ChatOpenAI(
+#     model="meta/llama-3.1-8b-instruct",
+#     openai_api_key="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",
+#     openai_api_base="https://integrate.api.nvidia.com/v1",
+#     temperature=0
+# )
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3.1-flash-lite",
+    google_api_key=os.getenv("API_KEY"),
+    temperature=0,
 )
 
 
@@ -131,7 +137,38 @@ def evaluate_at_k(
         f"mrr@{k}": mrr,
     }
 
-def _extract_json(text: str) -> Dict[str, Any]:
+# def _extract_json(text: str) -> Dict[str, Any]:
+#     try:
+#         return json.loads(text)
+#     except json.JSONDecodeError:
+#         pass
+#
+#     match = re.search(r"\{.*\}", text, re.DOTALL)
+#     if not match:
+#         return {}
+#
+#     try:
+#         return json.loads(match.group(0))
+#     except json.JSONDecodeError:
+#         return {}
+
+# def judge_fn(prompt: str) -> str:
+#     response = llm.invoke(prompt)
+#     return response.content
+
+def _extract_json(text) -> Dict[str, Any]:
+    if isinstance(text, dict):
+        return text
+
+    if isinstance(text, list):
+        text = "\n".join(
+            item.get("text", "") if isinstance(item, dict) else str(item)
+            for item in text
+        )
+
+    if not isinstance(text, str):
+        text = str(text)
+
     try:
         return json.loads(text)
     except json.JSONDecodeError:
@@ -148,7 +185,21 @@ def _extract_json(text: str) -> Dict[str, Any]:
 
 def judge_fn(prompt: str) -> str:
     response = llm.invoke(prompt)
-    return response.content
+    content = response.content
+
+    if isinstance(content, str):
+        return content
+
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                parts.append(item.get("text", ""))
+            else:
+                parts.append(str(item))
+        return "\n".join(parts)
+
+    return str(content)
 
 def evaluate_llm_answer(
         question: str,
