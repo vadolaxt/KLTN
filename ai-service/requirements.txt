@@ -3,26 +3,24 @@ numpy
 joblib
 transformers
 scikit-learn
-torch
+#torch
 python-dotenv
-openpyxl
-pyyaml
+#openpyxl
+#pyyaml
 
 openai
 google-genai
 
 langchain
-langchain-community
-langchain-core
-langchain-google-genai
+#langchain-community
+#langchain-core
+#langchain-text-splitters
 langchain-nvidia-ai-endpoints
+langchain-google-genai
 langchain_openai
-langchain-text-splitters
 langchain-mongodb
 
 pymongo
-
-faiss-cpu
 
 fastapi
 uvicorn

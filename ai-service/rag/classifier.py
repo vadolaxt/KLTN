@@ -1,10 +1,4 @@
-from transformers import pipeline, AutoTokenizer
-import os
-import joblib
 import warnings
-import json
-import re
-from typing import List
 from pattern import *
 from utils.helper import *
 from prompt import *
@@ -184,4 +178,5 @@ def split_question(question: str) -> List[Dict[str, Any]]:
     return output
 
 if __name__ == "__main__":
+    # print(intent_classifier("điểm chuẩn ngành công nghệ thông tin"))
     print(split_question("Điểm chuẩn và tổ hợp xét tuyển ngành công nghệ thông tin và trường có mấy giảng đường"))

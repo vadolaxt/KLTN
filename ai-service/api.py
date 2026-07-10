@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import sys
 
@@ -8,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from config.rag_config import admission_bundles
 from entity.entity import AdmissionPredictRequest, AdmissionPredictResponse
 from score import predict_admission
+
+from utils import libs_setup
 
 BASE_DIR = Path(__file__).resolve().parent
 

@@ -201,10 +201,12 @@ public class AuthService {
                         accessToken
                 )
                 .httpOnly(true)
-                .secure(false)
+//                .secure(false)
+//                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(15 * 60)
-                .sameSite("Lax")
                 .build();
 
         return accessCookie.toString();
@@ -216,10 +218,13 @@ public class AuthService {
                         refreshToken
                 )
                 .httpOnly(true)
-                .secure(false)
-                .path("/api/auth/refresh")
+//                .secure(false)
+//                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
+//                .path("/api/auth/refresh")
+                .path("/")
                 .maxAge(30 * 24 * 60 * 60)
-                .sameSite("Lax")
                 .build();
 
         return refreshCookie.toString();
