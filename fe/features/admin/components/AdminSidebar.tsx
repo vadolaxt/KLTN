@@ -4,7 +4,6 @@ import React from 'react';
 import {
 	Users,
 	BookOpen,
-	GraduationCap,
 	Newspaper,
 	LogOut,
 	ShieldCheck,
@@ -23,13 +22,11 @@ export default function AdminSidebar({
 	activeTab,
 	setActiveTab,
 	logout,
-	adminName = 'Admin',
 }: AdminSidebarProps) {
 	const menuItems = [
 		{ id: 'dashboard' as AdminTab, label: 'Thống kê báo cáo', icon: History },
 		{ id: 'users' as AdminTab, label: 'Quản lý người dùng', icon: Users },
 		{ id: 'admissions' as AdminTab, label: 'Thông tin tuyển sinh', icon: BookOpen },
-		{ id: 'scores' as AdminTab, label: 'Điểm chuẩn các năm', icon: GraduationCap },
 		{ id: 'news' as AdminTab, label: 'Quản lý tin tức', icon: Newspaper },
 	];
 
@@ -38,11 +35,11 @@ export default function AdminSidebar({
 			<div>
 				<div className="flex items-center gap-3 px-6 py-8 border-b border-white/10">
 					<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-green-dark font-black text-lg shadow-md">
-						NLU
+						AD
 					</div>
 					<div>
-						<h2 className="text-sm font-black tracking-wider text-green-light">ADMIN PORTAL</h2>
-						<p className="text-[10px] text-white/50 font-medium">Hệ thống tuyển sinh trực tuyến</p>
+						<h2 className="text-sm font-black tracking-wider text-green-light uppercase">Admin HCMUAF</h2>
+						<p className="text-[10px] text-white/50 font-medium">Quản trị viên</p>
 					</div>
 				</div>
 
@@ -75,19 +72,6 @@ export default function AdminSidebar({
 			</div>
 
 			<div className="p-4 border-t border-white/10">
-				<div className="flex items-center gap-3 px-3 py-3 bg-white/5 rounded-lg mb-3">
-					<div className="w-9 h-9 rounded-full bg-green-main border border-white/20 flex items-center justify-center text-sm font-extrabold text-white">
-						{adminName.substring(0, 2).toUpperCase()}
-					</div>
-					<div className="overflow-hidden">
-						<h4 className="text-xs font-extrabold text-white truncate">{adminName}</h4>
-						<div className="flex items-center gap-1 text-[10px] text-green-light font-bold">
-							<ShieldCheck size={11} />
-							Quản trị viên
-						</div>
-					</div>
-				</div>
-
 				<button
 					onClick={logout}
 					className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-white/15 bg-transparent hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 text-sm font-bold text-white/80 transition-all duration-200"

@@ -1,33 +1,24 @@
 'use client';
 
-import React, {useState} from 'react';
-import {useRouter} from 'next/navigation';
-import {useAdmin} from '@/hooks/use-admin';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAdmin } from '@/hooks/use-admin';
 
-// Layout & Authentication Components
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
-
+import DashboardOverview from './components/DashboardOverview';
 import UserManagement from './components/user-manage/UserManagement';
 import AdmissionManagement from './components/AdmissionManagement';
-import ScoreManagement from './components/ScoreManagement';
 import NewsManagement from './components/NewsManagement';
-
-import {AuthService} from "@/service/auth.api";
-import {toast} from "sonner";
 
 export default function AdminView() {
 	const {
-		// Auth State
 		isAuthenticated,
-		isRegisterMode,
-		setIsRegisterMode,
+		isCheckingAuth,
+		isForbidden,
 		currentUser,
-		login,
-		register,
 		logout,
 
-		// Layout State
 		activeTab,
 		setActiveTab,
 		selectedYear,
@@ -35,76 +26,60 @@ export default function AdminView() {
 		availableYears,
 		availableCombinationCodes,
 		isLoading,
-		error,
 
-		// Data List State
 		admissions,
-		scores,
 		news,
 		stats,
 
-		// Actions
 		updateAdmissionInfo,
 		createAdmissionInfo,
 		deleteAdmissionInfo,
-		updateCutoffScore,
 		createNewsArticle,
 		updateNewsArticle,
 		deleteNewsArticle,
 	} = useAdmin();
 
 	const router = useRouter();
-	const [isLoggedIn, setIsLoggedIn] = useState(false);
-	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-	// const handleLogout = async () => {
-	//   await logout();
-	//   router.push('/homepage');
-	//   router.refresh();
-	// };
-	const handleLogout = async () => {
-		try {
-			await AuthService.logout();
-			toast.success("Đăng xuất thành công");
-		} catch (error) {
-			console.error("Logout error:", error);
-		} finally {
-			localStorage.removeItem("isLogin");
-			localStorage.removeItem("userName");
-			setIsLoggedIn(false);
-			setIsDropdownOpen(false);
-			router.push("/homepage");
-			router.refresh();
+	useEffect(() => {
+		if (!isCheckingAuth && !isAuthenticated) {
+			router.replace(isForbidden ? '/homepage' : '/login');
 		}
+	}, [isAuthenticated, isCheckingAuth, isForbidden, router]);
+
+	const handleLogout = async () => {
+		await logout();
+		router.push('/homepage');
+		router.refresh();
 	};
 
-	// if (!isAuthenticated) {
-	// 	return (
-	// 		<div className="min-h-screen flex items-center justify-center font-vietnam bg-[linear-gradient(135deg,#f4f9f4_0%,#ffffff_50%,#f0f7f0_100%)] relative px-4 overflow-hidden">
-	// 			<div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(45,122,45,0.04)_1px,transparent_1px),linear-gradient(180deg,rgba(45,122,45,0.04)_1px,transparent_1px)] bg-[size:32px_32px]"/>
-	// 			<div className="absolute -left-40 -top-40 w-96 h-96 rounded-full bg-green-light/5 blur-3xl"/>
-	// 			<div className="absolute -right-40 -bottom-40 w-96 h-96 rounded-full bg-green-main/5 blur-3xl"/>
-	//
-	// 			<div className="relative z-10 w-full flex justify-center">
-	// 				{isRegisterMode ? (
-	// 					<AdminRegister
-	// 						register={register}
-	// 						isLoading={isLoading}
-	// 						error={error}
-	// 						switchToLogin={() => setIsRegisterMode(false)}
-	// 					/>
-	// 				) : (
-	// 					<AdminLogin
-	// 						login={login}
-	// 						isLoading={isLoading}
-	// 						error={error}
-	// 						switchToRegister={() => setIsRegisterMode(true)}
-	// 					/>
-	// 				)}
-	// 			</div>
-	// 		</div>
-	// 	);
-	// }
+	if (isCheckingAuth || !isAuthenticated) {
+		return (
+			<div className="min-h-screen flex items-center justify-center font-vietnam bg-[linear-gradient(135deg,#f4f9f4_0%,#ffffff_50%,#f0f7f0_100%)] relative px-4 overflow-hidden">
+				<div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(45,122,45,0.04)_1px,transparent_1px),linear-gradient(180deg,rgba(45,122,45,0.04)_1px,transparent_1px)] bg-[size:32px_32px]" />
+				<div className="absolute -left-40 -top-40 w-96 h-96 rounded-full bg-green-light/5 blur-3xl" />
+				<div className="absolute -right-40 -bottom-40 w-96 h-96 rounded-full bg-green-main/5 blur-3xl" />
+
+				<div className="relative z-10 rounded-3xl border border-green-main/10 bg-white/90 px-8 py-6 text-center shadow-xl">
+					<div className="text-sm font-bold uppercase tracking-[0.2em] text-green-main">
+						Hệ thống quản trị
+					</div>
+					<div className="mt-3 text-2xl font-black text-green-dark">
+						{isCheckingAuth
+							? 'Đang kiểm tra đăng nhập...'
+							: isForbidden
+								? 'Không có quyền quản trị'
+								: 'Đang chuyển đến trang đăng nhập...'}
+					</div>
+					<p className="mt-2 text-sm text-text-light">
+						{isForbidden
+							? 'Tài khoản hiện tại không có quyền quản trị.'
+							: 'Admin dùng chung tài khoản đăng nhập của hệ thống.'}
+					</p>
+				</div>
+			</div>
+		);
+	}
 
 	const adminFullName = currentUser
 		? `${currentUser.lastName} ${currentUser.firstName}`
@@ -121,23 +96,26 @@ export default function AdminView() {
 				/>
 			</aside>
 
-			<div className="flex flex-col h-screen overflow-hidden">
+			<div className="flex h-screen flex-col overflow-hidden">
 				<AdminHeader
 					activeTab={activeTab}
 					adminName={adminFullName}
 					adminEmail={currentUser?.email}
 				/>
-				<main className="flex-1 overflow-y-auto p-8 bg-gray-light">
-					<div className="max-w-6xl mx-auto">
+
+				<main className="flex-1 overflow-y-auto bg-gray-light p-8">
+					<div className="mx-auto max-w-6xl">
 						{activeTab === 'dashboard' && (
 							<DashboardOverview
 								stats={stats}
 								isLoading={isLoading}
+								selectedYear={selectedYear}
+								setSelectedYear={setSelectedYear}
+								availableYears={availableYears}
 							/>
 						)}
-						{activeTab === 'users' && (
-							<UserManagement/>
-						)}
+
+						{activeTab === 'users' && <UserManagement />}
 
 						{activeTab === 'admissions' && (
 							<AdmissionManagement
@@ -149,18 +127,6 @@ export default function AdminView() {
 								updateAdmissionInfo={updateAdmissionInfo}
 								createAdmissionInfo={createAdmissionInfo}
 								deleteAdmissionInfo={deleteAdmissionInfo}
-								isLoading={isLoading}
-							/>
-						)}
-
-						{activeTab === 'scores' && (
-							<ScoreManagement
-								scores={scores}
-								selectedYear={selectedYear}
-								availableYears={availableYears}
-								availableCombinationCodes={availableCombinationCodes}
-								setSelectedYear={setSelectedYear}
-								updateCutoffScore={updateCutoffScore}
 								isLoading={isLoading}
 							/>
 						)}

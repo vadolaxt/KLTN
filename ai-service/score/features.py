@@ -161,25 +161,6 @@ def _subjects_from_note_tail(note: object) -> list[str]:
 # Xử lý môn chung (môn nhân hệ số 2) từ cột Note
 # ---------------------------------------------------------------------------
 
-def parse_common_subjects_nlu(note: object) -> list[str]:
-    """Trích xuất danh sách môn chung từ Note của NLU.
-
-    Định dạng: "Tổ hợp gốc: A00\\nMôn chung: Toán, Vật lý"
-    Trả về list các subject key, ví dụ: ["Toan", "Vat_li"]
-    """
-    if pd.isna(note):
-        return []
-    note_str = str(note).strip()
-    match = re.search(
-        r"(?:m[oô]n\s+chung|mon\s+chung)\s*:\s*(.+)",
-        note_str,
-        re.IGNORECASE,
-    )
-    if not match:
-        return []
-    return _subjects_from_note_tail(match.group(1).strip())
-
-
 def parse_common_subject_sgu(note: object) -> list[str]:
     """Trích xuất môn chính từ Note của SGU.
 
@@ -258,17 +239,27 @@ def compute_student_score_with_common_subject(
     return round(min(result, 30.0), 2)
 
 
-def build_pipeline_specs(categorical_features: list[str]) -> dict[str, FeatureSpec]:
+def build_pipeline_specs(
+    categorical_features: list[str],
+    include_common_subject_feature: bool = True,
+) -> dict[str, FeatureSpec]:
     """Khai báo hai bộ đặc trưng: chỉ dùng dữ liệu nội bộ hoặc thêm phổ điểm quốc gia."""
+    numeric_features = list(PIPELINE_A_NUMERIC_FEATURES)
+    if not include_common_subject_feature:
+        numeric_features = [
+            feature for feature in numeric_features
+            if feature != "Has_Common_Subject"
+        ]
+
     return {
         "Pipeline_A_Internal": FeatureSpec(
             name="Pipeline_A_Internal",
-            numeric_features=list(PIPELINE_A_NUMERIC_FEATURES),
+            numeric_features=numeric_features,
             categorical_features=list(categorical_features),
         ),
         "Pipeline_B_National": FeatureSpec(
             name="Pipeline_B_National",
-            numeric_features=list(PIPELINE_A_NUMERIC_FEATURES)
+            numeric_features=numeric_features
             + list(PIPELINE_B_EXTRA_NUMERIC_FEATURES),
             categorical_features=list(categorical_features),
         ),
@@ -390,8 +381,11 @@ def _extract_common_subjects(row: pd.Series, school_code: str) -> list[str]:
     note = row.get("Note", None)
     sc = str(school_code).strip().upper()
     if sc == "NLU":
-        return parse_common_subjects_nlu(note)
-    elif sc == "SGU":
+        return []
+    if sc == "SGU":
+        year = pd.to_numeric(row.get("Year", None), errors="coerce")
+        if pd.notna(year) and int(year) >= 2026:
+            return []
         return parse_common_subject_sgu(note)
     return []
 

@@ -201,10 +201,10 @@ public class AuthService {
                         accessToken
                 )
                 .httpOnly(true)
-//                .secure(false)
-//                .sameSite("Lax")
-                .secure(true)
-                .sameSite("None")
+                .secure(false)
+                .sameSite("Lax")
+//                .secure(true)
+//                .sameSite("None")
                 .path("/")
                 .maxAge(15 * 60)
                 .build();
@@ -218,11 +218,11 @@ public class AuthService {
                         refreshToken
                 )
                 .httpOnly(true)
-//                .secure(false)
-//                .sameSite("Lax")
-                .secure(true)
-                .sameSite("None")
-//                .path("/api/auth/refresh")
+                .secure(false)
+                .sameSite("Lax")
+//                .secure(true)
+//                .sameSite("None")
+                .path("/api/auth/refresh")
                 .path("/")
                 .maxAge(30 * 24 * 60 * 60)
                 .build();

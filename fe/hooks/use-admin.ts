@@ -13,7 +13,7 @@ import {
   DashboardStats,
 } from '@/service/admin.api';
 
-export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'scores' | 'news';
+export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'news';
 
 const DEFAULT_YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 const ADMIN_DEMO_MODE = false;
@@ -126,11 +126,14 @@ const DEMO_NEWS: AdminNews[] = [
     title: 'ThĂ´ng bĂ¡o tuyá»ƒn sinh Ä‘áº¡i há»c chĂ­nh quy nÄƒm 2026',
     summary: 'Cáº­p nháº­t chá»‰ tiĂªu, tá»• há»£p mĂ´n vĂ  Ä‘iá»ƒm chuáº©n tham kháº£o cho cĂ¡c ngĂ nh Ä‘Ă o táº¡o.',
     content: 'Ná»™i dung demo phá»¥c vá»¥ kiá»ƒm thá»­ giao diá»‡n quáº£n trá»‹ tuyá»ƒn sinh.',
-    category: 'ANNOUNCEMENT',
+    category: 'ADMISSION_INFO',
     status: 'PUBLISHED',
     publishedAt: '2026-05-01',
-    emoji: 'đŸ“¢',
+    imageUrl: 'https://ts.nlu.edu.vn/imgs/hinh1.jpg',
+    sourceUrl: 'https://ts.nlu.edu.vn/',
+    sourceName: 'Trang tuyển sinh NLU',
     views: 1540,
+    displayOrder: 1,
   },
 ];
 
@@ -411,9 +414,6 @@ export function useAdmin() {
           case 'admissions':
             await fetchAdmissions(selectedYear);
             break;
-          case 'scores':
-            await fetchAdmissions(selectedYear);
-            break;
           case 'news':
             await fetchNews();
             break;
@@ -595,13 +595,14 @@ export function useAdmin() {
     });
   }, [updateAdmissionInfo]);
 
-  const createNewsArticle = useCallback(async (article: Omit<AdminNews, 'id' | 'views' | 'publishedAt'>) => {
+  const createNewsArticle = useCallback(async (article: Omit<AdminNews, 'id' | 'views' | 'createdAt' | 'updatedAt'>) => {
     if (ADMIN_DEMO_MODE) {
       const newArticle: AdminNews = {
         ...article,
         id: `news-demo-${Date.now()}`,
         views: 0,
-        publishedAt: new Date().toISOString().split('T')[0],
+        publishedAt: article.publishedAt || new Date().toISOString().split('T')[0],
+        displayOrder: article.displayOrder ?? 100,
       };
 
       setNews((prev) => [...prev, newArticle]);
@@ -611,7 +612,7 @@ export function useAdmin() {
 
     try {
       const res = await AdminApiService.createNews(article);
-      if (res.status === 'OK') {
+      if (res.status === 'OK' || res.status === 'CREATED') {
         setNews((prev) => [...prev, res.data]);
         toast.success('ÄĂ£ Ä‘Äƒng bĂ i viáº¿t tuyá»ƒn sinh');
         fetchStats();
@@ -668,13 +669,10 @@ export function useAdmin() {
     return Array.from(codeSet).sort();
   }, [admissions]);
 
-  const scores = admissions;
-
   const refreshData = useCallback(async () => {
     if (activeTab === 'dashboard') await fetchStats();
     if (activeTab === 'users') await fetchUsers();
     if (activeTab === 'admissions') await fetchAdmissions(selectedYear);
-    if (activeTab === 'scores') await fetchAdmissions(selectedYear);
     if (activeTab === 'news') await fetchNews();
   }, [activeTab, fetchAdmissions, fetchNews, fetchStats, fetchUsers, selectedYear]);
 
@@ -700,7 +698,6 @@ export function useAdmin() {
 
     users,
     admissions,
-    scores,
     news,
     stats,
 

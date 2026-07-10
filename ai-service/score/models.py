@@ -200,7 +200,10 @@ def _fit_single_model(
         raw_data, national_subject_stats,
         train_end_year=train_end_year, school_code=school_code,
     )
-    spec = build_pipeline_specs(CATEGORICAL_FEATURES)[pipeline_name]
+    spec = build_pipeline_specs(
+        CATEGORICAL_FEATURES,
+        include_common_subject_feature=str(school_code).strip().upper() != "NLU",
+    )[pipeline_name]
     if model_name == "XGB_Tuned":
         estimator = _make_tuned_xgb_pipeline(spec)
     else:
@@ -237,7 +240,10 @@ def run_nlu_experiment(
         historical_df, national_subject_stats,
         train_end_year=train_end_year, school_code=school_code,
     )
-    pipeline_specs = build_pipeline_specs(CATEGORICAL_FEATURES)
+    pipeline_specs = build_pipeline_specs(
+        CATEGORICAL_FEATURES,
+        include_common_subject_feature=str(school_code).strip().upper() != "NLU",
+    )
     regressors = _available_regressors()
 
     train_rows = _valid_model_rows(frame, frame["Year"].le(train_end_year))

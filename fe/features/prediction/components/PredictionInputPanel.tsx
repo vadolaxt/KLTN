@@ -137,56 +137,6 @@ const isRestrictedTranscriptSubject = (subjectName: string) => {
 
 const parseScore = (value: string) => Number(value.replace(',', '.'));
 
-const getCommonSubjectKeys = (schoolCode: SchoolCode, major?: Major) => {
-  if (schoolCode !== 'NLU' || !major) {
-    return [];
-  }
-
-  if (major.departmentCode === 'CK') {
-    return ['toan', 'vat ly'];
-  }
-
-  if (major.code.startsWith('7420201')) {
-    return ['sinh hoc'];
-  }
-
-  if (major.code === '7220201') {
-    return ['tieng anh'];
-  }
-
-  return ['toan'];
-};
-
-const calculateCommonSubjectScore = (
-  subjectNames: string[],
-  scores: number[],
-  commonSubjectKeys: string[],
-) => {
-  if (!commonSubjectKeys.length || subjectNames.length === 0) {
-    return null;
-  }
-
-  const validCommonSubjects = commonSubjectKeys.filter((subjectKey) =>
-    subjectNames.some((subjectName) => normalizeSubjectName(subjectName) === subjectKey),
-  );
-
-  if (!validCommonSubjects.length) {
-    return null;
-  }
-
-  const weightedTotal = subjectNames.reduce((total, subjectName, index) => {
-    const score = scores[index];
-    if (!Number.isFinite(score)) {
-      return total;
-    }
-
-    const multiplier = validCommonSubjects.includes(normalizeSubjectName(subjectName)) ? 2 : 1;
-    return total + score * multiplier;
-  }, 0);
-
-  return Number((weightedTotal * (3 / (3 + validCommonSubjects.length))).toFixed(2));
-};
-
 const calculatePriorityScore = (baseScore: number, rawPriorityScore: number) => {
   if (!Number.isFinite(baseScore) || !Number.isFinite(rawPriorityScore) || rawPriorityScore <= 0) {
     return 0;
@@ -396,37 +346,13 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
       return total + (method === 'vsat' ? convertVsatToThptScore(parsedScore) : parsedScore);
     }, 0);
 
-  const subjectScoreValues = useMemo(
-    () => subjectLabels.map((_, index) => {
-      const parsedScore = parseScore(subjectScores[index] ?? '');
-      if (!Number.isFinite(parsedScore)) {
-        return Number.NaN;
-      }
-
-      return method === 'vsat' ? convertVsatToThptScore(parsedScore) : parsedScore;
-    }),
-    [method, subjectLabels, subjectScores],
-  );
-
   const displayScore = method === 'dgnl'
     ? convertedDgnlScore
     : method === 'kh'
       ? combinedScore
       : subjectTotal;
 
-  const admissionBaseScore = useMemo(() => {
-    if (method !== 'hb' && method !== 'thpt' && method !== 'vsat') {
-      return displayScore;
-    }
-
-    const commonSubjectScore = calculateCommonSubjectScore(
-      subjectLabels,
-      subjectScoreValues,
-      getCommonSubjectKeys(schoolCode, selectedMajor),
-    );
-
-    return commonSubjectScore ?? displayScore;
-  }, [displayScore, method, schoolCode, selectedMajor, subjectLabels, subjectScoreValues]);
+  const admissionBaseScore = displayScore;
 
   const rawPriorityScore = useMemo(() => {
     const areaScore = PRIORITY_AREAS.find((item) => item.value === priorityArea)?.score ?? 0;

@@ -28,6 +28,9 @@ export interface NewsItem {
   date: string;
   emoji: string;
   gradientVariant: 'green' | 'blue' | 'purple';
+  href: string;
+  imageUrl?: string | null;
+  sourceUrl?: string | null;
 }
 
 export interface HomepageState {

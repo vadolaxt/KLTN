@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/constants/api-client";
 import { ApiResponse, AuthRequest, AuthResponse } from "@/types";
+import type { NewsCategory, NewsStatus } from "./news.api";
 
 export type AdminRole = "ADMIN" | "STAFF" | "USER" | "ROLE_ADMIN" | "ROLE_USER";
 export type AccountStatus = "ACTIVE" | "BLOCKED";
@@ -89,11 +90,16 @@ export interface AdminNews {
   title: string;
   summary: string;
   content: string;
-  category: "ANNOUNCEMENT" | "GUIDE" | "EVENT";
-  status: "DRAFT" | "PUBLISHED";
+  category: NewsCategory;
+  status: NewsStatus;
+  imageUrl?: string | null;
+  sourceUrl?: string | null;
+  sourceName?: string | null;
   publishedAt: string;
-  emoji: string;
   views: number;
+  displayOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DashboardStats {
@@ -223,7 +229,7 @@ export const AdminApiService = {
     return response.data;
   },
 
-  createNews: async (news: Omit<AdminNews, "id" | "views" | "publishedAt">): Promise<ApiResponse<AdminNews>> => {
+  createNews: async (news: Omit<AdminNews, "id" | "views" | "createdAt" | "updatedAt">): Promise<ApiResponse<AdminNews>> => {
     const response = await apiClient.post<ApiResponse<AdminNews>>("/admin/news", news);
     return response.data;
   },

@@ -8,6 +8,7 @@ import Header from '@/shared/components/Header';
 import NavBar from '@/shared/components/NavBar';
 import Footer from '@/shared/components/Footer';
 import { AdmissionLookupApi, type LookupAdmission } from '@/service/admission-lookup.api';
+import { getAdmissionNoteLines } from '@/shared/utils/admission-note';
 
 interface LookupMajor {
   id: string;
@@ -76,12 +77,15 @@ export default function SearchView() {
     AdmissionLookupApi.getYears()
       .then((years) => {
         setAvailableYears(years);
-        if (years.length > 0 && !years.includes(selectedYear)) setSelectedYear(years[0]);
+        if (years.length > 0) {
+          setSelectedYear((currentYear) => years.includes(currentYear) ? currentYear : years[0]);
+        }
       })
       .catch(() => setLoadError('Không thể tải danh sách năm tuyển sinh.'));
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     setLoadError(null);
     AdmissionLookupApi.getAdmissions(selectedYear)
@@ -292,7 +296,15 @@ export default function SearchView() {
                               </div>
                             </td>
                             <td className="max-w-[220px] px-3 py-3 text-[12px] leading-5 text-text-mid">
-                              {major.note || <span className="text-text-light">-</span>}
+                              {getAdmissionNoteLines(major.note).length > 0 ? (
+                                <div className="space-y-1">
+                                  {getAdmissionNoteLines(major.note).map((line) => (
+                                    <div key={line}>{line}</div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-text-light">-</span>
+                              )}
                             </td>
                           </tr>
                         ))}
