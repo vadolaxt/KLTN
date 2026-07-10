@@ -19,6 +19,8 @@ services:
       context: ./ai-service
     container_name: fastapi-ai-service
     restart: unless-stopped
+    ports:
+      - "8000:8000"
     env_file:
       - ./ai-service/.env
     networks:
