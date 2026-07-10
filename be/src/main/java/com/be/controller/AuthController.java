@@ -165,18 +165,23 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> logout() {
         ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
-                .secure(false) // Đổi thành true khi lên Production (HTTPS)
+//                .secure(false)
+//                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
                 .build();
 
         ResponseCookie deleteRefreshCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false)
-                .path("/api/auth/refresh") // Phải khớp path lúc khởi tạo
+//                .secure(false)
+//                .sameSite("Lax")
+                .secure(true)
+                .sameSite("None")
+//                .path("/api/auth/refresh")
+                .path("/")
                 .maxAge(0)
-                .sameSite("Lax")
                 .build();
 
         return ResponseEntity
