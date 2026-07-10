@@ -24,7 +24,6 @@ public class ScoreHelper {
     private static final String PERCENTILE_FILE = "bach phan vi.csv";
     private static final List<String> COMPETENCY_COMBINATIONS = List.of("A00", "A01", "B00", "C01", "D01");
 
-    // /50 *30 hoac /40
 
     public double convertNationalScore(double score) {
         return roundToTwoDecimals(score);

@@ -65,22 +65,7 @@ def unique_metadata_keyword() -> Dict[str, Any]:
     return pattern
 
 
-# dsach từ nối (dùng khi tách câu nhiều ý)
-def word_connector():
-    ls = [
-        "bên cạnh đó",
-        "ngoài ra",
-        "đồng thời",
-        "thêm nữa",
-        "với lại",
-        "và",
-        "với",
-        "hay",
-        "hoặc",
-        "còn",
-    ]
 
-    return ls
 
 
 def metadata_extractor_dict():

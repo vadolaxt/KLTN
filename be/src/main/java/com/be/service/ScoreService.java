@@ -169,121 +169,6 @@ public class ScoreService {
                 .build();
     }
 
-//    public MajorScoreResponse getMajorScore(String token) {
-//        ViewScoreResponse userScore = getUserScore(token);
-//        List<Major> majors = majorRepository.findAllByOrderByDepartmentCodeAsc();
-//
-//        List<MajorScoreResponse.MajorDTO> majorScores = majors.stream()
-//                .filter(Objects::nonNull)
-//                .map(major -> {
-//                    Set<String> majorCombinationCodes =
-//                            major.getCombinations() == null
-//                                    ? Set.of()
-//                                    : major.getCombinations().stream()
-//                                    .filter(Objects::nonNull)
-//                                    .map(SubjectCombination::getCode)
-//                                    .filter(Objects::nonNull)
-//                                    .collect(Collectors.toSet());
-//
-//                    List<MajorScoreResponse.MethodScoreDTO> scores =
-//                            new ArrayList<>();
-//
-//                    // hoc ba
-//                    if (userScore.schoolRecordMethodScore() != null) {
-//                        userScore.schoolRecordMethodScore().stream()
-//                                .filter(score ->
-//                                        score != null
-//                                                && majorCombinationCodes.contains(
-//                                                score.getCombination()
-//                                        )
-//                                )
-//                                .max(Comparator.comparingDouble(
-//                                        ViewScoreResponse.CombinationScoreDTO::getScore
-//                                ))
-//                                .ifPresent(score -> scores.add(
-//                                        MajorScoreResponse.MethodScoreDTO.builder()
-//                                                .type("SCHOOL_RECORD")
-//                                                .combination(score.getCombination())
-//                                                .rawScore(score.getScore())
-//                                                .convertedScore(score.getConvertScore())
-//                                                .build()
-//                                ));
-//                    }
-//
-//                    // thpt
-//                    if (userScore.nationalMethodScore() != null) {
-//                        userScore.nationalMethodScore().stream()
-//                                .filter(score ->
-//                                        score != null
-//                                                && majorCombinationCodes.contains(
-//                                                score.getCombination()
-//                                        )
-//                                )
-//                                .max(Comparator.comparingDouble(
-//                                        ViewScoreResponse.CombinationScoreDTO::getScore
-//                                ))
-//                                .ifPresent(score -> scores.add(
-//                                        MajorScoreResponse.MethodScoreDTO.builder()
-//                                                .type("NATIONAL")
-//                                                .combination(score.getCombination())
-//                                                .rawScore(score.getScore())
-//                                                .convertedScore(score.getConvertScore())
-//                                                .build()
-//                                ));
-//                    }
-//
-//                    // ket hop
-//                    if (userScore.combineMethodScore() != null) {
-//                        userScore.combineMethodScore().stream()
-//                                .filter(score ->
-//                                        score != null
-//                                                && majorCombinationCodes.contains(
-//                                                score.getCombination()
-//                                        )
-//                                )
-//                                .max(Comparator.comparingDouble(
-//                                        ViewScoreResponse.CombineMethodScoreDTO::getScore
-//                                ))
-//                                .ifPresent(score -> scores.add(
-//                                        MajorScoreResponse.MethodScoreDTO.builder()
-//                                                .type("COMBINE")
-//                                                .combination(score.getCombination())
-//                                                .rawScore(score.getScore())
-//                                                .convertedScore(score.getConvertScore())
-//                                                .build()
-//                                ));
-//                    }
-//
-//                    // dgnl
-//                    if (userScore.competencyMethod() != null) {
-//                        ViewScoreResponse.CompetencyScoreDTO competency = userScore.competencyMethod();
-//                        scores.add(
-//                                MajorScoreResponse.MethodScoreDTO.builder()
-//                                        .type("COMPETENCY")
-//                                        .rawScore(competency.getScore())
-
-    /// ////////////////////////////////
-    /// ////////////////////////////////
-    /// ////////////////////////////////       .convertedScore(competency.getConvertScore())
-    /// ////////////////////////////////
-    /// ////////////////////////////////
-//                                        .build()
-//                        );
-//                    }
-//
-//
-//                    return MajorScoreResponse.MajorDTO.builder()
-//                            .majorCode(major.getCode())
-//                            .majorName(major.getName())
-//                            .scores(scores)
-//                            .build();
-//                })
-//                .collect(Collectors.toList());
-//
-//        return MajorScoreResponse.builder()
-//                .majorScores(majorScores)
-//                .build();
-//    }
     public MajorScoreResponse getMajorScore(String token) {
         String userId = authService.getUserIdFromToken(token);
 
@@ -326,11 +211,7 @@ public class ScoreService {
                                         schoolRecord
                                 );
 
-                                double convertedScore = scoreHelper.convertMajorScore(
-                                        combination,
-                                        major.getCoreSubject(),
-                                        schoolRecord
-                                );
+                                double convertedScore = scoreHelper.convertSchoolRecordScore(rawScore);
 
                                 return MajorScoreResponse.MethodScoreDTO.builder()
                                         .type("SCHOOL_RECORD")
@@ -351,12 +232,6 @@ public class ScoreService {
                                         combination,
                                         nationalScoreMap
                                 );
-
-//                                double convertedScore = scoreHelper.convertMajorScore(
-//                                        combination,
-//                                        major.getCoreSubject(),
-//                                        nationalScoreMap
-//                                );
 
                                 return MajorScoreResponse.MethodScoreDTO.builder()
                                         .type("NATIONAL")
