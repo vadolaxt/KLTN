@@ -1,0 +1,34 @@
+{
+  "id2label": {
+    "0": "cac_moc_thoi_gian",
+    "1": "cau_lac_bo",
+    "2": "co_so_vat_chat",
+    "3": "diem_chuan",
+    "4": "diem_uu_tien",
+    "5": "hoc_phi",
+    "6": "huong_dan_thanh_toan",
+    "7": "ky_tuc_xa",
+    "8": "phuong_thuc_xet_tuyen",
+    "9": "quy_doi_diem_tieng_anh",
+    "10": "so_luoc_ve_truong",
+    "11": "thi_nang_khieu",
+    "12": "thong_tin_ve_nganh_hoc",
+    "13": "to_hop"
+  },
+  "label2id": {
+    "cac_moc_thoi_gian": 0,
+    "cau_lac_bo": 1,
+    "co_so_vat_chat": 2,
+    "diem_chuan": 3,
+    "diem_uu_tien": 4,
+    "hoc_phi": 5,
+    "huong_dan_thanh_toan": 6,
+    "ky_tuc_xa": 7,
+    "phuong_thuc_xet_tuyen": 8,
+    "quy_doi_diem_tieng_anh": 9,
+    "so_luoc_ve_truong": 10,
+    "thi_nang_khieu": 11,
+    "thong_tin_ve_nganh_hoc": 12,
+    "to_hop": 13
+  }
+}
