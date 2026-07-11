@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/predict/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/news/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/admissions/**").permitAll()
                         .requestMatchers("/api/cloudinary/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")

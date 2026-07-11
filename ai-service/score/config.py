@@ -1,7 +1,9 @@
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = PROJECT_ROOT / "assets" / "score-data"
+DEFAULT_DATA_DIR = PROJECT_ROOT / "assets" / "score-data"
+LEGACY_MODEL_DATA_DIR = PROJECT_ROOT / "assets" / "models" / "score-data"
+DATA_DIR = DEFAULT_DATA_DIR if DEFAULT_DATA_DIR.exists() else LEGACY_MODEL_DATA_DIR
 MODEL_DIR = PROJECT_ROOT / "assets" / "models"
 
 HISTORICAL_DATA_PATH = DATA_DIR / "dataset.csv"

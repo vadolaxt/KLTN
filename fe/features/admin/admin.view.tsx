@@ -1,20 +1,14 @@
 'use client';
 
-import React, {useState} from 'react';
-import {useRouter} from 'next/navigation';
-import {useAdmin} from '@/hooks/use-admin';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAdmin } from '@/hooks/use-admin';
 
-// Layout & Authentication Components
 import AdminSidebar from './components/AdminSidebar';
 import AdminHeader from './components/AdminHeader';
-import AdminLogin from './components/AdminLogin';
-import AdminRegister from './components/AdminRegister';
-
-// Dashboard Tab Components
 import DashboardOverview from './components/DashboardOverview';
 import UserManagement from './components/user-manage/UserManagement';
 import AdmissionManagement from './components/AdmissionManagement';
-import ScoreManagement from './components/ScoreManagement';
 import NewsManagement from './components/NewsManagement';
 import {AuthService} from "@/service/auth.api";
 import {toast} from "sonner";
@@ -22,16 +16,12 @@ import FQAManagement from "@/features/admin/components/FQAManagement";
 
 export default function AdminView() {
 	const {
-		// Auth State
 		isAuthenticated,
-		isRegisterMode,
-		setIsRegisterMode,
+		isCheckingAuth,
+		isForbidden,
 		currentUser,
-		login,
-		register,
 		logout,
 
-		// Layout State
 		activeTab,
 		setActiveTab,
 		selectedYear,
@@ -39,27 +29,26 @@ export default function AdminView() {
 		availableYears,
 		availableCombinationCodes,
 		isLoading,
-		error,
 
-		// Data List State
 		admissions,
-		scores,
 		news,
 		stats,
 
-		// Actions
 		updateAdmissionInfo,
 		createAdmissionInfo,
 		deleteAdmissionInfo,
-		updateCutoffScore,
 		createNewsArticle,
 		updateNewsArticle,
 		deleteNewsArticle,
 	} = useAdmin();
 
 	const router = useRouter();
-	const [isLoggedIn, setIsLoggedIn] = useState(false);
-	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+	useEffect(() => {
+		if (!isCheckingAuth && !isAuthenticated) {
+			router.replace(isForbidden ? '/homepage' : '/login');
+		}
+	}, [isAuthenticated, isCheckingAuth, isForbidden, router]);
 
 	const handleLogout = async () => {
 		try {
@@ -123,25 +112,26 @@ export default function AdminView() {
 				/>
 			</aside>
 
-			<div className="flex flex-col h-screen overflow-hidden">
+			<div className="flex h-screen flex-col overflow-hidden">
 				<AdminHeader
 					activeTab={activeTab}
 					adminName={adminFullName}
 					adminEmail={currentUser?.email}
 				/>
 
-				<main className="flex-1 overflow-y-auto p-8 bg-gray-light">
-					<div className="max-w-6xl mx-auto">
+				<main className="flex-1 overflow-y-auto bg-gray-light p-8">
+					<div className="mx-auto max-w-6xl">
 						{activeTab === 'dashboard' && (
 							<DashboardOverview
 								stats={stats}
 								isLoading={isLoading}
+								selectedYear={selectedYear}
+								setSelectedYear={setSelectedYear}
+								availableYears={availableYears}
 							/>
 						)}
 
-						{activeTab === 'users' && (
-							<UserManagement/>
-						)}
+						{activeTab === 'users' && <UserManagement />}
 
 						{activeTab === 'admissions' && (
 							<AdmissionManagement
@@ -153,18 +143,6 @@ export default function AdminView() {
 								updateAdmissionInfo={updateAdmissionInfo}
 								createAdmissionInfo={createAdmissionInfo}
 								deleteAdmissionInfo={deleteAdmissionInfo}
-								isLoading={isLoading}
-							/>
-						)}
-
-						{activeTab === 'scores' && (
-							<ScoreManagement
-								scores={scores}
-								selectedYear={selectedYear}
-								availableYears={availableYears}
-								availableCombinationCodes={availableCombinationCodes}
-								setSelectedYear={setSelectedYear}
-								updateCutoffScore={updateCutoffScore}
 								isLoading={isLoading}
 							/>
 						)}

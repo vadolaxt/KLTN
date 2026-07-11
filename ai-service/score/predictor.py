@@ -185,11 +185,12 @@ def predict_admission(
     item = row.iloc[0]
     final_student_score = float(student_score)
     common_subjects = item.get("Common_Subjects", [])
-    if subject_scores and subject_combination:
+    has_common_subjects = isinstance(common_subjects, list) and len(common_subjects) > 0
+    if subject_scores and subject_combination and has_common_subjects:
         final_student_score = compute_student_score_with_common_subject(
             subject_scores=subject_scores,
             combo=subject_combination,
-            common_subjects=common_subjects if isinstance(common_subjects, list) else [],
+            common_subjects=common_subjects,
         )
     final_student_score = final_student_score + max(float(priority_score or 0.0), 0.0)
     if (admission_method or "").strip().lower() == "hb":

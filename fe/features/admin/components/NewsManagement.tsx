@@ -1,111 +1,132 @@
 'use client';
 
-import React, { useState } from 'react';
-import { 
-  Search, 
-  Plus, 
-  Edit3, 
-  Trash2, 
-  Eye, 
-  X, 
-  Calendar, 
-  Check,
+import React, { useMemo, useState } from 'react';
+import {
   AlertCircle,
+  Calendar,
+  ExternalLink,
+  Eye,
+  FileCheck,
   FileText,
-  FileCheck
+  Image as ImageIcon,
+  Plus,
+  Search,
+  Trash2,
+  X,
+  Edit3,
 } from 'lucide-react';
 import { AdminNews } from '@/service/admin.api';
+import { NEWS_CATEGORY_LABEL, NewsCategory } from '@/service/news.api';
+
+type NewsPayload = Omit<AdminNews, 'id' | 'views' | 'createdAt' | 'updatedAt'>;
 
 interface NewsManagementProps {
   news: AdminNews[];
-  createNewsArticle: (news: Omit<AdminNews, 'id' | 'views' | 'publishedAt'>) => Promise<void>;
+  createNewsArticle: (news: NewsPayload) => Promise<void>;
   updateNewsArticle: (id: string, updatedFields: Partial<AdminNews>) => Promise<void>;
   deleteNewsArticle: (id: string) => Promise<void>;
   isLoading: boolean;
 }
+
+const CATEGORY_OPTIONS: Array<{ value: NewsCategory; label: string }> = [
+  { value: 'ADMISSION_INFO', label: NEWS_CATEGORY_LABEL.ADMISSION_INFO },
+  { value: 'CAREER_GUIDANCE', label: NEWS_CATEGORY_LABEL.CAREER_GUIDANCE },
+  { value: 'PRESS_NEWS', label: NEWS_CATEGORY_LABEL.PRESS_NEWS },
+];
+
+const emptyForm = {
+  title: '',
+  summary: '',
+  content: '',
+  category: 'ADMISSION_INFO' as NewsCategory,
+  status: 'DRAFT' as AdminNews['status'],
+  imageUrl: '',
+  sourceUrl: '',
+  sourceName: 'Trang tuyển sinh NLU',
+  publishedAt: new Date().toISOString().split('T')[0],
+  displayOrder: 100,
+};
 
 export default function NewsManagement({
   news,
   createNewsArticle,
   updateNewsArticle,
   deleteNewsArticle,
-  isLoading
+  isLoading,
 }: NewsManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-
-  // Create / Edit Modal State
+  const [categoryFilter, setCategoryFilter] = useState<NewsCategory | 'ALL'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<AdminNews['status'] | 'ALL'>('ALL');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<AdminNews | null>(null);
-  const [articleTitle, setArticleTitle] = useState('');
-  const [articleSummary, setArticleSummary] = useState('');
-  const [articleContent, setArticleContent] = useState('');
-  const [articleCategory, setArticleCategory] = useState<AdminNews['category']>('ANNOUNCEMENT');
-  const [articleStatus, setArticleStatus] = useState<AdminNews['status']>('DRAFT');
-  const [articleEmoji, setArticleEmoji] = useState('📢');
+  const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState('');
-
-  // Delete Confirm State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [previewArticle, setPreviewArticle] = useState<AdminNews | null>(null);
 
-  // Filter news list
-  const filteredNews = news.filter((n) => {
-    const searchMatch = 
-      n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      n.summary.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const catMatch = categoryFilter === 'ALL' || n.category === categoryFilter;
-    const statMatch = statusFilter === 'ALL' || n.status === statusFilter;
+  const filteredNews = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+    return news.filter((item) => {
+      const searchMatch =
+        !keyword ||
+        item.title.toLowerCase().includes(keyword) ||
+        item.summary.toLowerCase().includes(keyword) ||
+        item.sourceUrl?.toLowerCase().includes(keyword);
+      const categoryMatch = categoryFilter === 'ALL' || item.category === categoryFilter;
+      const statusMatch = statusFilter === 'ALL' || item.status === statusFilter;
+      return searchMatch && categoryMatch && statusMatch;
+    });
+  }, [categoryFilter, news, searchTerm, statusFilter]);
 
-    return searchMatch && catMatch && statMatch;
-  });
+  const updateForm = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
 
-  const handleOpenCreateModal = () => {
+  const openCreateModal = () => {
     setSelectedArticle(null);
-    setArticleTitle('');
-    setArticleSummary('');
-    setArticleContent('');
-    setArticleCategory('ANNOUNCEMENT');
-    setArticleStatus('DRAFT');
-    setArticleEmoji('📢');
+    setForm(emptyForm);
     setFormError('');
     setIsFormModalOpen(true);
   };
 
-  const handleOpenEditModal = (article: AdminNews) => {
+  const openEditModal = (article: AdminNews) => {
     setSelectedArticle(article);
-    setArticleTitle(article.title);
-    setArticleSummary(article.summary);
-    setArticleContent(article.content);
-    setArticleCategory(article.category);
-    setArticleStatus(article.status);
-    setArticleEmoji(article.emoji);
+    setForm({
+      title: article.title,
+      summary: article.summary,
+      content: article.content,
+      category: article.category,
+      status: article.status,
+      imageUrl: article.imageUrl || '',
+      sourceUrl: article.sourceUrl || '',
+      sourceName: article.sourceName || 'Trang tuyển sinh NLU',
+      publishedAt: article.publishedAt || new Date().toISOString().split('T')[0],
+      displayOrder: article.displayOrder ?? 100,
+    });
     setFormError('');
     setIsFormModalOpen(true);
   };
 
-  const handleTogglePublish = async (article: AdminNews) => {
-    const nextStatus = article.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
-    await updateNewsArticle(article.id, { status: nextStatus });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitForm = async (event: React.FormEvent) => {
+    event.preventDefault();
     setFormError('');
 
-    if (!articleTitle.trim() || !articleSummary.trim() || !articleContent.trim()) {
-      setFormError('Vui lòng điền đầy đủ các trường thông tin');
+    if (!form.title.trim() || !form.summary.trim() || !form.content.trim()) {
+      setFormError('Vui lòng nhập tiêu đề, tóm tắt và nội dung bài viết.');
       return;
     }
 
-    const payload = {
-      title: articleTitle.trim(),
-      summary: articleSummary.trim(),
-      content: articleContent.trim(),
-      category: articleCategory,
-      status: articleStatus,
-      emoji: articleEmoji
+    const payload: NewsPayload = {
+      title: form.title.trim(),
+      summary: form.summary.trim(),
+      content: form.content.trim(),
+      category: form.category,
+      status: form.status,
+      imageUrl: form.imageUrl.trim() || null,
+      sourceUrl: form.sourceUrl.trim() || null,
+      sourceName: form.sourceName.trim() || 'Trang tuyển sinh NLU',
+      publishedAt: form.publishedAt,
+      displayOrder: Number(form.displayOrder) || 100,
     };
 
     if (selectedArticle) {
@@ -117,183 +138,175 @@ export default function NewsManagement({
     setIsFormModalOpen(false);
   };
 
-  const getCategoryLabel = (cat: AdminNews['category']) => {
-    switch (cat) {
-      case 'ANNOUNCEMENT': return 'Thông báo';
-      case 'GUIDE': return 'Hướng dẫn';
-      case 'EVENT': return 'Sự kiện';
-    }
+  const togglePublish = async (article: AdminNews) => {
+    await updateNewsArticle(article.id, {
+      status: article.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED',
+    });
   };
 
   return (
-    <div className="bg-white border border-gray-mid rounded-2xl p-6 shadow-sm">
-      {/* Controls */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center mb-6">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
+    <div className="bg-white border border-gray-mid rounded-2xl p-4 shadow-sm xl:p-5">
+      <div className="flex flex-col gap-3 justify-between items-stretch lg:flex-row lg:items-center mb-5">
+        <div className="relative flex-1 max-w-[420px]">
           <input
             type="text"
-            placeholder="Tìm tin tức theo tiêu đề, tóm tắt..."
+            placeholder="Tìm theo tiêu đề, tóm tắt, nguồn..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(event) => setSearchTerm(event.target.value)}
             className="w-full bg-gray-light text-xs text-text-dark px-3.5 py-2.5 pl-9 rounded-xl border border-gray-mid focus:outline-none focus:border-green-main focus:ring-1 focus:ring-green-main font-medium"
           />
           <Search size={15} className="absolute left-3 top-3 text-text-light" />
         </div>
 
-        {/* Filters and Add button */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Category Filter */}
-          <div className="flex items-center gap-1.5 bg-gray-light border border-gray-mid px-3 py-1.5 rounded-xl">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="bg-transparent text-xs font-bold text-text-mid outline-none border-none cursor-pointer"
-            >
-              <option value="ALL">Tất cả nhãn</option>
-              <option value="ANNOUNCEMENT">Thông báo</option>
-              <option value="GUIDE">Hướng dẫn</option>
-              <option value="EVENT">Sự kiện</option>
-            </select>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={categoryFilter}
+            onChange={(event) => setCategoryFilter(event.target.value as NewsCategory | 'ALL')}
+            className="bg-gray-light border border-gray-mid px-3 py-2 rounded-xl text-xs font-bold text-text-mid outline-none max-w-[185px]"
+          >
+            <option value="ALL">Tất cả nhóm</option>
+            {CATEGORY_OPTIONS.map((item) => (
+              <option key={item.value} value={item.value}>{item.label}</option>
+            ))}
+          </select>
 
-          {/* Status Filter */}
-          <div className="flex items-center gap-1.5 bg-gray-light border border-gray-mid px-3 py-1.5 rounded-xl">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent text-xs font-bold text-text-mid outline-none border-none cursor-pointer"
-            >
-              <option value="ALL">Tất cả trạng thái</option>
-              <option value="PUBLISHED">Đã xuất bản</option>
-              <option value="DRAFT">Bản nháp</option>
-            </select>
-          </div>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as AdminNews['status'] | 'ALL')}
+            className="bg-gray-light border border-gray-mid px-3 py-2 rounded-xl text-xs font-bold text-text-mid outline-none max-w-[165px]"
+          >
+            <option value="ALL">Tất cả trạng thái</option>
+            <option value="PUBLISHED">Đã xuất bản</option>
+            <option value="DRAFT">Bản nháp</option>
+          </select>
 
-          {/* Add News Button */}
           <button
-            onClick={handleOpenCreateModal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-green-main hover:bg-green-dark text-white font-extrabold text-xs rounded-xl shadow-sm transition-all duration-200"
+            onClick={openCreateModal}
+            className="flex items-center gap-2 px-3.5 py-2.5 bg-green-main hover:bg-green-dark text-white font-extrabold text-xs rounded-xl shadow-sm transition-all duration-200"
           >
             <Plus size={15} />
-            Đăng tin tuyển sinh
+            Đăng bài cẩm nang
           </button>
         </div>
       </div>
 
-      {/* News Table */}
-      <div className="overflow-x-auto border border-gray-mid rounded-xl">
-        <table className="min-w-full divide-y divide-gray-mid text-left">
+      <div className="overflow-hidden border border-gray-mid rounded-xl">
+        <table className="w-full table-fixed divide-y divide-gray-mid text-left">
           <thead className="bg-gray-light text-[10px] font-black uppercase tracking-[1.5px] text-text-light">
             <tr>
-              <th className="px-6 py-4 w-12 text-center">Bìa</th>
-              <th className="px-6 py-4">Bài viết tin tức</th>
-              <th className="px-6 py-4">Nhãn</th>
-              <th className="px-6 py-4">Ngày đăng</th>
-              <th className="px-6 py-4">Lượt xem</th>
-              <th className="px-6 py-4">Trạng thái</th>
-              <th className="px-6 py-4 text-center">Hành động</th>
+              <th className="w-[34%] px-3 py-3">Bài viết</th>
+              <th className="w-[15%] px-3 py-3">Nhóm</th>
+              <th className="w-[11%] px-3 py-3">Ngày đăng</th>
+              <th className="w-[14%] px-3 py-3">Nguồn</th>
+              <th className="w-[7%] px-3 py-3">Lượt xem</th>
+              <th className="w-[9%] px-3 py-3">Trạng thái</th>
+              <th className="w-[10%] px-3 py-3 text-center">Hành động</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-mid bg-white text-xs">
             {isLoading ? (
               <tr>
                 <td colSpan={7} className="text-center py-10 text-text-light font-medium">
-                  Đang tải danh sách tin tức tuyển sinh...
+                  Đang tải danh sách tin tức...
                 </td>
               </tr>
             ) : filteredNews.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-10 text-text-light font-medium">
-                  🔍 Không tìm thấy bài viết tin tức nào phù hợp.
+                  Không tìm thấy bài viết phù hợp.
                 </td>
               </tr>
             ) : (
               filteredNews.map((article) => (
                 <tr key={article.id} className="hover:bg-green-pale/10 transition-colors">
-                  {/* Emoji Cover */}
-                  <td className="px-6 py-4 whitespace-nowrap text-center text-lg">
-                    {article.emoji}
+                  <td className="px-3 py-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <div className="flex h-11 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md border border-gray-mid bg-gray-light">
+                        {article.imageUrl ? (
+                          <img src={article.imageUrl} alt={article.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <ImageIcon size={17} className="text-text-light" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-extrabold text-text-dark truncate">{article.title}</h4>
+                        <p className="text-[11px] text-text-light truncate mt-0.5">{article.summary}</p>
+                        <p className="text-[10px] text-text-light mt-1">Thứ tự: {article.displayOrder ?? 100}</p>
+                      </div>
+                    </div>
                   </td>
-                  {/* Title & Summary */}
-                  <td className="px-6 py-4 max-w-sm">
-                    <h4 className="font-extrabold text-text-dark truncate">{article.title}</h4>
-                    <p className="text-[11px] text-text-light truncate mt-0.5">{article.summary}</p>
+                  <td className="px-3 py-3 font-bold text-text-mid">
+                    <span className="block truncate">{NEWS_CATEGORY_LABEL[article.category]}</span>
                   </td>
-                  {/* Category */}
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {article.category === 'ANNOUNCEMENT' && (
-                      <span className="bg-green-pale text-green-dark text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-green-main/10">
-                        Thông báo
-                      </span>
+                  <td className="px-3 py-3 font-medium text-text-mid">
+                    <span className="inline-flex items-center gap-1 truncate">
+                      <Calendar size={12} className="text-green-main" />
+                      {article.publishedAt}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3">
+                    {article.sourceUrl ? (
+                      <a
+                        href={article.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex max-w-full items-center gap-1 truncate font-bold text-green-main no-underline"
+                      >
+                        {article.sourceName || 'Nguồn chính thức'}
+                        <ExternalLink size={12} className="shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="text-text-light">Chưa có</span>
                     )}
-                    {article.category === 'GUIDE' && (
-                      <span className="bg-gray-light text-text-dark text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-gray-mid">
-                        Hướng dẫn
-                      </span>
-                    )}
-                    {article.category === 'EVENT' && (
-                      <span className="bg-green-pale text-green-main text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
-                        Sự kiện
-                      </span>
-                    )}
                   </td>
-                  {/* Date */}
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-text-mid flex items-center gap-1.5 mt-2">
-                    <Calendar size={12} className="text-green-main" />
-                    {article.publishedAt}
-                  </td>
-                  {/* Views */}
-                  <td className="px-6 py-4 whitespace-nowrap font-bold text-text-mid">
+                  <td className="px-3 py-3 font-bold text-text-mid">
                     <span className="inline-flex items-center gap-1">
                       <Eye size={12} />
                       {article.views.toLocaleString()}
                     </span>
                   </td>
-                  {/* Status */}
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3">
                     {article.status === 'PUBLISHED' ? (
-                      <span className="inline-flex items-center gap-1 bg-green-pale text-green-dark px-2.5 py-0.5 rounded-full font-extrabold text-[10px]">
+                      <span className="inline-flex bg-green-pale text-green-dark px-2 py-0.5 rounded-full font-extrabold text-[10px]">
                         Đã đăng
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 bg-gray-light text-text-light px-2.5 py-0.5 rounded-full font-extrabold text-[10px] border border-gray-mid">
+                      <span className="inline-flex bg-gray-light text-text-light px-2 py-0.5 rounded-full font-extrabold text-[10px] border border-gray-mid">
                         Bản nháp
                       </span>
                     )}
                   </td>
-                  {/* Actions */}
-                  <td className="px-6 py-4 whitespace-nowrap text-center flex items-center justify-center gap-2">
-                    {/* Toggle publish status */}
-                    <button
-                      onClick={() => handleTogglePublish(article)}
-                      title={article.status === 'PUBLISHED' ? 'Hạ xuống bản nháp' : 'Xuất bản tin tức'}
-                      className={`p-1.5 rounded-lg border transition-all ${
-                        article.status === 'PUBLISHED'
-                          ? 'border-gray-mid text-text-mid hover:bg-gray-light'
-                          : 'border-green-main/20 text-green-main bg-green-pale hover:bg-green-main hover:text-white'
-                      }`}
-                    >
-                      {article.status === 'PUBLISHED' ? <FileText size={13} /> : <FileCheck size={13} />}
-                    </button>
-
-                    {/* Edit button */}
-                    <button
-                      onClick={() => handleOpenEditModal(article)}
-                      title="Chỉnh sửa tin tức"
-                      className="p-1.5 rounded-lg border border-gray-mid text-text-mid hover:bg-green-pale hover:text-green-dark hover:border-green-main/30 transition-all"
-                    >
-                      <Edit3 size={13} />
-                    </button>
-
-                    {/* Delete button */}
-                    <button
-                      onClick={() => setDeleteConfirmId(article.id)}
-                      title="Xóa tin tức"
-                      className="p-1.5 rounded-lg border border-gray-mid text-text-mid hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                  <td className="px-3 py-3">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        onClick={() => togglePublish(article)}
+                        title={article.status === 'PUBLISHED' ? 'Hạ xuống bản nháp' : 'Xuất bản'}
+                        className="p-1 rounded-md border border-gray-mid text-text-mid hover:bg-green-pale hover:text-green-dark transition-all"
+                      >
+                        {article.status === 'PUBLISHED' ? <FileText size={12} /> : <FileCheck size={12} />}
+                      </button>
+                      <button
+                        onClick={() => setPreviewArticle(article)}
+                        title="Xem nhanh"
+                        className="p-1 rounded-md border border-gray-mid text-text-mid hover:bg-green-pale hover:text-green-dark transition-all"
+                      >
+                        <Eye size={12} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(article)}
+                        title="Chỉnh sửa"
+                        className="p-1 rounded-md border border-gray-mid text-text-mid hover:bg-green-pale hover:text-green-dark transition-all"
+                      >
+                        <Edit3 size={12} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmId(article.id)}
+                        title="Xóa"
+                        className="p-1 rounded-md border border-gray-mid text-text-mid hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -302,118 +315,137 @@ export default function NewsManagement({
         </table>
       </div>
 
-      {/* ─────────────────────────────────────────────
-      // MODAL: CREATE OR EDIT NEWS ARTICLE
-      // ───────────────────────────────────────────── */}
       {isFormModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white border border-gray-mid rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
-            {/* Header */}
+          <div className="bg-white border border-gray-mid rounded-2xl w-full max-w-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
             <div className="flex justify-between items-center pb-4 border-b border-gray-light mb-5">
               <h3 className="text-sm font-black text-text-dark uppercase tracking-[0.5px]">
-                {selectedArticle ? 'Cập nhật tin tuyển sinh' : 'Đăng tin tuyển sinh mới'}
+                {selectedArticle ? 'Cập nhật bài cẩm nang' : 'Đăng bài cẩm nang mới'}
               </h3>
               <button onClick={() => setIsFormModalOpen(false)} className="text-text-light hover:text-text-dark">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Form Error */}
             {formError && (
-              <div className="mb-4 bg-red-50 text-red-600 border border-red-200 p-3 rounded-lg text-xs font-semibold">
-                ⚠️ {formError}
+              <div className="mb-4 flex items-center gap-2 bg-red-50 text-red-600 border border-red-200 p-3 rounded-lg text-xs font-semibold">
+                <AlertCircle size={15} />
+                {formError}
               </div>
             )}
 
-            {/* Form Body */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
-                {/* Cover Emoji */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-black uppercase text-text-mid">Emoji bìa</label>
+            <form onSubmit={submitForm} className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black uppercase text-text-mid">Nhóm bài</span>
                   <select
-                    value={articleEmoji}
-                    onChange={(e) => setArticleEmoji(e.target.value)}
-                    className="h-10 w-full rounded-xl border border-gray-mid px-3 text-sm text-text-dark outline-none bg-gray-light/20 focus:border-green-main focus:bg-white text-center font-bold"
+                    value={form.category}
+                    onChange={(event) => updateForm('category', event.target.value as NewsCategory)}
+                    className="h-10 rounded-xl border border-gray-mid px-3 text-xs font-bold outline-none focus:border-green-main"
                   >
-                    <option value="📢">📢 Thông báo</option>
-                    <option value="📝">📝 Hướng dẫn</option>
-                    <option value="🎪">🎪 Sự kiện</option>
-                    <option value="📅">📅 Lịch tuyển</option>
-                    <option value="🏆">🏆 Kết quả</option>
-                    <option value="🎓">🎓 Nhập học</option>
+                    {CATEGORY_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>{item.label}</option>
+                    ))}
                   </select>
-                </div>
+                </label>
 
-                {/* Category */}
-                <div className="flex flex-col gap-1 col-span-2">
-                  <label className="text-[10px] font-black uppercase text-text-mid">Nhãn bài viết</label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black uppercase text-text-mid">Trạng thái</span>
                   <select
-                    value={articleCategory}
-                    onChange={(e) => setArticleCategory(e.target.value as AdminNews['category'])}
-                    className="h-10 w-full rounded-xl border border-gray-mid px-3 text-xs text-text-dark outline-none bg-gray-light/20 focus:border-green-main focus:bg-white font-bold"
+                    value={form.status}
+                    onChange={(event) => updateForm('status', event.target.value as AdminNews['status'])}
+                    className="h-10 rounded-xl border border-gray-mid px-3 text-xs font-bold outline-none focus:border-green-main"
                   >
-                    <option value="ANNOUNCEMENT">Thông báo chính thức</option>
-                    <option value="GUIDE">Hướng dẫn tuyển sinh</option>
-                    <option value="EVENT">Sự kiện & Ngày hội</option>
+                    <option value="DRAFT">Bản nháp</option>
+                    <option value="PUBLISHED">Xuất bản</option>
                   </select>
-                </div>
+                </label>
               </div>
 
-              {/* Title */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase text-text-mid">Tiêu đề tin tức *</label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] font-black uppercase text-text-mid">Tiêu đề *</span>
                 <input
-                  type="text"
-                  placeholder="Nhập tiêu đề tin tức tuyển sinh..."
-                  value={articleTitle}
-                  onChange={(e) => setArticleTitle(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-gray-mid px-4 text-xs font-bold text-text-dark outline-none bg-gray-light/20 focus:border-green-main focus:bg-white"
+                  value={form.title}
+                  onChange={(event) => updateForm('title', event.target.value)}
+                  className="h-10 rounded-xl border border-gray-mid px-4 text-xs font-bold outline-none focus:border-green-main"
                   required
                 />
-              </div>
+              </label>
 
-              {/* Summary */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase text-text-mid">Tóm tắt ngắn *</label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] font-black uppercase text-text-mid">Tóm tắt *</span>
                 <input
-                  type="text"
-                  placeholder="Mô tả tóm tắt nội dung bài viết (hiển thị trên trang chủ)..."
-                  value={articleSummary}
-                  onChange={(e) => setArticleSummary(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-gray-mid px-4 text-xs text-text-dark outline-none bg-gray-light/20 focus:border-green-main focus:bg-white"
+                  value={form.summary}
+                  onChange={(event) => updateForm('summary', event.target.value)}
+                  className="h-10 rounded-xl border border-gray-mid px-4 text-xs outline-none focus:border-green-main"
                   required
                 />
-              </div>
+              </label>
 
-              {/* Content */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase text-text-mid">Nội dung chi tiết *</label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] font-black uppercase text-text-mid">Nội dung *</span>
                 <textarea
-                  placeholder="Viết nội dung bài viết tin tức đầy đủ tại đây..."
-                  value={articleContent}
-                  onChange={(e) => setArticleContent(e.target.value)}
-                  rows={6}
-                  className="w-full rounded-xl border border-gray-mid p-4 text-xs text-text-dark outline-none bg-gray-light/20 focus:border-green-main focus:bg-white resize-y font-medium"
+                  value={form.content}
+                  onChange={(event) => updateForm('content', event.target.value)}
+                  rows={7}
+                  className="rounded-xl border border-gray-mid p-4 text-xs leading-6 outline-none focus:border-green-main resize-y"
                   required
                 />
+              </label>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black uppercase text-text-mid">Ảnh bìa URL</span>
+                  <input
+                    value={form.imageUrl}
+                    onChange={(event) => updateForm('imageUrl', event.target.value)}
+                    className="h-10 rounded-xl border border-gray-mid px-4 text-xs outline-none focus:border-green-main"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black uppercase text-text-mid">Ngày đăng</span>
+                  <input
+                    type="date"
+                    value={form.publishedAt}
+                    onChange={(event) => updateForm('publishedAt', event.target.value)}
+                    className="h-10 rounded-xl border border-gray-mid px-4 text-xs outline-none focus:border-green-main"
+                  />
+                </label>
               </div>
 
-              {/* Status */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase text-text-mid">Trạng thái đăng bài</label>
-                <select
-                  value={articleStatus}
-                  onChange={(e) => setArticleStatus(e.target.value as AdminNews['status'])}
-                  className="h-10 w-full rounded-xl border border-gray-mid px-3 text-xs text-text-dark outline-none bg-gray-light/20 focus:border-green-main focus:bg-white font-bold"
-                >
-                  <option value="DRAFT">Lưu bản nháp (Draft)</option>
-                  <option value="PUBLISHED">Xuất bản ngay (Published)</option>
-                </select>
+              <div className="grid gap-3 md:grid-cols-[1fr_130px]">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black uppercase text-text-mid">Link nguồn chính thức</span>
+                  <input
+                    value={form.sourceUrl}
+                    onChange={(event) => updateForm('sourceUrl', event.target.value)}
+                    className="h-10 rounded-xl border border-gray-mid px-4 text-xs outline-none focus:border-green-main"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1">
+                  <span className="text-[10px] font-black uppercase text-text-mid">Thứ tự</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.displayOrder}
+                    onChange={(event) => updateForm('displayOrder', Number(event.target.value))}
+                    className="h-10 rounded-xl border border-gray-mid px-4 text-xs outline-none focus:border-green-main"
+                  />
+                </label>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-light mt-5">
+              <label className="flex flex-col gap-1">
+                <span className="text-[10px] font-black uppercase text-text-mid">Tên nguồn</span>
+                <input
+                  value={form.sourceName}
+                  onChange={(event) => updateForm('sourceName', event.target.value)}
+                  className="h-10 rounded-xl border border-gray-mid px-4 text-xs outline-none focus:border-green-main"
+                />
+              </label>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-light">
                 <button
                   type="button"
                   onClick={() => setIsFormModalOpen(false)}
@@ -433,12 +465,30 @@ export default function NewsManagement({
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────
-      // MODAL: DELETE CONFIRMATION
-      // ───────────────────────────────────────────── */}
+      {previewArticle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-gray-mid bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-black uppercase text-text-dark">Xem nhanh bài viết</h3>
+              <button onClick={() => setPreviewArticle(null)} className="text-text-light hover:text-text-dark">
+                <X size={18} />
+              </button>
+            </div>
+            <h4 className="text-xl font-black text-green-dark">{previewArticle.title}</h4>
+            <p className="mt-2 text-sm font-semibold leading-6 text-text-mid">{previewArticle.summary}</p>
+            <p className="mt-4 whitespace-pre-line text-sm leading-7 text-text-dark">{previewArticle.content}</p>
+            {previewArticle.sourceUrl && (
+              <a href={previewArticle.sourceUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-green-main no-underline">
+                Mở nguồn chính thức <ExternalLink size={15} />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white border border-gray-mid rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white border border-gray-mid rounded-2xl w-full max-w-sm p-6 shadow-2xl">
             <div className="flex items-center gap-3 text-red-500 mb-4">
               <div className="h-10 w-10 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center">
                 <Trash2 size={20} />
@@ -446,7 +496,7 @@ export default function NewsManagement({
               <h3 className="text-sm font-black uppercase tracking-[0.5px]">Xóa bài viết</h3>
             </div>
             <p className="text-xs text-text-mid leading-relaxed mb-6">
-              Bạn có chắc chắn muốn xóa bài viết tin tức tuyển sinh này? Hành động này sẽ gỡ bài viết vĩnh viễn khỏi trang tin tức và không thể phục hồi.
+              Bài viết sẽ bị xóa khỏi danh sách cẩm nang và không thể khôi phục.
             </p>
             <div className="flex justify-end gap-3">
               <button

@@ -1,11 +1,6 @@
-// ─────────────────────────────────────────────
-// HOMEPAGE API SERVICE
-// ─────────────────────────────────────────────
-
-// import { API_ENDPOINTS } from '@/lib/constants/api-client';
 import type { StatItem, ServiceItem, NewsItem } from '@/features/homepage/bloc/homepage.state';
+import { NEWS_CATEGORY_LABEL, NewsApiService } from './news.api';
 
-// ── Mock data (dùng khi chưa có backend) ──────
 const MOCK_STATS: StatItem[] = [
   { id: '1', value: '36', label: 'Ngành đào tạo' },
   { id: '2', value: '12', label: 'Khoa' },
@@ -20,7 +15,7 @@ const MOCK_SERVICES: ServiceItem[] = [
     name: 'Tra Cứu Tuyển Sinh',
     description: 'Tra cứu thông tin tuyển sinh, điểm chuẩn các năm và ngành đào tạo nhanh chóng.',
     linkLabel: 'Tra cứu ngay',
-    href: '#',
+    href: '/tra-cuu',
     variant: 'default',
   },
   {
@@ -54,9 +49,9 @@ const MOCK_SERVICES: ServiceItem[] = [
     id: '5',
     iconKey: 'BOOK',
     name: 'Cẩm Nang Tuyển Sinh',
-    description: 'Hướng dẫn đầy đủ quy trình xét tuyển, hạn nộp hồ sơ và các lưu ý quan trọng.',
+    description: 'Tổng hợp thông tin tuyển sinh, hướng nghiệp chuyên sâu và điểm tin chính thức.',
     linkLabel: 'Xem cẩm nang',
-    href: '#',
+    href: '/cam-nang',
     variant: 'default',
   },
   // {
@@ -73,61 +68,59 @@ const MOCK_SERVICES: ServiceItem[] = [
 const MOCK_NEWS: NewsItem[] = [
   {
     id: '1',
-    tag: 'Tuyển sinh 2025',
-    title: 'Công bố Đề án Tuyển sinh 2025',
-    description: 'Nhà trường chính thức công bố đề án tuyển sinh năm 2025 với nhiều phương thức xét tuyển mới.',
-    date: '2025-02-26',
-    emoji: '📋',
+    tag: 'Tuyển sinh 2026',
+    title: 'Thông tin tuyển sinh đại học chính quy năm 2026',
+    description: 'Cập nhật thông tin tuyển sinh chính quy và các mốc hồ sơ quan trọng.',
+    date: '2026-07-01',
+    emoji: '📌',
     gradientVariant: 'green',
+    href: '/cam-nang',
   },
   {
     id: '2',
-    tag: 'Lịch nộp hồ sơ',
-    title: 'Lịch nộp hồ sơ xét tuyển',
-    description: 'Cập nhật lịch nộp hồ sơ xét tuyển, thời hạn đăng ký và các mốc thời gian quan trọng.',
-    date: '2025-03-01',
-    emoji: '📅',
+    tag: 'Hướng nghiệp',
+    title: 'Thông tin tuyển sinh và hướng nghiệp 2026',
+    description: 'Tài liệu định hướng ngành học dành cho phụ huynh và thí sinh.',
+    date: '2026-03-20',
+    emoji: '🎓',
     gradientVariant: 'blue',
+    href: '/cam-nang',
   },
   {
     id: '3',
-    tag: 'Tư vấn',
-    title: 'Tư vấn chọn ngành nghề',
-    description: 'Chương trình tư vấn chọn ngành nghề phù hợp với năng lực và định hướng tương lai.',
-    date: '2025-03-05',
-    emoji: '🎓',
+    tag: 'Điểm tin',
+    title: 'Mùa thi, ăn uống thế nào để học mau, nhớ lâu?',
+    description: 'Góc nhìn hỗ trợ sức khỏe và học tập cho thí sinh trong mùa thi.',
+    date: '2026-01-15',
+    emoji: '📰',
     gradientVariant: 'purple',
+    href: '/cam-nang',
   },
 ];
 
-// ── API calls ──────────────────────────────────
-
 export async function getStats(): Promise<StatItem[]> {
-  try {
-    const res = await fetch("");
-    if (!res.ok) throw new Error('Fetch failed');
-    return await res.json();
-  } catch {
-    // Fallback mock data khi chưa có API
-    return MOCK_STATS;
-  }
+  return MOCK_STATS;
 }
 
 export async function getServices(): Promise<ServiceItem[]> {
-  try {
-    const res = await fetch("");
-    if (!res.ok) throw new Error('Fetch failed');
-    return await res.json();
-  } catch {
-    return MOCK_SERVICES;
-  }
+  return MOCK_SERVICES;
 }
 
 export async function getNews(): Promise<NewsItem[]> {
   try {
-    const res = await fetch("");
-    if (!res.ok) throw new Error('Fetch failed');
-    return await res.json();
+    const res = await NewsApiService.getPublished({ limit: 6 });
+    return res.data.map((item, index) => ({
+      id: item.id,
+      tag: NEWS_CATEGORY_LABEL[item.category],
+      title: item.title,
+      description: item.summary,
+      date: item.publishedAt,
+      emoji: item.category === 'ADMISSION_INFO' ? '📌' : item.category === 'CAREER_GUIDANCE' ? '🎓' : '📰',
+      gradientVariant: index % 3 === 0 ? 'green' : index % 3 === 1 ? 'blue' : 'purple',
+      href: `/cam-nang/${item.id}`,
+      imageUrl: item.imageUrl,
+      sourceUrl: item.sourceUrl,
+    }));
   } catch {
     return MOCK_NEWS;
   }

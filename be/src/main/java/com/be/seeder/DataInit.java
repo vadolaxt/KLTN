@@ -2,12 +2,16 @@ package com.be.seeder;
 
 import com.be.entity.AdmissionInfo;
 import com.be.entity.Major;
+import com.be.entity.NewsArticle;
 import com.be.entity.Subject;
 import com.be.entity.SubjectCombination;
 import com.be.entity.User;
+import com.be.enums.NewsCategory;
+import com.be.enums.NewsStatus;
 import com.be.enums.Role;
 import com.be.repository.AdmissionInfoRepository;
 import com.be.repository.MajorRepository;
+import com.be.repository.NewsArticleRepository;
 import com.be.repository.SubjectCombinationRepository;
 import com.be.repository.SubjectRepository;
 import com.be.repository.UserRepository;
@@ -29,6 +33,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -107,6 +113,7 @@ public class DataInit {
             SubjectRepository subjectRepository,
             SubjectCombinationRepository subjectCombinationRepository,
             AdmissionInfoRepository admissionInfoRepository,
+            NewsArticleRepository newsArticleRepository,
             MongoTemplate mongoTemplate
     ) {
         return args -> {
@@ -134,6 +141,8 @@ public class DataInit {
                     subjectCombinationRepository,
                     admissionInfoRepository
             );
+
+            initNewsArticles(newsArticleRepository);
 
             addCoreSubjectToMajor(majorRepository);
         };
@@ -779,5 +788,141 @@ public class DataInit {
             System.out.println("--- Các mã ngành có trong list nhưng không tồn tại trong collection Major ---");
             notExistInDb.forEach(code -> System.out.println("Not exist in DB: " + code));
         }
+    }
+
+    private void initNewsArticles(NewsArticleRepository newsArticleRepository) {
+        List<NewsArticle> seedArticles = List.of(
+                seedNews(
+                        "Thông tin Tuyển sinh đại học chính quy và cao đẳng ngành Giáo dục mầm non năm 2026",
+                        "Trường Đại học Nông Lâm TP.HCM công bố thông tin tuyển sinh đại học chính quy và cao đẳng ngành Giáo dục mầm non năm 2026.",
+                        "Bài viết tổng hợp các thông tin tuyển sinh năm 2026, phục vụ phụ huynh và thí sinh theo dõi đề án, phương thức xét tuyển, ngưỡng đầu vào và các mốc hồ sơ quan trọng. Nội dung hiển thị trong hệ thống là bản tóm tắt, thí sinh cần đối chiếu link nguồn chính thức trước khi nộp hồ sơ.",
+                        NewsCategory.ADMISSION_INFO,
+                        "https://ts.nlu.edu.vn/ts-44307-1/vn/span-stylecolor-redthong-tin-tuyen-sinh-dai-hoc-chinh-quy-va-cao-dang-nganh-giao-duc-mam-non-nam-2026.html",
+                        "https://ts.nlu.edu.vn/imgs/hinh1.jpg",
+                        LocalDate.of(2026, 7, 1),
+                        1
+                ),
+                seedNews(
+                        "Kết quả trúng tuyển diện tuyển thẳng vào trình độ đại học hệ chính quy năm 2026",
+                        "Cập nhật kết quả trúng tuyển diện tuyển thẳng vào trình độ đại học hệ chính quy năm 2026.",
+                        "Thông tin dành cho thí sinh thuộc diện tuyển thẳng, ưu tiên xét tuyển và các đối tượng cần theo dõi kết quả trúng tuyển sớm. Hệ thống lưu link nguồn để thí sinh truy cập văn bản chính thức và các phụ lục nếu có.",
+                        NewsCategory.ADMISSION_INFO,
+                        "https://ts.nlu.edu.vn/ts-44302-1/vn/span-stylecolor-redket-qua-trung-tuyen-dien-tuyen-thang-vao-trinh-do-dai-hoc-he-chinh-quy-nam-2026.html",
+                        "https://ts.nlu.edu.vn/imgs/hinh1.jpg",
+                        LocalDate.of(2026, 6, 28),
+                        2
+                ),
+                seedNews(
+                        "Ngưỡng đảm bảo chất lượng đầu vào năm 2026",
+                        "Thông tin điểm sàn các chương trình tuyển sinh đại học và cao đẳng ngành Giáo dục Mầm non năm 2026.",
+                        "Ngưỡng đảm bảo chất lượng đầu vào là căn cứ quan trọng để thí sinh điều chỉnh chiến lược đăng ký nguyện vọng. Bài viết trong cẩm nang giúp thí sinh nhanh chóng tiếp cận thông tin, đồng thời dẫn về nguồn chính thức để xem chi tiết từng chương trình.",
+                        NewsCategory.ADMISSION_INFO,
+                        "https://ts.nlu.edu.vn/ts-44298-1/vn/span-stylecolor-rednguong-dam-bao-chat-luong-dau-vao-diem-san-cac-chuong-trinh-tuyen-sinh-dai-hoc-tuyen-sinh-cao-dang-nganh-giao-duc-mam-non-nam-2026-chinh-quy.html",
+                        "https://ts.nlu.edu.vn/imgs/hinh1.jpg",
+                        LocalDate.of(2026, 6, 25),
+                        3
+                ),
+                seedNews(
+                        "Thông tin Tuyển sinh và hướng nghiệp 2026",
+                        "Thông tin Tuyển sinh và Hướng nghiệp Trường Đại học Nông Lâm TP.HCM cho phụ huynh và thí sinh.",
+                        "Bài viết giới thiệu nguồn thông tin hướng nghiệp 2026, giúp thí sinh tìm hiểu các ngành đào tạo từ bậc Đại học, Cao đẳng đến Sau đại học. Đây là điểm vào phù hợp cho nhóm thí sinh đang cần tổng quan trước khi chọn ngành.",
+                        NewsCategory.CAREER_GUIDANCE,
+                        "https://ts.nlu.edu.vn/ts-44093-1/vn/thong-tin-tuyen-sinh-va-huong-nghiep-2026.html",
+                        "https://ts.nlu.edu.vn/data/image/hinh%20anh/tuvanhuongnghiep.png",
+                        LocalDate.of(2026, 3, 20),
+                        10
+                ),
+                seedNews(
+                        "Trắc nghiệm định hướng nghề nghiệp",
+                        "Công cụ gợi ý giúp thí sinh khám phá bản thân và định hướng nghề nghiệp phù hợp.",
+                        "Nội dung hướng dẫn thí sinh nhận diện sở thích nghề nghiệp, điều kiện cá nhân và khả năng phù hợp với nhóm ngành. Bài viết phù hợp để đặt trong cẩm nang hướng nghiệp chuyên sâu.",
+                        NewsCategory.CAREER_GUIDANCE,
+                        "https://ts.nlu.edu.vn/ts-31960-1/vn/trac-nghiem-dinh-huong-nghe-nghiep.html",
+                        "https://ts.nlu.edu.vn/data/image/hinh%20anh/tuvanhuongnghiep.png",
+                        LocalDate.of(2026, 3, 20),
+                        11
+                ),
+                seedNews(
+                        "Tuân thủ thứ tự trong hướng nghiệp: Nghề - Ngành - Trường",
+                        "Gợi ý cách tiếp cận quá trình hướng nghiệp theo thứ tự nghề, ngành, trường.",
+                        "Bài viết nhấn mạnh việc lựa chọn nghề nghiệp nên đi từ hiểu mình và hiểu nghề, sau đó mới chọn ngành đào tạo và môi trường học phù hợp. Đây là nội dung cần thiết cho thí sinh đang phân vân giữa nhiều lựa chọn.",
+                        NewsCategory.CAREER_GUIDANCE,
+                        "https://ts.nlu.edu.vn/ts-24991-1/vn/tuan-thu-thu-tu-trong-huong-nghiep-nghe-nganh-truong.html",
+                        "https://ts.nlu.edu.vn/data/image/hinh%20anh/tuvanhuongnghiep.png",
+                        LocalDate.of(2016, 8, 7),
+                        12
+                ),
+                seedNews(
+                        "Mùa thi, ăn uống thế nào để học mau, nhớ lâu?",
+                        "Điểm tin về chăm sóc sức khỏe mùa thi, giúp thí sinh giữ sức và học tập hiệu quả.",
+                        "Bài viết thuộc nhóm điểm tin từ các báo, cung cấp góc nhìn hỗ trợ thí sinh trong giai đoạn ôn thi. Nội dung trong hệ thống là bản tóm tắt có dẫn nguồn chính thức từ trang tuyển sinh.",
+                        NewsCategory.PRESS_NEWS,
+                        "https://ts.nlu.edu.vn/ts-36641-1/vn/mua-thi-an-uong-the-nao-de-hoc-mau-nho-lau.html",
+                        "https://ts.nlu.edu.vn/data/file/TS%202026/z7965480417564_63a9358827303f789382e8fc2e61decc.jpg",
+                        LocalDate.of(2026, 1, 15),
+                        20
+                ),
+                seedNews(
+                        "ĐH Nông Lâm xét điểm thi năng lực ĐH Quốc gia TP.HCM",
+                        "Điểm tin về phương thức xét tuyển bằng điểm thi đánh giá năng lực.",
+                        "Bài viết được xếp vào nhóm điểm tin từ các báo, giúp thí sinh theo dõi các kênh xét tuyển ngoài điểm thi tốt nghiệp THPT. Thí sinh nên đọc nguồn chính thức để nắm năm áp dụng và điều kiện cụ thể.",
+                        NewsCategory.PRESS_NEWS,
+                        "https://ts.nlu.edu.vn/ts-31955-1/vn/dh-nong-lam-xet-diem-thi-nang-luc-dh-quoc-gia-tphcm.html",
+                        "https://ts.nlu.edu.vn/data/file/TS%202026/z7965480417564_63a9358827303f789382e8fc2e61decc.jpg",
+                        LocalDate.of(2018, 3, 20),
+                        21
+                )
+        );
+
+        List<NewsArticle> articlesToSave = seedArticles.stream()
+                .map(seedArticle -> newsArticleRepository.findBySourceUrl(seedArticle.getSourceUrl())
+                        .map(existing -> mergeSeedNews(existing, seedArticle))
+                        .orElse(seedArticle))
+                .toList();
+
+        newsArticleRepository.saveAll(articlesToSave);
+        System.out.printf("--- Đã đồng bộ %d bài viết cẩm nang từ nguồn tuyển sinh NLU ---%n", articlesToSave.size());
+    }
+
+    private NewsArticle mergeSeedNews(NewsArticle existing, NewsArticle seedArticle) {
+        existing.setTitle(seedArticle.getTitle());
+        existing.setSummary(seedArticle.getSummary());
+        existing.setContent(seedArticle.getContent());
+        existing.setCategory(seedArticle.getCategory());
+        existing.setStatus(seedArticle.getStatus());
+        existing.setImageUrl(seedArticle.getImageUrl());
+        existing.setSourceName(seedArticle.getSourceName());
+        existing.setPublishedAt(seedArticle.getPublishedAt());
+        existing.setDisplayOrder(seedArticle.getDisplayOrder());
+        existing.setUpdatedAt(LocalDateTime.now());
+        return existing;
+    }
+
+    private NewsArticle seedNews(
+            String title,
+            String summary,
+            String content,
+            NewsCategory category,
+            String sourceUrl,
+            String imageUrl,
+            LocalDate publishedAt,
+            int displayOrder
+    ) {
+        LocalDateTime now = LocalDateTime.now();
+        return NewsArticle.builder()
+                .title(title)
+                .summary(summary)
+                .content(content)
+                .category(category)
+                .status(NewsStatus.PUBLISHED)
+                .imageUrl(imageUrl)
+                .sourceUrl(sourceUrl)
+                .sourceName("Trang tuyển sinh NLU")
+                .publishedAt(publishedAt)
+                .views(0)
+                .displayOrder(displayOrder)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
     }
 }
