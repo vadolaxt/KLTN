@@ -113,14 +113,14 @@ export default function Header() {
 										Quản lý tài khoản
 									</Link>
 
-									<Link
-										href="/xet-tuyen"
-										className="flex items-center gap-3 px-4 py-3 text-[14px] text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
-										onClick={() => setIsDropdownOpen(false)}
-									>
-										<LayoutDashboard size={18}/>
-										Kết quả xét tuyển
-									</Link>
+									{/*<Link*/}
+									{/*	href="/xet-tuyen"*/}
+									{/*	className="flex items-center gap-3 px-4 py-3 text-[14px] text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"*/}
+									{/*	onClick={() => setIsDropdownOpen(false)}*/}
+									{/*>*/}
+									{/*	<LayoutDashboard size={18}/>*/}
+									{/*	Kết quả xét tuyển*/}
+									{/*</Link>*/}
 
 									<div className="h-px bg-gray-100 my-1 mx-2"></div>
 

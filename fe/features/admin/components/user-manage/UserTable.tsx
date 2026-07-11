@@ -125,14 +125,14 @@ export default function UserTable({
 										{user.status === "ACTIVE" ? <Lock size={13}/> : <Unlock size={13}/>}
 									</button>
 
-									<button
-										type="button"
-										onClick={() => onConfirmDelete(user.id)}
-										title="Xóa tài khoản"
-										className="p-1.5 rounded-lg border border-gray-mid text-text-mid hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"
-									>
-										<Trash2 size={13}/>
-									</button>
+									{/*<button*/}
+									{/*	type="button"*/}
+									{/*	onClick={() => onConfirmDelete(user.id)}*/}
+									{/*	title="Xóa tài khoản"*/}
+									{/*	className="p-1.5 rounded-lg border border-gray-mid text-text-mid hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all"*/}
+									{/*>*/}
+									{/*	<Trash2 size={13}/>*/}
+									{/*</button>*/}
 								</div>
 							</td>
 						</tr>

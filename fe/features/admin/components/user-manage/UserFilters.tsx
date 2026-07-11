@@ -57,7 +57,6 @@ export default function UserFilters({
 					>
 						<option value="ALL">Tất cả trạng thái</option>
 						<option value="ACTIVE">Đang hoạt động</option>
-						<option value="INACTIVE">Chưa kích hoạt</option>
 						<option value="BANNED">Bị khóa</option>
 					</select>
 				</div>

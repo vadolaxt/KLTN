@@ -56,7 +56,7 @@ export default function ChatView() {
 					<div className="flex items-center gap-3">
 						<div className="w-10 h-10 rounded-full bg-green-700 border-2 border-yellow-500 flex items-center justify-center text-xl shadow-md">🤖</div>
 						<div>
-							<h2 className="text-sm font-extrabold text-green-900 leading-none">NLU Assistant</h2>
+							<h2 className="text-sm font-extrabold text-green-900 leading-none">Chatbot tư vấn tuyển sinh</h2>
 							<p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
 								<span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Đang hoạt động
 							</p>

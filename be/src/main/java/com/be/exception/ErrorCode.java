@@ -49,8 +49,7 @@ public enum ErrorCode {
     WRONG_FILE_TYPE(HttpStatus.BAD_REQUEST, "Chỉ cho phép tải lên các định dạng: PDF, JPG, JPEG."),
 
 
-
-    ;
+    FQA_NOT_FOUND(HttpStatus.NOT_FOUND, "Dữ liệu câu hỏi không tồn tại");
     private final HttpStatus status;
     private final String message;
 

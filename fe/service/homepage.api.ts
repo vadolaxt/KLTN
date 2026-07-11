@@ -35,10 +35,10 @@ const MOCK_SERVICES: ServiceItem[] = [
   {
     id: '3',
     iconKey: 'GLOBE',
-    name: 'Chứng Chỉ Tiếng Anh',
-    description: 'Tra cứu yêu cầu và quy đổi chứng chỉ ngoại ngữ quốc tế theo từng ngành.',
-    linkLabel: 'Tra cứu ngay',
-    href: '#',
+    name: 'Quy đổi Chứng Chỉ Tiếng Anh',
+    description: 'Quy đổi chứng chỉ ngoại ngữ quốc tế thành điểm thi trung học phổ thông.',
+    linkLabel: 'Quy đổi ngay',
+    href: 'quy-doi-chung-chi',
     variant: 'default',
   },
   {
@@ -59,15 +59,15 @@ const MOCK_SERVICES: ServiceItem[] = [
     href: '#',
     variant: 'default',
   },
-  {
-    id: '6',
-    iconKey: 'CHAT',
-    name: 'Chatbot Tư Vấn Trực Tuyến',
-    description: '',
-    linkLabel: '',
-    href: '/chat',
-    variant: 'chatbot',
-  },
+  // {
+  //   id: '6',
+  //   iconKey: 'CHAT',
+  //   name: 'Chatbot Tư Vấn Trực Tuyến',
+  //   description: '',
+  //   linkLabel: '',
+  //   href: '/chat',
+  //   variant: 'chatbot',
+  // },
 ];
 
 const MOCK_NEWS: NewsItem[] = [

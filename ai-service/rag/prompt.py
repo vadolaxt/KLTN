@@ -8,8 +8,15 @@ def split_question_prompt() -> str:
     - Không tự bịa thêm thông tin.
     - Mỗi câu con phải giữ lại đầy đủ ngữ cảnh chung như ngành, năm, cơ sở, chương trình, phương thức xét tuyển.
     - Nếu câu chỉ có một ý thì trả lại đúng một câu đã được làm rõ.
-    - Không tách các cụm danh từ cố định chỉ vì có chữ "và".
-    - Viết lại ngắn gọn, rõ ràng, dễ đưa vào intent classifier.
+    - Viết lại ngắn gọn, rõ ràng.
+    - Định dạng đầu ra: CHỈ trả về JSON đúng format, không kèm lời thoại nào khác:
+    {
+      "questions": [...]
+    }
+    
+    QUY TẮC CỐT LÕI KHI TÁCH Ý:
+    1. Quy tắc "Bù ngữ cảnh": Khi tách một câu có chung ngữ cảnh thành các câu đơn, PHẢI lặp lại ngữ cảnh đó (ngành, năm, phương thức...) vào từng câu con để câu con có thể đứng độc lập.
+    2. Quy tắc "Dấu phẩy và Từ nối": Các từ "và", "hoặc", "còn", "cùng với" hoặc dấu phẩy (,) ngăn cách các danh từ/hành động khác nhau => Phải tách (Trừ cụm danh từ cố định như "Công nghệ thông tin và Truyền thông").
 
     Ví dụ 1:
     Input: "tổ hợp và điểm chuẩn ngành công nghệ thông tin"
@@ -79,11 +86,11 @@ def generate_response_prompt(context, query) -> str:
     "Theo tài liệu, điểm ưu tiên theo khu vực và đối tượng được thực hiện theo quy chế tuyển sinh hiện hành. Tài liệu hiện chưa nêu cụ thể khu vực 1 được cộng bao nhiêu điểm."
 
     KHÔNG được trả:
-    "Thông tin ko có trong tài liệu."
+    "Xin lỗi, hiện tại tôi chưa trả lời được câu hỏi này."
 
     B3.
     Chỉ trả:
-    "Thông tin ko có trong tài liệu."
+    "Xin lỗi, hiện tại tôi chưa trả lời được câu hỏi này."
 
     khi tài liệu hoàn toàn không có đoạn nào liên quan.
 

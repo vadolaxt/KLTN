@@ -18,6 +18,7 @@ import ScoreManagement from './components/ScoreManagement';
 import NewsManagement from './components/NewsManagement';
 import {AuthService} from "@/service/auth.api";
 import {toast} from "sonner";
+import FQAManagement from "@/features/admin/components/FQAManagement";
 
 export default function AdminView() {
 	const {
@@ -60,12 +61,6 @@ export default function AdminView() {
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-
-	// const handleLogout = async () => {
-	//   await logout();
-	//   router.push('/homepage');
-	//   router.refresh();
-	// };
 	const handleLogout = async () => {
 		try {
 			await AuthService.logout();
@@ -79,6 +74,9 @@ export default function AdminView() {
 			setIsDropdownOpen(false);
 			router.push("/homepage");
 			router.refresh();
+			setTimeout(() => {
+				window.location.reload();
+			}, 105);
 		}
 	};
 
@@ -179,6 +177,10 @@ export default function AdminView() {
 								deleteNewsArticle={deleteNewsArticle}
 								isLoading={isLoading}
 							/>
+						)}
+
+						{activeTab === 'fqa' && (
+							<FQAManagement/>
 						)}
 					</div>
 				</main>

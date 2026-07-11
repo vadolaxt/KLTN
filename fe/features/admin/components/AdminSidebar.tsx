@@ -8,7 +8,7 @@ import {
 	GraduationCap,
 	Newspaper,
 	LogOut,
-	ShieldCheck
+	ShieldCheck, MessageCircleQuestionMark
 } from 'lucide-react';
 import {AdminTab} from '@/hooks/use-admin';
 
@@ -32,6 +32,7 @@ export default function AdminSidebar({
 		{id: 'admissions' as AdminTab, label: 'Thông tin tuyển sinh', icon: BookOpen},
 		{id: 'scores' as AdminTab, label: 'Điểm chuẩn các năm', icon: GraduationCap},
 		{id: 'news' as AdminTab, label: 'Quản lý tin tức', icon: Newspaper},
+		{id: 'fqa' as AdminTab, label: 'Quản lý bộ câu hỏi chabot', icon: MessageCircleQuestionMark},
 	];
 
 	return (

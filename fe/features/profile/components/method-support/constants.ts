@@ -23,7 +23,7 @@ export const METHODS: Array<{ value: ScoreMethod; label: string; shortLabel: str
     value: 'kh',
     label: 'Kết hợp THPT và Học bạ',
     shortLabel: 'Kết hợp',
-    description: '02 môn thi tốt nghiệp THPT năm 2026 và 01 môn còn lại bằng điểm học bạ.',
+    description: '02 môn thi tốt nghiệp THPT năm 2026 và 01 môn thay thế bằng điểm học bạ.',
   },
 ];
 

@@ -13,7 +13,7 @@ import {
   DashboardStats,
 } from '@/service/admin.api';
 
-export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'scores' | 'news';
+export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'scores' | 'news' | 'fqa';
 
 const DEFAULT_YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 const ADMIN_DEMO_MODE = false;
