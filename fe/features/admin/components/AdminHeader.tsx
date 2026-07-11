@@ -14,6 +14,7 @@ const TITLE_BY_TAB: Record<AdminTab, string> = {
 	users: 'Quản lý người dùng',
 	admissions: 'Thông tin tuyển sinh',
 	news: 'Quản lý tin tức',
+	fqa: 'Quản lý bộ câu hỏi chatbot'
 };
 
 export default function AdminHeader({
@@ -38,33 +39,4 @@ export default function AdminHeader({
 			</div>
 		</header>
 	);
-      <div className="flex items-center gap-6">
-        {/*<div className="relative hidden md:block">*/}
-        {/*  <input*/}
-        {/*    type="text"*/}
-        {/*    placeholder="Tìm nhanh..."*/}
-        {/*    className="w-48 bg-gray-light text-xs text-text-dark px-3.5 py-2 pl-9 rounded-lg border border-gray-mid focus:outline-none focus:border-green-main focus:ring-1 focus:ring-green-main transition-all font-medium"*/}
-        {/*  />*/}
-        {/*  <Search size={14} className="absolute left-3.5 top-2.5 text-text-light" />*/}
-        {/*</div>*/}
-
-        {/*<button className="relative p-2 text-text-light hover:text-green-main hover:bg-green-pale rounded-lg transition-all">*/}
-        {/*  <Bell size={18} />*/}
-        {/*  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#e53935] rounded-full ring-2 ring-white" />*/}
-        {/*</button>*/}
-
-        {/*<div className="w-px h-8 bg-gray-mid" />*/}
-
-        {/*<div className="flex items-center gap-3">*/}
-        {/*  <div className="text-right hidden sm:block">*/}
-        {/*    <h4 className="text-xs font-black text-text-dark leading-tight">{adminName}</h4>*/}
-        {/*    <p className="text-[10px] text-text-light font-medium">{adminEmail}</p>*/}
-        {/*  </div>*/}
-        {/*  <div className="w-10 h-10 rounded-full bg-green-pale border border-green-main/20 flex items-center justify-center text-green-dark">*/}
-        {/*    <User size={18} />*/}
-        {/*  </div>*/}
-        {/*</div>*/}
-      </div>
-    </header>
-  );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdmin } from '@/hooks/use-admin';
 
@@ -43,6 +43,13 @@ export default function AdminView() {
 	} = useAdmin();
 
 	const router = useRouter();
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+	useEffect(() => {
+		const isLogin = localStorage.getItem("isLogin");
+		setIsLoggedIn(isLogin === "true");
+	}, []);
 
 	useEffect(() => {
 		if (!isCheckingAuth && !isAuthenticated) {
@@ -59,43 +66,15 @@ export default function AdminView() {
 		} finally {
 			localStorage.removeItem("isLogin");
 			localStorage.removeItem("userName");
+			localStorage.removeItem("accessToken");
+			localStorage.removeItem("isAdminLogin");
+			localStorage.removeItem("role");
 			setIsLoggedIn(false);
 			setIsDropdownOpen(false);
 			router.push("/homepage");
 			router.refresh();
-			setTimeout(() => {
-				window.location.reload();
-			}, 105);
 		}
 	};
-
-	// if (!isAuthenticated) {
-	// 	return (
-	// 		<div className="min-h-screen flex items-center justify-center font-vietnam bg-[linear-gradient(135deg,#f4f9f4_0%,#ffffff_50%,#f0f7f0_100%)] relative px-4 overflow-hidden">
-	// 			<div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(45,122,45,0.04)_1px,transparent_1px),linear-gradient(180deg,rgba(45,122,45,0.04)_1px,transparent_1px)] bg-[size:32px_32px]"/>
-	// 			<div className="absolute -left-40 -top-40 w-96 h-96 rounded-full bg-green-light/5 blur-3xl"/>
-	// 			<div className="absolute -right-40 -bottom-40 w-96 h-96 rounded-full bg-green-main/5 blur-3xl"/>
-	//
-	// 			<div className="relative z-10 w-full flex justify-center">
-	// 				{isRegisterMode ? (
-	// 					<AdminRegister
-	// 						register={register}
-	// 						isLoading={isLoading}
-	// 						error={error}
-	// 						switchToLogin={() => setIsRegisterMode(false)}
-	// 					/>
-	// 				) : (
-	// 					<AdminLogin
-	// 						login={login}
-	// 						isLoading={isLoading}
-	// 						error={error}
-	// 						switchToRegister={() => setIsRegisterMode(true)}
-	// 					/>
-	// 				)}
-	// 			</div>
-	// 		</div>
-	// 	);
-	// }
 
 	const adminFullName = currentUser
 		? `${currentUser.lastName} ${currentUser.firstName}`

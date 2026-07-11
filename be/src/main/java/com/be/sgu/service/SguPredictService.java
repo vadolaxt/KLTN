@@ -193,7 +193,7 @@ public class SguPredictService {
     private PredictScoreResponse callFastApi(Map<String, Object> body) {
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(normalizeFastApiBaseUrl() + "/api/predict-admission"))
+                    .uri(URI.create(normalizeFastApiBaseUrl() + "/predict-admission"))
                     .timeout(Duration.ofSeconds(30))
                     .header("Content-Type", "application/json")
                     .header("Accept", "application/json")

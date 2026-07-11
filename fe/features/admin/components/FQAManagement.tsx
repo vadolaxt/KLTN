@@ -286,7 +286,7 @@ export default function FQAManagement() {
 					<div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 space-y-4 border border-gray-100">
 						<h3 className="text-sm font-black text-gray-800 uppercase">Xác nhận xóa câu hỏi?</h3>
 						<p className="text-xs text-gray-500 leading-relaxed">
-							Hành động này không thể hoàn tác. Dữ liệu câu hỏi này sẽ bị xóa vĩnh viễn khỏi cơ sở dữ liệu huấn luyện chatbot.
+							Hành động này không thể hoàn tác. Dữ liệu câu hỏi này sẽ bị xóa vĩnh viễn khỏi cơ sở dữ liệu.
 						</p>
 						<div className="flex justify-end gap-2 pt-2">
 							<button

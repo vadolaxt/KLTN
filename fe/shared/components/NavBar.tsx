@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { label: 'Dự đoán trúng tuyển', href: '/du-doan' },
   { label: 'Cẩm nang', href: '/cam-nang' },
   { label: 'Liên hệ', href: '/lien-he' },
-  { label: 'Câu hỏi thường gặp', href: '/cau-hoi-thuong-gap' },
+  { label: 'Tư vấn với chatbot', href: '/cau-hoi-thuong-gap' },
 ];
 
 export default function Navbar() {

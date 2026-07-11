@@ -9,7 +9,7 @@ export default function FloatingChatbot() {
 	const [isOpen, setIsOpen] = useState(false);
 
 	return (
-		<div className="fixed bottom-4 right-4 z-[60] sm:bottom-6 sm:right-6">
+		<div className="fixed bottom-2 right-2 z-[60] sm:bottom-4 sm:right-4">
 			{isOpen ? (
 				<div
 					role="dialog"

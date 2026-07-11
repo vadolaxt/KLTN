@@ -11,7 +11,6 @@ import {
 	MessageSquare,
 	HelpCircle,
 	Bot,
-	User,
 	Send,
 	Loader2,
 	Sparkles
@@ -58,16 +57,14 @@ export default function FQAView() {
 		fetchFQA();
 	}, []);
 
-	// XỬ LÝ KHI BẤM VÀO CÂU HỎI BÊN TRÁI: Hiện trực tiếp câu hỏi và câu trả lời từ FQA Object không qua server
+	// XỬ LÝ KHI BẤM VÀO CÂU HỎI BÊN TRÁI
 	const handleSelectFQA = (fqa: FQA) => {
 		const userMsg: ChatMessage = { role: "USER", content: fqa.question };
 		const botMsg: ChatMessage = { role: "ASSISTANT", content: fqa.answer };
-
-		// Đẩy cả 2 tin nhắn vào list UI ngay lập tức
 		setMessages((prev) => [...prev, userMsg, botMsg]);
 	};
 
-	// XỬ LÝ KHI TỰ GÕ Ô CHAT: Gửi request thực tế lên server AI/Chatbot thông qua ChatService
+	// XỬ LÝ KHI TỰ GÕ Ô CHAT
 	const handleSendMessage = async (text: string) => {
 		if (!text.trim() || isSending) return;
 
@@ -90,31 +87,38 @@ export default function FQAView() {
 		}
 	};
 
-	// Xử lý khi người dùng nhấn submit Form bằng ô Input gõ tay
 	const handleFormSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!inputValue.trim()) return;
 
 		handleSendMessage(inputValue);
-		setInputValue(''); // Xóa trống ô nhập sau khi gửi
+		setInputValue('');
 	};
 
-	// Lọc danh sách câu hỏi gợi ý bên trái theo ô tìm kiếm
 	const filteredFQA = fqaList.filter(item =>
 		item.question.toLowerCase().includes(searchTerm.toLowerCase())
 	);
 
 	return (
-		<div className="min-h-screen flex flex-col font-vietnam bg-gray-light">
+		/* CẤT CÁNH 1: Biến thẻ bọc ngoài cùng thành flex-col cố định chiều cao màn hình (h-screen)
+		  và giấu phần thừa (overflow-hidden). Điều này ép trình duyệt không bao giờ xuất hiện scrollbar tổng của trang.
+		*/
+		<div className="h-screen w-screen flex flex-col font-vietnam bg-gray-light overflow-hidden">
+
+			{/* Giữ nguyên vẹn 3 component điều hướng của bạn */}
 			<TopBar/>
 			<Header/>
 			<NavBar/>
 
-			<main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-[320px_1fr] gap-6 h-[calc(100vh-200px)] min-h-[550px]">
+			{/* CẤT CÁNH 2: Thẻ <main> được cấp flex-1 để tự động "đo đạc" và lấy toàn bộ chiều cao còn lại của màn hình.
+         Thêm `min-h-0` là điều kiện bắt buộc trong Flexbox để báo hiệu cho phần tử con biết giới hạn diện tích,
+         tránh việc nội dung con (ô chat) đẩy khung cha giãn ra.
+       */}
+			<main className="flex-1 min-h-0 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-[320px_1fr] gap-6 pb-6">
 
 				{/* THANH BÊN TRÁI: DANH SÁCH CÂU HỎI GỢI Ý */}
-				<div className="bg-white rounded-2xl border border-gray-200 flex flex-col overflow-hidden shadow-sm">
-					<div className="p-4 border-b border-gray-100 bg-gray-50/70">
+				<div className="bg-white rounded-2xl border border-gray-200 flex flex-col overflow-hidden shadow-sm h-full min-h-0">
+					<div className="p-4 border-b border-gray-100 bg-gray-50/70 shrink-0">
 						<h2 className="text-sm font-black text-green-dark flex items-center gap-2 uppercase tracking-wider">
 							<HelpCircle className="text-green-main" size={18} />
 							Câu hỏi thường gặp
@@ -142,7 +146,7 @@ export default function FQAView() {
 							filteredFQA.map((item) => (
 								<button
 									key={item.id}
-									onClick={() => handleSelectFQA(item)} // Thay đổi hành động sang handleSelectFQA sử dụng data local
+									onClick={() => handleSelectFQA(item)}
 									className="w-full text-left p-3 rounded-xl text-xs font-semibold text-gray-700 hover:bg-green-main/5 hover:text-green-dark border border-transparent hover:border-green-main/10 transition-all duration-150 flex items-start gap-2 group"
 								>
 									<MessageSquare size={14} className="text-gray-400 shrink-0 mt-0.5 group-hover:text-green-main" />
@@ -158,9 +162,9 @@ export default function FQAView() {
 				</div>
 
 				{/* KHUNG BÊN PHẢI: GIAO DIỆN CHAT CHÍNH */}
-				<div className="bg-white rounded-2xl border border-gray-200 flex flex-col overflow-hidden shadow-sm">
-					{/* Header Khung Chat */}
-					<div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-green-dark to-green-main text-white">
+				<div className="bg-white rounded-2xl border border-gray-200 flex flex-col overflow-hidden shadow-sm h-full min-h-0">
+					{/* Header Khung Chat - shrink-0 giữ nguyên kích thước */}
+					<div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-green-dark to-green-main text-white shrink-0">
 						<div className="flex items-center gap-3">
 							<div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
 								<Bot size={20} className="text-green-light" />
@@ -175,8 +179,11 @@ export default function FQAView() {
 						</div>
 					</div>
 
-					{/* Khung chứa nội dung tin nhắn cuộc trò chuyện */}
-					<div className="flex-1 overflow-y-auto p-4 bg-[#fafaf8] space-y-3">
+					{/* CẤT CÁNH 3: Vùng chứa tin nhắn cuộc trò chuyện.
+             - `flex-1` để lấy trọn không gian ở giữa Header và Form.
+             - `min-h-0` kèm `overflow-y-auto` kích hoạt thanh cuộn nội bộ ngay khi tin nhắn tràn ra khỏi vùng hiển thị.
+           */}
+					<div className="flex-1 min-h-0 overflow-y-auto p-4 bg-[#fafaf8] space-y-3">
 						{messages.length === 0 ? (
 							<div className="h-full flex flex-col items-center justify-center text-center p-6">
 								<h4 className="text-sm font-bold text-green-dark">Chào mừng bạn đến với Cổng tư vấn tuyển sinh NLU!</h4>
@@ -214,21 +221,20 @@ export default function FQAView() {
 													{message.content}
 												</p>
 											) : (
-												/* Định dạng Markdown tích hợp plugin remarkGfm chuẩn thiết kế mẫu */
 												<div
 													className="
-														prose
-														prose-sm
-														max-w-none
-														break-words
-														prose-headings:font-bold
-														prose-headings:text-green-900
-														prose-p:my-1
-														prose-p:leading-relaxed
-														prose-strong:text-green-800
-														prose-ul:ml-4
-														prose-ul:list-disc
-													"
+                             prose
+                             prose-sm
+                             max-w-none
+                             break-words
+                             prose-headings:font-bold
+                             prose-headings:text-green-900
+                             prose-p:my-1
+                             prose-p:leading-relaxed
+                             prose-strong:text-green-800
+                             prose-ul:ml-4
+                             prose-ul:list-disc
+                           "
 												>
 													<ReactMarkdown remarkPlugins={[remarkGfm]}>
 														{message.content}
@@ -241,7 +247,7 @@ export default function FQAView() {
 							})
 						)}
 
-						{/* Hiệu ứng ba chấm nhấp nháy khi đang chờ gõ tay gửi lên Server */}
+						{/* Hiệu ứng ba chấm nhấp nháy khi đang chờ */}
 						{isSending && (
 							<div className="flex items-center gap-2.5">
 								<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-yellow-500 bg-green-700" />
@@ -255,11 +261,12 @@ export default function FQAView() {
 							</div>
 						)}
 
+						{/* Điểm neo để cuộn tự động */}
 						<div ref={chatEndRef} />
 					</div>
 
-					{/* Ô nhập tin nhắn thủ công bên dưới */}
-					<form onSubmit={handleFormSubmit} className="p-4 border-t border-gray-100 bg-white flex gap-2">
+					{/* Ô nhập tin nhắn thủ công bên dưới - shrink-0 cố định vị trí ở đáy */}
+					<form onSubmit={handleFormSubmit} className="p-4 border-t border-gray-100 bg-white flex gap-2 shrink-0">
 						<input
 							type="text"
 							placeholder="Nhập câu hỏi của bạn tại đây..."

@@ -55,48 +55,89 @@ public class ChatService {
         return jwt.getSubject();
     }
 
+    //    public Message sendMessage(ChatRequest request, String accessToken) {
+//        try {
+//            String userContent = request.content();
+//            String userId = getUserIdFromToken(accessToken);
+//
+//            Message userMsg = Message.builder()
+//                    .sessionId(userId)
+//                    .content(userContent)
+//                    .timestamp(Instant.now())
+//                    .role("USER")
+//                    .build();
+//            messageRepository.save(userMsg);
+//
+//            BotRequest botRequest = new BotRequest(userContent);
+//
+//            BotResponse response = fastapiClient.post()
+//                    .uri("/chat")
+//                    .body(botRequest)
+//                    .retrieve()
+//
+//                    .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
+//                        throw new AppException(ErrorCode.AI_PROCESSING_ERROR);
+//                    })
+//                    // lỗi sai endpoint
+//                    .onStatus(status -> status.value() == 404, (req, res) -> {
+//                        throw new AppException(ErrorCode.FASTAPI_CONNECTION_FAILED);
+//                    })
+//                    .body(BotResponse.class);
+//
+//            String botReply = (response != null) ? response.answer() : "Xin lỗi, tôi không thể trả lời lúc này.";
+//
+//            Message botMsg = Message.builder()
+//                    .sessionId(userId)
+//                    .content(botReply)
+//                    .timestamp(Instant.now())
+//                    .role("CHATBOT")
+//                    .build();
+//            messageRepository.save(botMsg);
+//
+//            return botMsg;
+//        } catch (ResourceAccessException e) {
+//            throw new AppException(ErrorCode.AI_SERVICE_TIMEOUT);
+//        }
+//    }
     public Message sendMessage(ChatRequest request, String accessToken) {
+        String userId = getUserIdFromToken(accessToken);
+        String userContent = request.content();
+
+        Message userMsg = Message.builder()
+                .sessionId(userId)
+                .content(userContent)
+                .timestamp(Instant.now())
+                .role("USER")
+                .build();
+        messageRepository.save(userMsg);
+
+        String botReply;
+
         try {
-            String userContent = request.content();
-            String userId = getUserIdFromToken(accessToken);
-
-            Message userMsg = Message.builder()
-                    .sessionId(userId)
-                    .content(userContent)
-                    .timestamp(Instant.now())
-                    .role("USER")
-                    .build();
-            messageRepository.save(userMsg);
-
             BotRequest botRequest = new BotRequest(userContent);
-
             BotResponse response = fastapiClient.post()
                     .uri("/chat")
                     .body(botRequest)
                     .retrieve()
-
-                    .onStatus(HttpStatusCode::is5xxServerError, (req, res) -> {
-                        throw new AppException(ErrorCode.AI_PROCESSING_ERROR);
-                    })
-                    // lỗi sai endpoint
-                    .onStatus(status -> status.value() == 404, (req, res) -> {
-                        throw new AppException(ErrorCode.FASTAPI_CONNECTION_FAILED);
-                    })
                     .body(BotResponse.class);
 
-            String botReply = (response != null) ? response.answer() : "Xin lỗi, tôi không thể trả lời lúc này.";
+            botReply = (response != null) ? response.answer() : "Xin lỗi, tôi không thể trả lời lúc này.";
 
-            Message botMsg = Message.builder()
-                    .sessionId(userId)
-                    .content(botReply)
-                    .timestamp(Instant.now())
-                    .role("CHATBOT")
-                    .build();
-            messageRepository.save(botMsg);
-
-            return botMsg;
         } catch (ResourceAccessException e) {
-            throw new AppException(ErrorCode.AI_SERVICE_TIMEOUT);
+            // Lỗi timeout kết nối
+            botReply = "Chatbot hiện đang gặp sự cố kết nối, vui lòng thử lại sau.";
+        } catch (Exception e) {
+            // Catch các lỗi 404, 5xx từ RestClientException nói chung
+            botReply = "Chatbot hiện đang gặp sự cố kết nối, vui lòng thử lại sau.";
         }
+
+        Message botMsg = Message.builder()
+                .sessionId(userId)
+                .content(botReply)
+                .timestamp(Instant.now())
+                .role("CHATBOT")
+                .build();
+
+        return messageRepository.save(botMsg);
     }
 }

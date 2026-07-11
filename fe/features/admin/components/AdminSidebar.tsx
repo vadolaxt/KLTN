@@ -6,7 +6,6 @@ import {
 	BookOpen,
 	Newspaper,
 	LogOut,
-	ShieldCheck,
 	History,
 	ShieldCheck, MessageCircleQuestionMark
 } from 'lucide-react';

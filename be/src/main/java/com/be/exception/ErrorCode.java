@@ -28,7 +28,7 @@ public enum ErrorCode {
 
     // ==== FAST API ====
     FASTAPI_CONNECTION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "Hệ thống AI hiện đang bảo trì"),
-    AI_SERVICE_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "AI phản hồi quá lâu, vui lòng thử lại sau"),
+    AI_SERVICE_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "Chatbot phản hồi quá lâu, vui lòng thử lại sau"),
     AI_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Fast API internal error"),
     AI_QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Hết lượt gọi chat trong ngày"),
 
