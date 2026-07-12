@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import MessageList from "@/features/chat/components/message-list";
-import ChatSidebar from "@/features/chat/components/chat-side-bar";
+// import ChatSidebar from "@/features/chat/components/chat-side-bar";
 import ChatInput from "@/features/chat/components/chat-input";
 import {ChatMessage, ChatRequest} from "@/types";
 import {ChatService} from "@/service/chat.api";
@@ -45,9 +45,9 @@ export default function ChatView() {
 	return (
 		<div className="flex h-screen bg-[#fafaf8] text-gray-900 overflow-hidden">
 			{/* SIDEBAR */}
-			<ChatSidebar
-				onSelectTopic={handleSendMessage}
-			/>
+			{/*<ChatSidebar*/}
+			{/*	onSelectTopic={handleSendMessage}*/}
+			{/*/>*/}
 
 			{/* MAIN CHAT AREA */}
 			<main className="flex-1 flex flex-col relative">
