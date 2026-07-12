@@ -12,7 +12,9 @@ interface EnvironmentConfig {
 
 export const ENV_CONFIG: EnvironmentConfig = {
   apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000',
+  // serverUrl: process.env.NEXT_PUBLIC_SERVER_URL || 'http://168.144.105.254:8081/api',
   serverUrl: process.env.NEXT_PUBLIC_SERVER_URL || '/api-backend',
+  // serverUrl: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:8081/api',
   googleClientId: "655464563429-c45i97cc5isk764dbvjn0pt9fij8m41a.apps.googleusercontent.com",
   isDevelopment: process.env.NODE_ENV === 'development',
   isProduction: process.env.NODE_ENV === 'production',

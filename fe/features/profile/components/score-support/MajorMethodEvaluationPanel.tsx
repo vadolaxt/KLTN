@@ -316,7 +316,7 @@ export default function MajorMethodEvaluationPanel({
 
 			<div className="m-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
 				<div className="rounded-[14px] border-1.5 border-green-light/35 bg-green-pale px-5 py-4">
-					<div className="text-[11px] font-black uppercase tracking-[0.7px] text-green-main">Điểm mặc định ở bảng</div>
+					<div className="text-[11px] font-black uppercase tracking-[0.7px] text-green-main">Điểm cao nhất</div>
 					<div className="mt-3 grid gap-3 sm:grid-cols-2">
 						<div>
 							<div className="text-[12px] font-extrabold text-text-light">Phương thức</div>

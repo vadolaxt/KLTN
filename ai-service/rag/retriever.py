@@ -112,13 +112,13 @@ def get_relevant_context(
             },
             {
                 "$project": {
-                    "_id": 0,
-                    "intent": 1,
+                    "_id": 0, # 0: nghĩa là ko select truờng này ra
+                    "intent": 1, #  1: hiểu như là select thuộc tính X từ dữ liệu
                     "chunk_index": 1,
                     "source_file": 1,
                     "text": 1,
                     "metadata": 1,
-                    "score": {"$meta": "vectorSearchScore"},
+                    "score": {"$meta": "vectorSearchScore"},  # độ tương đồng cosine giữa dữ liệu được lấy ra so với câu hỏi
                 }
             },
         ]

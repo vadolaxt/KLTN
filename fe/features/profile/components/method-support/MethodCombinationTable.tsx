@@ -35,11 +35,11 @@ export default function MethodCombinationTable({
 							Các môn trong tổ hợp
 						</th>
 
-						{isCombinedMethod && (
-							<th className="min-w-[220px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
-								Môn lấy điểm học bạ
-							</th>
-						)}
+						{/*{isCombinedMethod && (*/}
+						{/*	<th className="min-w-[220px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">*/}
+						{/*		Môn lấy điểm học bạ*/}
+						{/*	</th>*/}
+						{/*)}*/}
 
 						<th className="w-[170px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
 							Tổng điểm
@@ -106,17 +106,17 @@ export default function MethodCombinationTable({
 										: '-'}
 								</td>
 
-								{isCombinedMethod && (
-									<td className="px-4 py-3 text-[13px] font-semibold leading-[1.55] text-text-mid">
-										{combination.replacedSubject ? (
-											<span className="inline-flex rounded-md bg-green-pale px-2.5 py-1 text-[13px] font-bold text-green-dark">
-													{combination.replacedSubject}
-												</span>
-										) : (
-											<p></p>
-										)}
-									</td>
-								)}
+								{/*{isCombinedMethod && (*/}
+								{/*	<td className="px-4 py-3 text-[13px] font-semibold leading-[1.55] text-text-mid">*/}
+								{/*		{combination.replacedSubject ? (*/}
+								{/*			<span className="inline-flex rounded-md bg-green-pale px-2.5 py-1 text-[13px] font-bold text-green-dark">*/}
+								{/*					{combination.replacedSubject}*/}
+								{/*				</span>*/}
+								{/*		) : (*/}
+								{/*			<p></p>*/}
+								{/*		)}*/}
+								{/*	</td>*/}
+								{/*)}*/}
 
 								<td className="px-4 py-3 text-[14px] font-black text-green-dark">
 									{combination.score > 0 ? (

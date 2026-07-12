@@ -5,11 +5,6 @@
 import { ICONS } from '@/lib/constants/icons';
 import Link from 'next/link';
 
-const topLinks = [
-  { label: 'Cựu sinh viên', href: '#' },
-  { label: 'Đối tác', href: '#' },
-  { label: 'Sơ đồ trang', href: '#' },
-];
 
 export default function TopBar() {
   return (
@@ -28,19 +23,6 @@ export default function TopBar() {
           </svg>
           Số điện thoại: 0773.284.806, 028.3896.3350
         </span>
-      </div>
-
-      {/* Right: quick links */}
-      <div className="flex gap-5">
-        {topLinks.map((link) => (
-          <Link
-            key={link.label}
-            href={link.href}
-            className="transition-colors duration-200 text-topbar-text hover:text-gold-light"
-          >
-            {link.label}
-          </Link>
-        ))}
       </div>
     </div>
   );

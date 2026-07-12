@@ -5,6 +5,7 @@ import {
   BookOpenCheck,
   Check,
   Edit3,
+  Eye,
   Hash,
   Layers,
   Plus,
@@ -13,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { AdmissionCreateRequest, AdmissionInfo, AdmissionUpdateRequest } from '@/service/admin.api';
+import { getAdmissionNoteLines } from '@/shared/utils/admission-note';
 
 interface AdmissionManagementProps {
   admissions: AdmissionInfo[];
@@ -45,6 +47,7 @@ export default function AdmissionManagement({
   const [deptFilter, setDeptFilter] = useState('ALL');
   const [programFilter, setProgramFilter] = useState('ALL');
 
+  const [detailItem, setDetailItem] = useState<AdmissionInfo | null>(null);
   const [editItem, setEditItem] = useState<AdmissionInfo | null>(null);
   const [editQuota, setEditQuota] = useState(0);
   const [editCutoffScore, setEditCutoffScore] = useState(0);
@@ -303,8 +306,15 @@ export default function AdmissionManagement({
                   </td>
                   <td className="px-2 py-4 whitespace-nowrap text-center">
                     <button
+                      onClick={() => setDetailItem(item)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-mid p-1.5 text-text-mid transition-all hover:border-green-main/30 hover:bg-green-pale hover:text-green-dark"
+                    >
+                      <Eye size={13} />
+                      <span className="text-[11px] font-bold">Xem</span>
+                    </button>
+                    <button
                       onClick={() => openEditModal(item)}
-                      className="p-1.5 rounded-lg border border-gray-mid text-text-mid hover:bg-green-pale hover:text-green-dark hover:border-green-main/30 transition-all inline-flex items-center gap-1.5"
+                      className="ml-2 inline-flex items-center gap-1.5 rounded-lg border border-gray-mid p-1.5 text-text-mid transition-all hover:border-green-main/30 hover:bg-green-pale hover:text-green-dark"
                     >
                       <Edit3 size={13} />
                       <span className="text-[11px] font-bold">Sửa</span>
@@ -324,6 +334,69 @@ export default function AdmissionManagement({
         </table>
       </div>
       </div>
+
+      {detailItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-2xl rounded-2xl border border-gray-mid bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between border-b border-gray-light pb-4">
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-[0.5px] text-text-dark">
+                  Chi tiết thông tin tuyển sinh
+                </h3>
+                <p className="mt-0.5 text-[10px] font-bold text-text-light">
+                  {detailItem.majorName} ({detailItem.majorCode}) - {detailItem.year}
+                </p>
+              </div>
+              <button type="button" onClick={() => setDetailItem(null)} className="text-text-light hover:text-text-dark">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+              <div className="rounded-xl border border-gray-mid bg-gray-light/30 p-3">
+                <div className="text-[10px] font-extrabold uppercase text-text-light">Mã khoa</div>
+                <div className="mt-1 font-bold text-text-dark">{detailItem.departmentCode}</div>
+              </div>
+              <div className="rounded-xl border border-gray-mid bg-gray-light/30 p-3">
+                <div className="text-[10px] font-extrabold uppercase text-text-light">Chương trình</div>
+                <div className="mt-1 font-bold text-text-dark">{detailItem.programType}</div>
+              </div>
+              <div className="rounded-xl border border-gray-mid bg-gray-light/30 p-3">
+                <div className="text-[10px] font-extrabold uppercase text-text-light">Chỉ tiêu</div>
+                <div className="mt-1 font-bold text-green-dark">{detailItem.admissionQuota}</div>
+              </div>
+              <div className="rounded-xl border border-gray-mid bg-gray-light/30 p-3">
+                <div className="text-[10px] font-extrabold uppercase text-text-light">Điểm chuẩn</div>
+                <div className="mt-1 font-bold text-green-dark">{detailItem.cutoffScore.toFixed(2)}</div>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-gray-mid bg-gray-light/30 p-3">
+              <div className="text-[10px] font-extrabold uppercase text-text-light">Tổ hợp môn</div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {getCombinationCodes(detailItem).map((code) => (
+                  <span key={code} className="rounded border border-gray-mid bg-white px-2 py-0.5 text-[10px] font-black text-text-dark">
+                    {code}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-gray-mid bg-gray-light/30 p-3">
+              <div className="text-[10px] font-extrabold uppercase text-text-light">Ghi chú</div>
+              {getAdmissionNoteLines(detailItem.note).length > 0 ? (
+                <div className="mt-2 space-y-1 text-xs font-semibold leading-5 text-text-mid">
+                  {getAdmissionNoteLines(detailItem.note).map((line) => (
+                    <div key={line}>{line}</div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-2 text-xs font-semibold text-text-light">-</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs">

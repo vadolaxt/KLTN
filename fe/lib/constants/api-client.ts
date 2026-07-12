@@ -4,6 +4,12 @@ import {ENV_CONFIG as config, isClientSide} from "@/core";
 
 // 1. Hàm dùng chung để xử lý đính kèm Cookie cho Next.js Server-side (SSR)
 const handleServerSideCookies = async (axiosConfig: InternalAxiosRequestConfig) => {
+	if (axiosConfig.headers?.["X-Skip-Auth"] === "true") {
+		delete axiosConfig.headers["X-Skip-Auth"];
+		delete axiosConfig.headers.Authorization;
+		return axiosConfig;
+	}
+
 	if (typeof window === "undefined") {
 		try {
 			const {cookies} = await import("next/headers");
@@ -14,6 +20,11 @@ const handleServerSideCookies = async (axiosConfig: InternalAxiosRequestConfig) 
 			}
 		} catch (e) {
 			console.error("[SSR] Error getting cookies:", e);
+		}
+	} else {
+		const accessToken = localStorage.getItem("accessToken");
+		if (accessToken && !axiosConfig.headers.Authorization) {
+			axiosConfig.headers.Authorization = `Bearer ${accessToken}`;
 		}
 	}
 	return axiosConfig;
@@ -99,6 +110,7 @@ apiClient.interceptors.response.use(
 						const newToken = res.data?.data?.accessToken;
 
 						if (newToken) {
+							if (isClientSide()) localStorage.setItem("accessToken", newToken);
 							// Lưu vào bộ nhớ instance để các request sau tự động lấy dùng
 							apiClient.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
 
@@ -117,7 +129,15 @@ apiClient.interceptors.response.use(
 					})
 					.catch((refreshError) => {
 						processQueue(refreshError, null);
-						if (isClientSide()) window.location.href = "/login";
+						if (isClientSide()) {
+							localStorage.removeItem("accessToken");
+							localStorage.removeItem("isLogin");
+							localStorage.removeItem("userName");
+							localStorage.removeItem("role");
+							localStorage.removeItem("isAdminLogin");
+							localStorage.removeItem("adminProfile");
+							window.location.href = "/login";
+						}
 						reject(refreshError);
 					})
 					.finally(() => {

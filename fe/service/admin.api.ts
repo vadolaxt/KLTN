@@ -1,7 +1,8 @@
 import { apiClient } from "@/lib/constants/api-client";
 import { ApiResponse, AuthRequest, AuthResponse } from "@/types";
+import type { NewsCategory, NewsStatus } from "./news.api";
 
-export type AdminRole = "ADMIN" | "STAFF" | "USER";
+export type AdminRole = "ADMIN" | "STAFF" | "USER" | "ROLE_ADMIN" | "ROLE_USER";
 export type AccountStatus = "ACTIVE" | "BLOCKED";
 
 export interface AdminProfile {
@@ -89,21 +90,31 @@ export interface AdminNews {
   title: string;
   summary: string;
   content: string;
-  category: "ANNOUNCEMENT" | "GUIDE" | "EVENT";
-  status: "DRAFT" | "PUBLISHED";
+  category: NewsCategory;
+  status: NewsStatus;
+  imageUrl?: string | null;
+  sourceUrl?: string | null;
+  sourceName?: string | null;
   publishedAt: string;
-  emoji: string;
   views: number;
+  displayOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DashboardStats {
-  totalUsers: number;
-  totalAdmissions: number;
-  totalNews: number;
-  activeUsers: number;
-  approvedApplicationsRate: number;
-  applicationsByMethod: { method: string; count: number }[];
-  registrationsByMonth: { month: string; count: number }[];
+  totalMajors: number;
+  totalDepartments: number;
+  totalQuota: number;
+  totalAdmissionRecords: number;
+  averageCutoffScore: number | null;
+  highestCutoffScore: number | null;
+  lowestCutoffScore: number | null;
+  latestYear: number | null;
+  quotaByDepartment: { label: string; count: number }[];
+  majorsByDepartment: { label: string; count: number }[];
+  majorsByProgramType: { label: string; count: number }[];
+  quotaByYear: { label: string; count: number }[];
 }
 
 const compactParams = (params?: AdmissionQueryParams) => {
@@ -115,6 +126,11 @@ const compactParams = (params?: AdmissionQueryParams) => {
 };
 
 export const AdminApiService = {
+  getCurrentProfile: async (): Promise<ApiResponse<AdminProfile>> => {
+    const response = await apiClient.get<ApiResponse<AdminProfile>>("/auth/me");
+    return response.data;
+  },
+
   login: async (email: string, password: string): Promise<ApiResponse<{ token: string; profile: AdminProfile }>> => {
     const loginResponse = await apiClient.post<ApiResponse<AuthResponse>>("/auth/login", {
       email,
@@ -151,6 +167,7 @@ export const AdminApiService = {
 
   logout: async (): Promise<number> => {
     const response = await apiClient.post("/auth/logout");
+    delete apiClient.defaults.headers.common.Authorization;
     return response.status;
   },
 
@@ -212,7 +229,7 @@ export const AdminApiService = {
     return response.data;
   },
 
-  createNews: async (news: Omit<AdminNews, "id" | "views" | "publishedAt">): Promise<ApiResponse<AdminNews>> => {
+  createNews: async (news: Omit<AdminNews, "id" | "views" | "createdAt" | "updatedAt">): Promise<ApiResponse<AdminNews>> => {
     const response = await apiClient.post<ApiResponse<AdminNews>>("/admin/news", news);
     return response.data;
   },
@@ -227,8 +244,10 @@ export const AdminApiService = {
     return response.data;
   },
 
-  getStats: async (): Promise<ApiResponse<DashboardStats>> => {
-    const response = await apiClient.get<ApiResponse<DashboardStats>>("/admin/dashboard");
+  getStats: async (year?: number): Promise<ApiResponse<DashboardStats>> => {
+    const response = await apiClient.get<ApiResponse<DashboardStats>>("/admin/dashboard", {
+      params: year ? { year } : undefined,
+    });
     return response.data;
   },
 };

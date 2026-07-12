@@ -13,7 +13,7 @@ import {
   DashboardStats,
 } from '@/service/admin.api';
 
-export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'scores' | 'news';
+export type AdminTab = 'dashboard' | 'users' | 'admissions' | 'news' | 'fqa';
 
 const DEFAULT_YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020];
 const ADMIN_DEMO_MODE = false;
@@ -129,35 +129,44 @@ const DEMO_NEWS: AdminNews[] = [
     category: 'ANNOUNCEMENT',
     status: 'PUBLISHED',
     publishedAt: '2026-05-01',
-    emoji: '📢',
+    imageUrl: 'https://ts.nlu.edu.vn/imgs/hinh1.jpg',
+    sourceUrl: 'https://ts.nlu.edu.vn/',
+    sourceName: 'Trang tuyển sinh NLU',
     views: 1540,
+    displayOrder: 1,
   },
 ];
 
 const buildDemoStats = (): DashboardStats => ({
-  totalUsers: DEMO_USERS.length,
-  totalAdmissions: DEMO_ADMISSIONS
-    .filter((item) => item.year === 2026)
-    .reduce((sum, item) => sum + item.admissionQuota, 0),
-  totalNews: DEMO_NEWS.length,
-  activeUsers: DEMO_USERS.filter((user) => user.status === 'ACTIVE').length,
-  approvedApplicationsRate: 78.4,
-  applicationsByMethod: [
-    { method: 'Xét học bạ THPT', count: 1840 },
-    { method: 'Xét điểm thi THPT', count: 2450 },
-    { method: 'Xét điểm ĐGNL', count: 680 },
-    { method: 'Xét tuyển thẳng', count: 120 },
+  totalMajors: new Set(DEMO_ADMISSIONS.filter((item) => item.year === 2026).map((item) => item.majorCode)).size,
+  totalDepartments: new Set(DEMO_ADMISSIONS.filter((item) => item.year === 2026).map((item) => item.departmentCode)).size,
+  totalQuota: DEMO_ADMISSIONS.filter((item) => item.year === 2026).reduce((sum, item) => sum + item.admissionQuota, 0),
+  totalAdmissionRecords: DEMO_ADMISSIONS.filter((item) => item.year === 2026).length,
+  averageCutoffScore: 23.31,
+  highestCutoffScore: 24.75,
+  lowestCutoffScore: 21,
+  latestYear: 2026,
+  quotaByDepartment: [
+    { label: 'CNTT', count: 240 },
+    { label: 'CNHHTP', count: 220 },
+    { label: 'CNTY', count: 180 },
+    { label: 'CK', count: 120 },
   ],
-  registrationsByMonth: [
-    { month: 'T1', count: 110 },
-    { month: 'T2', count: 140 },
-    { month: 'T3', count: 290 },
-    { month: 'T4', count: 650 },
-    { month: 'T5', count: 1200 },
-    { month: 'T6', count: 1540 },
+  majorsByDepartment: [
+    { label: 'CNTT', count: 1 },
+    { label: 'CNHHTP', count: 1 },
+    { label: 'CNTY', count: 1 },
+    { label: 'CK', count: 1 },
+  ],
+  majorsByProgramType: [
+    { label: 'Đại trà', count: 3 },
+    { label: 'CLC', count: 1 },
+  ],
+  quotaByYear: [
+    { label: '2026', count: 760 },
+    { label: '2025', count: 210 },
   ],
 });
-
 const upsertById = <T extends { id: string }>(items: T[], nextItem: T) => {
   const exists = items.some((item) => item.id === nextItem.id);
   if (!exists) return [...items, nextItem];
@@ -166,6 +175,8 @@ const upsertById = <T extends { id: string }>(items: T[], nextItem: T) => {
 
 export function useAdmin() {
   const [isAuthenticated, setIsAuthenticated] = useState(ADMIN_DEMO_MODE);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(!ADMIN_DEMO_MODE);
+  const [isForbidden, setIsForbidden] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [currentUser, setCurrentUser] = useState<AdminProfile | null>(
     ADMIN_DEMO_MODE ? DEMO_ADMIN_PROFILE : null
@@ -190,8 +201,42 @@ export function useAdmin() {
       localStorage.setItem('adminProfile', JSON.stringify(DEMO_ADMIN_PROFILE));
       setIsAuthenticated(true);
       setCurrentUser(DEMO_ADMIN_PROFILE);
+      setIsCheckingAuth(false);
       return;
     }
+
+    const verifyAdminSession = async () => {
+      try {
+        const response = await AdminApiService.getCurrentProfile();
+        const profile = response.data;
+        const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'ROLE_ADMIN';
+
+        if (response.status === 'OK' && isAdmin) {
+          localStorage.setItem('isAdminLogin', 'true');
+          localStorage.setItem('adminProfile', JSON.stringify(profile));
+          setIsAuthenticated(true);
+          setIsForbidden(false);
+          setCurrentUser(profile);
+          setIsCheckingAuth(false);
+          return;
+        }
+
+        if (response.status === 'OK' && profile) {
+          setIsForbidden(true);
+        }
+      } catch {
+        // The admin page will redirect to the shared login page after this check finishes.
+        setIsForbidden(false);
+      }
+
+      localStorage.removeItem('isAdminLogin');
+      localStorage.removeItem('adminProfile');
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setIsCheckingAuth(false);
+    };
+
+    verifyAdminSession();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -274,7 +319,12 @@ export function useAdmin() {
     } finally {
       localStorage.removeItem('isAdminLogin');
       localStorage.removeItem('adminProfile');
+      localStorage.removeItem('isLogin');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('role');
       setIsAuthenticated(false);
+      setIsForbidden(false);
       setCurrentUser(null);
       toast.success('Đã đăng xuất tài khoản quản trị');
     }
@@ -296,15 +346,15 @@ export function useAdmin() {
     }
   }, []);
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (year: number = selectedYear) => {
     if (ADMIN_DEMO_MODE) {
       setStats(buildDemoStats());
       return;
     }
 
-    const res = await AdminApiService.getStats();
+    const res = await AdminApiService.getStats(year);
     if (res.status === 'OK') setStats(res.data);
-  }, []);
+  }, [selectedYear]);
 
   const fetchUsers = useCallback(async () => {
     if (ADMIN_DEMO_MODE) {
@@ -364,15 +414,12 @@ export function useAdmin() {
           case 'admissions':
             await fetchAdmissions(selectedYear);
             break;
-          case 'scores':
-            await fetchAdmissions(selectedYear);
-            break;
           case 'news':
             await fetchNews();
             break;
         }
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Không thể đồng bộ dữ liệu quản trị';
+        const msg = err instanceof Error ? err.message : 'KhĂ´ng thá»ƒ Ä‘á»“ng bá»™ dá»¯ liá»‡u quáº£n trá»‹';
         setError(msg);
         toast.error(msg);
       } finally {
@@ -548,13 +595,14 @@ export function useAdmin() {
     });
   }, [updateAdmissionInfo]);
 
-  const createNewsArticle = useCallback(async (article: Omit<AdminNews, 'id' | 'views' | 'publishedAt'>) => {
+  const createNewsArticle = useCallback(async (article: Omit<AdminNews, 'id' | 'views' | 'createdAt' | 'updatedAt'>) => {
     if (ADMIN_DEMO_MODE) {
       const newArticle: AdminNews = {
         ...article,
         id: `news-demo-${Date.now()}`,
         views: 0,
-        publishedAt: new Date().toISOString().split('T')[0],
+        publishedAt: article.publishedAt || new Date().toISOString().split('T')[0],
+        displayOrder: article.displayOrder ?? 100,
       };
 
       setNews((prev) => [...prev, newArticle]);
@@ -564,7 +612,7 @@ export function useAdmin() {
 
     try {
       const res = await AdminApiService.createNews(article);
-      if (res.status === 'OK') {
+      if (res.status === 'OK' || res.status === 'CREATED') {
         setNews((prev) => [...prev, res.data]);
         toast.success('Đã đăng bài viết tuyển sinh');
         fetchStats();
@@ -621,18 +669,17 @@ export function useAdmin() {
     return Array.from(codeSet).sort();
   }, [admissions]);
 
-  const scores = admissions;
-
   const refreshData = useCallback(async () => {
     if (activeTab === 'dashboard') await fetchStats();
     if (activeTab === 'users') await fetchUsers();
     if (activeTab === 'admissions') await fetchAdmissions(selectedYear);
-    if (activeTab === 'scores') await fetchAdmissions(selectedYear);
     if (activeTab === 'news') await fetchNews();
   }, [activeTab, fetchAdmissions, fetchNews, fetchStats, fetchUsers, selectedYear]);
 
   return {
     isAuthenticated,
+    isCheckingAuth,
+    isForbidden,
     isRegisterMode,
     setIsRegisterMode,
     currentUser,
@@ -651,7 +698,6 @@ export function useAdmin() {
 
     users,
     admissions,
-    scores,
     news,
     stats,
 

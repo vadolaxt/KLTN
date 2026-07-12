@@ -360,77 +360,273 @@ def evaluate_question_answer_similarity(
 
 
 if __name__ == "__main__":
-    question = "điểm chuẩn ngành công nghệ thông tin năm 2024"
-
-    context = get_context(
-        query=question,
-        intent=["diem_chuan"],
-        metadata_filter={
-            "year": "2024",
-            # "major": "công nghệ thông tin"
+    # 1. Chuẩn bị danh sách các test case
+    test_cases = [
+        {
+            "question": "điểm chuẩn ngành công nghệ thông tin năm 2024",
+            "intent": ["diem_chuan"],
+            "metadata_filter": {"year": "2024"},
+            "expected_chunk_indexes": [21, 22, 23],
+            "answer": """
+            Điểm trúng tuyển ngành Công nghệ thông tin năm 2024 của Trường Đại học Nông Lâm như sau:
+            - Phương thức xét tuyển 100: 22.25
+            - Phương thức xét tuyển 200: 21
+            - Phương thức xét tuyển 402: 700
+            """,
+            "expected_answer": """
+            Điểm chuẩn nghành công nghệ thông tin 2024:
+            - Phương thức 100: 22.25
+            - Phương thức 200: 21
+            - Phương thức 402: 700
+            """
         },
-        top_k=5,
-        num_candidates=50,
-    )
+        {
+            "question": "cho em hỏi giá tiền ở ký túc xá của trường là bao nhiêu",
+            "intent": ["ky_tuc_xa"],
+            "expected_chunk_indexes": [2, 1],
+            "answer": """
+                Chào bạn, chi phí ở ký túc xá của Trường Đại học Nông Lâm được quy định như sau:
+                    Khu A, B, C, D, F: 250.000đ/tháng.
+                    Khu E: 400.000đ/tháng (khu này có thêm ban công và nhà vệ sinh riêng).
+                Lưu ý:
+                    Chi phí trên đã bao gồm hỗ trợ sử dụng nước.
+                    Nhà trường thu theo năm học (10 tháng).
+                Ngoài ra, đối với ký túc xá Cỏ May, tài liệu hiện chưa nêu cụ thể mức giá tiền vì đây là ký túc xá có chính sách miễn phí chỗ ở cho sinh viên.
+                """,
+            "expected_answer": """
+                Giá tiền ở ký túc xá của Trường Đại học Nông Lâm được tính như sau:
+                    Khu A, B, C, D, F: 250.000đ/tháng.
+                    Khu E: 400.000đ/tháng (ban công và nhà vệ sinh riêng).
+                """
+        },
+        {
+            "question": "tổ hợp xét tuyển ngành công nghệ thông tin",
+            "intent": ["to_hop"],
+            # "metadata_filter": {"major": "công nghệ thông tin"},
+            "expected_chunk_indexes": [12, 13, 14],
+            "answer": """
+                Ngành Công nghệ thông tin (bao gồm Công nghệ thông tin, Công nghệ thông tin chương trình nâng cao và Công nghệ thông tin phân hiệu Ninh Thuận) có các tổ hợp xét tuyển sau: A00, A01, D07, X06, X07, X10.
+                """,
+            "expected_answer": """
+                Ngành Công nghệ thông tin có các tổ hợp xét tuyển sau: A00, A01, D07, X06, X07, X10.
+                """
+        },
+        {
+            "question": "trường có mấy giảng đường và có ký túc xá ko",
+            "intent": ["co_so_vat_chat"],
+            # "metadata_filter": {"major": "công nghệ thông tin"},
+            "expected_chunk_indexes": [1],
+            "answer": """
+            Chào bạn, về câu hỏi của bạn, tôi xin được giải đáp dựa trên thông tin của nhà trường như sau:
+                Trường Đại học Nông Lâm hiện có 06 giảng đường.
+                Về hệ thống ký túc xá, trường có 06 khu ký túc xá với 391 phòng, có sức chứa khoảng 3.000 sinh viên và nhiều năm đạt danh hiệu Ký túc xá sinh viên văn hóa cấp thành phố.
+            """,
+            "expected_answer": """
+                    Trường Đại học Nông Lâm hiện có 06 giảng đường và trường có 06 khu ký túc xá với 391 phòng, có sức chứa khoảng 3.000 sinh viên và nhiều năm đạt danh hiệu Ký túc xá sinh viên văn hóa cấp thành phố.
+                    """
+        },
+        {
+            "question": "slogan câu lạc bộ bóng rổ của trường là gì",
+            "intent": ["cau_lac_bo"],
+            # "metadata_filter": {"major": "công nghệ thông tin"},
+            "expected_chunk_indexes": [2],
+            "answer": """
+                Slogan của câu lạc bộ Bóng rổ Đại học Nông Lâm là: 1 2 3 Nông Lâm (x3).
+                """,
+            "expected_answer": """
+                        Slogan của câu lạc bộ Bóng rổ Đại học Nông Lâm là: 1 2 3 Nông Lâm (x3).
+                        """
+        },
+        {
+            "question": "ý nghĩa viết tắt tên câu lạc bộ EFB là gì",
+            "intent": ["cau_lac_bo"],
+            # "metadata_filter": {"major": "công nghệ thông tin"},
+            "expected_chunk_indexes": [15],
+            "answer": """
+            Chào bạn, tên đầy đủ câu lạc bộ EFB là English For Business Club.
+                    """,
+            "expected_answer": """
+            Ý nghĩa tên viết tắt câu lạc bộ là English For Business Club.
+                            """
+        },
+        {
+            "question": "Mức điểm ưu tiên khu vực 1 là bao nhiêu",
+            "intent": ["diem_uu_tien"],
+            "metadata_filter": {"priority_type": "khu vực"},
+            "expected_chunk_indexes": [1],
+            "answer": """
+                        Mức điểm ưu tiên khu vực 1 là 0,75 điểm. Bao gồm các xã vùng đồng bào dân tộc thiểu số và miền núi, xã đặc biệt khó khăn, xã đảo, xã biên giới.
+                        """,
+            "expected_answer": """
+                                    Mức điểm ưu tiên khu vực 1 (KV1) là 0,75 điểm. Bao gồm các xã vùng đồng bào dân tộc thiểu số và miền núi, xã đặc biệt khó khăn, xã đảo, xã biên giới.
+                                """
+        },
+        {
+            "question": "Phương thức xét tuyển kết hợp điểm thi THPT và học bạ là như nào",
+            "intent": ["phuong_thuc_tuyen_sinh"],
+            "metadata_filter": {"method": "4"},
+            "expected_chunk_indexes": [5],
+            "answer": """
+Chào bạn, phương thức xét tuyển kết hợp điểm thi THPT và học bạ là sử dụng:
+    * 02 môn thuộc tổ hợp xét tuyển lấy từ điểm thi tốt nghiệp THPT năm 2026
+    * 01 môn còn lại sử dụng điểm học bạ THPT
+Trong đó: 
+* Quy định môn học bạ
+  * Điểm học bạ được tính bằng:
+    * Trung bình 06 học kỳ
+    * Từ HK I lớp 10 → HK II lớp 12
+    * Làm tròn đến 02 chữ số thập phân
+* Điều kiện
+  * Môn bổ sung hoặc thay thế không được là Toán hoặc Ngữ văn.
+                                """,
+            "expected_answer": """
+Chào bạn, phương thức xét tuyển kết hợp điểm thi THPT và học bạ là sử dụng:
+    * 02 môn thuộc tổ hợp xét tuyển lấy từ điểm thi tốt nghiệp THPT năm 2026
+    * 01 môn còn lại sử dụng điểm học bạ THPT
+Trong đó: 
+* Quy định môn học bạ
+  * Điểm học bạ được tính bằng:
+    * Trung bình 06 học kỳ
+    * Từ HK I lớp 10 → HK II lớp 12
+    * Làm tròn đến 02 chữ số thập phân
+* Điều kiện
+  * Môn bổ sung hoặc thay thế không được là Toán hoặc Ngữ văn.
+                            """
+        },
+        {
+            "question": "các thành tựu mà trường đã đạt được",
+            "intent": ["so_luoc_ve_truong"],
+            "metadata_filter": {"achievement": ""},
+            "expected_chunk_indexes": [3],
+            "answer": """
+                Nhà trường đã vinh dự được trao tặng nhiều danh hiệu và phần thưởng cao quý, tiêu biểu như:
+                    * Huân chương Lao động hạng Ba
+                    * Huân chương Lao động hạng Nhất
+                    * Huân chương Độc lập hạng Ba
+                """,
+            "expected_answer": """
+                Chào bạn, nhà trường đã vinh dự được trao tặng nhiều danh hiệu và phần thưởng cao quý, tiêu biểu như:
+                    * Huân chương Lao động hạng Ba
+                    * Huân chương Lao động hạng Nhất
+                    * Huân chương Độc lập hạng Ba
+                """
+        },
+        {
+            "question": "ngành công nghệ kỹ thuật cơ điện tử sẽ được học gì",
+            "intent": ["thong_tin_ve_nganh_hoc"],
+            "metadata_filter": {"major": "công nghệ kỹ thuật cơ điện tử"},
+            "expected_chunk_indexes": [1],
+            "answer": """
+            Chào bạn, ngành công nghệ kỹ thuật cơ điện tử sẽ được đào tạo như sau:
+            - Nền tảng về cơ khí, điện, điện tử và công nghệ thông tin.
+            - Tính toán, thiết kế, chế tạo các chi tiết máy và mạch điện tử.
+            - Thiết kế, chế tạo và điều khiển robot.
+            - Lập trình điều khiển các thiết bị, hệ thống cơ điện tử, dây chuyền điều khiển tự động.
+            - Sử dụng các phần mềm hỗ trợ trong thiết kế chi tiết máy, gia công khuôn mẫu, thiết kế mạch điện tử.
+                """,
+            "expected_answer": """
+                Kiến thức chuyên môn
+                - Nền tảng về cơ khí, điện, điện tử và công nghệ thông tin.
+                - Tính toán, thiết kế, chế tạo các chi tiết máy và mạch điện tử.
+                - Thiết kế, chế tạo và điều khiển robot.
+                - Lập trình điều khiển các thiết bị, hệ thống cơ điện tử, dây chuyền điều khiển tự động.
+                - Sử dụng các phần mềm hỗ trợ trong thiết kế chi tiết máy, gia công khuôn mẫu, thiết kế mạch điện tử.
+                """
+        },
+    ]
 
-    print("Retrieved chunk_index:")
-    print(context.get("chunk_index"))
+    all_results = []
 
-    print("Source files:")
-    print(context.get("source_file"))
+    # 2. Vòng lặp đánh giá từng câu hỏi
+    for idx, tc in enumerate(test_cases, start=1):
+        print(f"\n{'=' * 50}")
+        print(f"Đang đánh giá câu hỏi {idx}/{len(test_cases)}: {tc['question']}")
+        print(f"{'=' * 50}")
 
-    retrieve_metrics = evaluate_at_k(
-        context_result=context,
-        expected_chunk_indexes=[21, 22, 23],
-        k=5,
-    )
+        # Lấy context
+        context = get_context(
+            query=tc["question"],
+            intent=tc["intent"],
+            metadata_filter=tc.get("metadata_filter"),
+            top_k=5,
+            num_candidates=50,
+        )
 
-    print("Retrieve metrics:")
-    print(retrieve_metrics)
+        # Retrieve metrics
+        retrieve_metrics = evaluate_at_k(
+            context_result=context,
+            expected_chunk_indexes=tc["expected_chunk_indexes"],
+            k=5,
+        )
 
+        # LLM metrics
+        llm_metrics = evaluate_llm_answer(
+            question=tc["question"],
+            answer=tc["answer"],
+            retrieved_context=context.get("text", []),
+            expected_answer=tc["expected_answer"],
+            judge_fn=judge_fn,
+        )
 
-    answer = """
-    Điểm trúng tuyển ngành Công nghệ thông tin năm 2024 của Trường Đại học Nông Lâm như sau:
-    - Phương thức xét tuyển 100: 22.25
-    - Phương thức xét tuyển 200: 21
-    - Phương thức xét tuyển 402: 700
-    """
+        # Context similarity metrics
+        similarity_metrics = evaluate_answer_context_similarity(
+            answer=tc["answer"],
+            context_result=context,
+            top_k=5,
+        )
 
-    expected_answer = """
-    Điểm chuẩn nghành công nghệ thông tin 2024:
-    - Phương thức 100: 22.25
-    - Phương thức 200: 21
-    - Phương thức 402: 700
-    """
+        # QA similarity metrics
+        question_answer_metrics = evaluate_question_answer_similarity(
+            question=tc["question"],
+            answer=tc["answer"],
+        )
 
-    llm_metrics = evaluate_llm_answer(
-        question=question,
-        answer=answer,
-        retrieved_context=context.get("text", []),
-        expected_answer=expected_answer,
-        judge_fn=judge_fn,
-    )
+        # Lưu kết quả của câu hỏi hiện tại
+        case_result = {
+            "question": tc["question"],
+            "retrieve_metrics": retrieve_metrics,
+            "llm_metrics": llm_metrics,
+            "similarity_metrics": similarity_metrics,
+            "question_answer_metrics": question_answer_metrics
+        }
+        all_results.append(case_result)
 
-    print("LLM answer metrics:")
-    print(llm_metrics)
+        # In kết quả chi tiết của từng câu
+        print(f"Retrieve metrics: {retrieve_metrics}")
+        print(f"LLM answer metrics: {llm_metrics}")
+        print(f"Similarity metrics: {similarity_metrics}")
+        print(f"QA similarity metrics: {question_answer_metrics}")
 
+    # 3. Tính toán và in ra điểm trung bình cho toàn bộ tập dữ liệu (Tùy chọn)
+    print("\n" + "*" * 50)
+    print("TỔNG KẾT ĐÁNH GIÁ (AVERAGE SCORES)")
+    print("*" * 50)
 
-    similarity_metrics = evaluate_answer_context_similarity(
-        answer=answer,
-        context_result=context,
-        top_k=5,
-    )
+    if all_results:
+        num_cases = len(all_results)
 
-    print("Answer-context similarity metrics:")
-    print(similarity_metrics)
+        # Khởi tạo dict để cộng tổng các chỉ số
+        avg_retrieve = {k: 0.0 for k in all_results[0]["retrieve_metrics"]}
+        avg_llm = {k: 0.0 for k in all_results[0]["llm_metrics"]}
+        avg_qa_sim = 0.0
 
+        # Cộng dồn
+        for res in all_results:
+            for k, v in res["retrieve_metrics"].items():
+                avg_retrieve[k] += v
+            for k, v in res["llm_metrics"].items():
+                avg_llm[k] += v
+            avg_qa_sim += res["question_answer_metrics"]["question_answer_similarity"]
 
-    question_answer_metrics = evaluate_question_answer_similarity(
-        question=question,
-        answer=answer,
-    )
+        # Chia trung bình và in ra
+        print("1. Trung bình Retrieve Metrics:")
+        for k, v in avg_retrieve.items():
+            print(f"   - {k}: {v / num_cases:.4f}")
 
-    print("Question-answer similarity metrics:")
-    print(question_answer_metrics)
+        print("\n2. Trung bình LLM Metrics:")
+        for k, v in avg_llm.items():
+            print(f"   - {k}: {v / num_cases:.4f}")
+
+        print(f"\n3. Trung bình QA Similarity: {avg_qa_sim / num_cases:.4f}")
 
 

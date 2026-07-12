@@ -1,9 +1,14 @@
 import os
 from pathlib import Path
+import sys
+
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import sys
+
+from config.rag_config import admission_bundles
+from entity.entity import AdmissionPredictRequest, AdmissionPredictResponse
+from score import predict_admission
 
 from utils import libs_setup
 
@@ -15,14 +20,14 @@ if str(RAG_DIR) not in sys.path:
 from rag.retriever import get_relevant_context
 from rag.generator import generate_response
 from rag.classifier import *
+from entity.entity import ChatRequest, ChatResponse
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 
-from entity.entity import AdmissionPredictResponse, AdmissionPredictRequest
-from score import predict_admission
-from config.rag_config import admission_bundles
-from entity.entity import ChatResponse, ChatRequest
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-libs_setup.install_libs()
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3.1-flash-lite",
+    google_api_key=os.getenv("API_KEY"),
+    temperature=0,
+)
 
 app = FastAPI()
 app.add_middleware(
@@ -33,11 +38,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-3.1-flash-lite",
-    google_api_key=os.getenv("API_KEY"),
-    temperature=0,
-)
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
@@ -142,17 +142,17 @@ async def chat_endpoint(request: ChatRequest):
         )
 
 
-
 @app.post("/api/predict-admission", response_model=AdmissionPredictResponse)
 async def predict_admission_endpoint(request: AdmissionPredictRequest):
     school_code = (request.school_code or "NLU").strip().upper()
     if school_code not in admission_bundles:
         school_code = "NLU"
+
     selected_bundle = admission_bundles.get(school_code)
     if selected_bundle is None:
         raise HTTPException(
             status_code=500,
-            detail="Model dự đoán chưa được load."
+            detail="Model du doan chua duoc load.",
         )
 
     try:
@@ -168,15 +168,14 @@ async def predict_admission_endpoint(request: AdmissionPredictRequest):
         )
 
         return AdmissionPredictResponse(result=result)
-
     except Exception as e:
-        print(f"Lỗi predict admission: {e}")
+        print(f"Loi predict admission: {e}")
         raise HTTPException(
             status_code=500,
-            detail="Lỗi xử lý dự đoán điểm chuẩn."
+            detail="Loi xu ly du doan diem chuan.",
         )
 
 
 if __name__ == "__main__":
-    print("Bắt đầu chạy Server API tại: http://localhost:8000")
+    print("Bat dau chay Server API tai: http://localhost:8000")
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

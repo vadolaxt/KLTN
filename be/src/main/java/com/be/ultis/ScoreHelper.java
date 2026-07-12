@@ -24,7 +24,6 @@ public class ScoreHelper {
     private static final String PERCENTILE_FILE = "bach phan vi.csv";
     private static final List<String> COMPETENCY_COMBINATIONS = List.of("A00", "A01", "B00", "C01", "D01");
 
-    // /50 *30 hoac /40
 
     public double convertNationalScore(double score) {
         return roundToTwoDecimals(score);
@@ -266,7 +265,8 @@ public class ScoreHelper {
 
             if (isCoreSubject) {
                 // môn chung nhân hệ số 2
-                weightedTotalScore += subjectScore * 2;
+//                weightedTotalScore += subjectScore * 2;
+                weightedTotalScore += subjectScore * 1;
                 matchedCoreSubjectCount++;
             } else {
                 weightedTotalScore += subjectScore;
@@ -274,11 +274,13 @@ public class ScoreHelper {
         }
 
         if (matchedCoreSubjectCount >= 2) {
-            return roundToTwoDecimals(weightedTotalScore * 30 / 50);
+//            return roundToTwoDecimals(weightedTotalScore * 30 / 50);
+            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
         }
 
         if (matchedCoreSubjectCount == 1) {
-            return roundToTwoDecimals(weightedTotalScore * 30 / 40);
+//            return roundToTwoDecimals(weightedTotalScore * 30 / 40);
+            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
         }
 
         return roundToTwoDecimals(weightedTotalScore);
