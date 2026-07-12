@@ -157,7 +157,7 @@ export default function ChatPanel({ onClose }: ChatPanelProps) {
 
 			<ChatInput
 				onSendMessage={handleSendMessage}
-				disabled={isSending || isLoadingHistory}
+				// disabled={isSending || isLoadingHistory}
 			/>
 		</section>
 	);
