@@ -60,7 +60,7 @@ export default function FQAView() {
 	// XỬ LÝ KHI BẤM VÀO CÂU HỎI BÊN TRÁI
 	const handleSelectFQA = (fqa: FQA) => {
 		const userMsg: ChatMessage = { role: "USER", content: fqa.question };
-		const botMsg: ChatMessage = { role: "ASSISTANT", content: fqa.answer };
+		const botMsg: ChatMessage = { role: "CHATBOT", content: fqa.answer };
 		setMessages((prev) => [...prev, userMsg, botMsg]);
 	};
 
