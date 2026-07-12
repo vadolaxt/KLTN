@@ -126,7 +126,7 @@ const DEMO_NEWS: AdminNews[] = [
     title: 'Thông báo tuyển sinh đại học chính quy năm 2026',
     summary: 'Cập nhật chỉ tiêu, tổ hợp môn và điểm chuẩn tham khảo cho các ngành đào tạo.',
     content: 'Nội dung demo phục vụ kiểm thử giao diện quản trị tuyển sinh.',
-    category: 'ANNOUNCEMENT',
+    category: 'PRESS_NEWS',
     status: 'PUBLISHED',
     publishedAt: '2026-05-01',
     imageUrl: 'https://ts.nlu.edu.vn/imgs/hinh1.jpg',
