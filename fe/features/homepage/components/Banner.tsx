@@ -2,6 +2,8 @@
 // Banner — Hero section trang chủ
 // ─────────────────────────────────────────────
 
+import Link from "next/link";
+
 export default function Banner() {
   return (
     <section className="relative min-h-[420px] flex items-center overflow-hidden bg-[linear-gradient(135deg,#0d2b0d_0%,#1e5c1e_40%,#2d7a2d_70%,#1a4a1a_100%)]">
@@ -26,9 +28,9 @@ export default function Banner() {
         <p className="mt-4 mb-8 text-[20px] italic font-normal text-white/85">
           Hành trình kiến tạo tương lai vững chắc
         </p>
-        <button className="px-9 py-4 text-[16px] font-extrabold tracking-[0.3px] rounded-lg transition-all duration-200 bg-gold text-[#1a1a1a] shadow-[0_4px_20px_rgba(201,162,39,0.4)] hover:bg-gold-light hover:-translate-y-[2px] hover:shadow-[0_8px_28px_rgba(201,162,39,0.5)]">
+        <Link href={"/de-an-tuyen-sinh"} className="px-9 py-4 text-[16px] font-extrabold tracking-[0.3px] rounded-lg transition-all duration-200 bg-gold text-[#1a1a1a] shadow-[0_4px_20px_rgba(201,162,39,0.4)] hover:bg-gold-light hover:-translate-y-[2px] hover:shadow-[0_8px_28px_rgba(201,162,39,0.5)]">
           Xem Ngay Phương Thức Xét Tuyển →
-        </button>
+        </Link>
       </div>
     </section>
   );
