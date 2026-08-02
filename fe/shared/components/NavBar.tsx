@@ -18,7 +18,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="w-full px-10 flex items-center bg-green-dark">
+    <nav className="sticky top-[80px] z-40 w-full px-10 flex items-center bg-green-dark">
       {NAV_LINKS.map((link) => {
         const isActive =
           link.href === '/homepage'

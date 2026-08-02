@@ -42,7 +42,7 @@ export default function Header() {
 			{/* Logo Section */}
 			<Link href="/" className="flex items-center gap-3.5 hover:opacity-90 transition-opacity">
 				<div className="w-[58px] h-[58px] rounded-full flex items-center justify-center text-[18px] font-black text-white tracking-[1px] flex-shrink-0 bg-green-700 border-[3px] border-yellow-500">
-					NLU
+					<img src={'https://upload.wikimedia.org/wikipedia/vi/thumb/e/e1/Logo_HCMUAF.svg/3840px-Logo_HCMUAF.svg.png'}/>
 				</div>
 				<div>
 					<div className="text-[16px] font-extrabold uppercase tracking-[0.3px] leading-[1.2] text-green-900">

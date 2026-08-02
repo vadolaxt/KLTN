@@ -21,7 +21,7 @@ export default function TopBar() {
           <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 fill-topbar-icon">
             <path d={ICONS.PHONE.path} />
           </svg>
-          Số điện thoại: 0773.284.806, 028.3896.3350
+          Số điện thoại: 0773.284.806, 028.3896.6780
         </span>
       </div>
     </div>
