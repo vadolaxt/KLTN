@@ -265,8 +265,8 @@ public class ScoreHelper {
 
             if (isCoreSubject) {
                 // môn chung nhân hệ số 2
-//                weightedTotalScore += subjectScore * 2;
-                weightedTotalScore += subjectScore * 1;
+                weightedTotalScore += subjectScore * 2;
+//                weightedTotalScore += subjectScore * 1;
                 matchedCoreSubjectCount++;
             } else {
                 weightedTotalScore += subjectScore;
@@ -274,13 +274,13 @@ public class ScoreHelper {
         }
 
         if (matchedCoreSubjectCount >= 2) {
-//            return roundToTwoDecimals(weightedTotalScore * 30 / 50);
-            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
+            return roundToTwoDecimals(weightedTotalScore * 30 / 50);
+//            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
         }
 
         if (matchedCoreSubjectCount == 1) {
-//            return roundToTwoDecimals(weightedTotalScore * 30 / 40);
-            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
+            return roundToTwoDecimals(weightedTotalScore * 30 / 40);
+//            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
         }
 
         return roundToTwoDecimals(weightedTotalScore);
