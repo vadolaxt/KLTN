@@ -72,7 +72,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(Arrays.asList(FE_BASE_URL));
+        configuration.setAllowedOrigins(Arrays.asList(
+                FE_BASE_URL,
+                "https://*.vercel.app",
+                "https://kltn-tau.vercel.app",
+                "https://kltn-git-trung-vadolaxts-projects.vercel.app"
+        ));
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
 
