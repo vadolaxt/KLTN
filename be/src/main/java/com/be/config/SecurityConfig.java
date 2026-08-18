@@ -76,7 +76,8 @@ public class SecurityConfig {
                 FE_BASE_URL,
                 "https://*.vercel.app",
                 "https://kltn-tau.vercel.app",
-                "https://kltn-git-trung-vadolaxts-projects.vercel.app"
+                "https://kltn-git-trung-vadolaxts-projects.vercel.app",
+                "*"
         ));
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
