@@ -33,6 +33,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -72,13 +73,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-                FE_BASE_URL,
-                "https://*.vercel.app",
-                "https://kltn-tau.vercel.app",
-                "https://kltn-git-trung-vadolaxts-projects.vercel.app",
-                "*"
-        ));
+//        configuration.setAllowedOriginPatterns(Arrays.asList(
+//                FE_BASE_URL,
+//                "https://*.vercel.app",
+//                "https://kltn-tau.vercel.app",
+//                "https://kltn-git-trung-vadolaxts-projects.vercel.app",
+//                "*"
+//        ));
+        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
 
