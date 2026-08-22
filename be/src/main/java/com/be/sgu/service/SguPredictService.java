@@ -10,6 +10,7 @@ import com.be.sgu.entity.SguMajor;
 import com.be.sgu.entity.SguSubjectCombination;
 import com.be.sgu.repository.SguAdmissionInfoRepository;
 import com.be.sgu.repository.SguMajorRepository;
+import com.be.ultis.ScoreHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,16 +39,19 @@ public class SguPredictService {
 
     private final SguMajorRepository majorRepository;
     private final SguAdmissionInfoRepository admissionInfoRepository;
+    private final ScoreHelper scoreHelper;
 
     @Value("${FASTAPI_BASE_URL:http://127.0.0.1:8000}")
     String fastapiBaseUrl;
 
     public SguPredictService(
             SguMajorRepository majorRepository,
-            SguAdmissionInfoRepository admissionInfoRepository
+            SguAdmissionInfoRepository admissionInfoRepository,
+            ScoreHelper scoreHelper
     ) {
         this.majorRepository = majorRepository;
         this.admissionInfoRepository = admissionInfoRepository;
+        this.scoreHelper = scoreHelper;
     }
 
     public PredictScoreResponse predict(PredictScoreRequest request) {
@@ -68,15 +72,42 @@ public class SguPredictService {
 
         int targetYear = request.targetYear() > 0 ? request.targetYear() : DEFAULT_TARGET_YEAR;
         double totalScore = scores.stream().mapToDouble(SubjectScore::getScore).sum();
+        double predictionBaseScore = totalScore;
+        double predictionPriorityScore = request.priorityScore() == null ? 0.0 : request.priorityScore();
+        double rawPriorityScore = predictionPriorityScore;
+        if (isCompetencyMethod(request.admissionMethod())) {
+            Double convertedScore = scoreHelper.convertCompetencyScore(totalScore)
+                    .get(request.subjectCombination().trim().toUpperCase());
+            if (convertedScore == null || convertedScore <= 0) {
+                throw new AppException(ErrorCode.SUBJECT_COMBINATION_NOT_SUPPORTED);
+            }
+            predictionBaseScore = convertedScore;
+            double priorityLevel = scoreHelper.resolveCompetencyPriorityLevel(
+                    request.priorityArea(), request.priorityGroup());
+            rawPriorityScore = scoreHelper.calculateCompetencyPriorityScore(totalScore, priorityLevel);
+            Double convertedScoreWithPriority = scoreHelper.convertCompetencyScore(
+                    Math.min(totalScore + rawPriorityScore, 1200.0)
+            ).get(request.subjectCombination().trim().toUpperCase());
+            predictionPriorityScore = convertedScoreWithPriority == null
+                    ? 0.0
+                    : scoreHelper.roundToTwoDecimals(Math.max(convertedScoreWithPriority - predictionBaseScore, 0.0));
+        } else if (isSchoolRecordMethod(request.admissionMethod())) {
+            predictionBaseScore = scoreHelper.convertSchoolRecordScore(totalScore);
+            predictionPriorityScore = scoreHelper.calculatePriorityScore(
+                    predictionBaseScore,
+                    predictionPriorityScore
+            );
+        }
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("school_code", "SGU");
         body.put("major_code", major.getCode());
-        body.put("student_score", totalScore);
+        body.put("student_score", predictionBaseScore);
         body.put("subject_combination", request.subjectCombination());
         body.put("target_year", targetYear);
-        if (request.priorityScore() != null && request.priorityScore() > 0) {
-            body.put("priority_score", request.priorityScore());
+        body.put("top_k", normalizeTopK(request.topK()));
+        if (predictionPriorityScore > 0) {
+            body.put("priority_score", predictionPriorityScore);
         }
         if (request.admissionMethod() != null && !request.admissionMethod().isBlank()) {
             body.put("admission_method", request.admissionMethod().trim().toLowerCase());
@@ -87,7 +118,7 @@ public class SguPredictService {
             body.put("subject_scores", subjectScores);
         }
 
-        return enrichHistory(callFastApi(body), major, request.subjectCombination(), targetYear);
+        return enrichHistory(callFastApi(body), major, request.subjectCombination(), targetYear, rawPriorityScore);
     }
 
     private Map<String, Double> buildSubjectScores(List<SubjectScore> scores) {
@@ -135,7 +166,8 @@ public class SguPredictService {
             PredictScoreResponse response,
             SguMajor major,
             String combinationCode,
-            int targetYear
+            int targetYear,
+            double rawPriorityScore
     ) {
         PredictScoreResponse.PredictResult result = response.result();
         int previousYear = targetYear - 1;
@@ -146,6 +178,8 @@ public class SguPredictService {
                         .majorName(major.getName())
                         .targetYear(result.targetYear())
                         .studentScore(result.studentScore())
+                        .priorityScore(result.priorityScore())
+                        .rawPriorityScore(rawPriorityScore)
                         .subjectCombination(combinationCode)
                         .schoolCode("SGU")
                         .schoolName("Trường Đại học Sài Gòn")
@@ -157,10 +191,26 @@ public class SguPredictService {
                         .previousYearCutoffScore(findCutoff(previousYear, major, combinationCode))
                         .twoYearsAgo(twoYearsAgo)
                         .twoYearsAgoCutoffScore(findCutoff(twoYearsAgo, major, combinationCode))
+                        .topKMajors(result.topKMajors())
                         .model(result.model())
                         .pipeline(result.pipeline())
                         .build())
                 .build();
+    }
+
+    private int normalizeTopK(Integer topK) {
+        if (topK == null) {
+            return 5;
+        }
+        return Math.max(1, Math.min(topK, 500));
+    }
+
+    private boolean isCompetencyMethod(String admissionMethod) {
+        return admissionMethod != null && admissionMethod.trim().equalsIgnoreCase("dgnl");
+    }
+
+    private boolean isSchoolRecordMethod(String admissionMethod) {
+        return admissionMethod != null && admissionMethod.trim().equalsIgnoreCase("hb");
     }
 
     private Double findCutoff(int year, SguMajor major, String combinationCode) {

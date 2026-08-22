@@ -16,6 +16,8 @@ public record ProfileRequest(
         int graduateYear,
         String birthPlace,
         String address,
+        String priorityArea,
+        String priorityGroup,
         String email
 ) {
 }

@@ -11,6 +11,7 @@ import com.be.exception.ErrorCode;
 import com.be.repository.AdmissionInfoRepository;
 import com.be.repository.MajorRepository;
 import com.be.entity.SubjectScore;
+import com.be.ultis.ScoreHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
@@ -46,6 +47,9 @@ public class PredictScoreService {
     @Autowired
     AdmissionInfoRepository admissionInfoRepository;
 
+    @Autowired
+    ScoreHelper scoreHelper;
+
     @Value("${FASTAPI_BASE_URL:http://127.0.0.1:8000}")
     String fastapiBaseUrl;
 
@@ -80,16 +84,44 @@ public class PredictScoreService {
                 .mapToDouble(SubjectScore::getScore)
                 .sum();
 
+        double predictionBaseScore = totalScore;
+        double predictionPriorityScore = request.priorityScore() == null ? 0.0 : request.priorityScore();
+        double rawPriorityScore = predictionPriorityScore;
+        if (isCompetencyMethod(request.admissionMethod())) {
+            Double convertedScore = scoreHelper.convertCompetencyScore(totalScore)
+                    .get(combination.trim().toUpperCase());
+            if (convertedScore == null || convertedScore <= 0) {
+                throw new AppException(ErrorCode.SUBJECT_COMBINATION_NOT_SUPPORTED);
+            }
+            predictionBaseScore = convertedScore;
+            double priorityLevel = scoreHelper.resolveCompetencyPriorityLevel(
+                    request.priorityArea(), request.priorityGroup());
+            rawPriorityScore = scoreHelper.calculateCompetencyPriorityScore(totalScore, priorityLevel);
+            Double convertedScoreWithPriority = scoreHelper.convertCompetencyScore(
+                    Math.min(totalScore + rawPriorityScore, 1200.0)
+            ).get(combination.trim().toUpperCase());
+            predictionPriorityScore = convertedScoreWithPriority == null
+                    ? 0.0
+                    : scoreHelper.roundToTwoDecimals(Math.max(convertedScoreWithPriority - predictionBaseScore, 0.0));
+        } else if (isSchoolRecordMethod(request.admissionMethod())) {
+            predictionBaseScore = scoreHelper.convertSchoolRecordScore(totalScore);
+            predictionPriorityScore = scoreHelper.calculatePriorityScore(
+                    predictionBaseScore,
+                    predictionPriorityScore
+            );
+        }
+
         int targetYear = request.targetYear() > 0 ? request.targetYear() : DEFAULT_TARGET_YEAR;
 
         Map<String, Object> requestBody = new LinkedHashMap<>();
         requestBody.put("school_code", schoolCode);
         requestBody.put("major_code", majorCode);
-        requestBody.put("student_score", totalScore);
+        requestBody.put("student_score", predictionBaseScore);
         requestBody.put("subject_combination", combination);
         requestBody.put("target_year", targetYear);
-        if (request.priorityScore() != null && request.priorityScore() > 0) {
-            requestBody.put("priority_score", request.priorityScore());
+        requestBody.put("top_k", normalizeTopK(request.topK()));
+        if (predictionPriorityScore > 0) {
+            requestBody.put("priority_score", predictionPriorityScore);
         }
         if (request.admissionMethod() != null && !request.admissionMethod().isBlank()) {
             requestBody.put("admission_method", request.admissionMethod().trim().toLowerCase());
@@ -101,7 +133,7 @@ public class PredictScoreService {
         }
 
         PredictScoreResponse response = callFastApi(requestBody);
-        return enrichWithAdmissionHistory(response, major, targetYear, schoolCode);
+        return enrichWithAdmissionHistory(response, major, targetYear, schoolCode, rawPriorityScore);
     }
 
     private String normalizeSchoolCode(String schoolCode) {
@@ -203,7 +235,7 @@ public class PredictScoreService {
         return null;
     }
 
-    private PredictScoreResponse enrichWithAdmissionHistory(PredictScoreResponse response, Major major, int targetYear, String schoolCode) {
+    private PredictScoreResponse enrichWithAdmissionHistory(PredictScoreResponse response, Major major, int targetYear, String schoolCode, double rawPriorityScore) {
         PredictScoreResponse.PredictResult result = response.result();
         int previousYear = targetYear - 1;
         int twoYearsAgo = targetYear - 2;
@@ -217,6 +249,8 @@ public class PredictScoreService {
                         .majorName(result.majorName())
                         .targetYear(result.targetYear())
                         .studentScore(result.studentScore())
+                        .priorityScore(result.priorityScore())
+                        .rawPriorityScore(rawPriorityScore)
                         .subjectCombination(result.subjectCombination())
                         .schoolCode(schoolCode)
                         .schoolName(resolveSchoolName(schoolCode))
@@ -228,10 +262,26 @@ public class PredictScoreService {
                         .previousYearCutoffScore(previousYearCutoffScore)
                         .twoYearsAgo(twoYearsAgo)
                         .twoYearsAgoCutoffScore(twoYearsAgoCutoffScore)
+                        .topKMajors(result.topKMajors())
                         .model(result.model())
                         .pipeline(result.pipeline())
                         .build())
                 .build();
+    }
+
+    private int normalizeTopK(Integer topK) {
+        if (topK == null) {
+            return 5;
+        }
+        return Math.max(1, Math.min(topK, 500));
+    }
+
+    private boolean isCompetencyMethod(String admissionMethod) {
+        return admissionMethod != null && admissionMethod.trim().equalsIgnoreCase("dgnl");
+    }
+
+    private boolean isSchoolRecordMethod(String admissionMethod) {
+        return admissionMethod != null && admissionMethod.trim().equalsIgnoreCase("hb");
     }
 
     private Double findCutoffScore(int year, Major major, String schoolCode) {

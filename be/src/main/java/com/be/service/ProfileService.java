@@ -63,6 +63,8 @@ public class ProfileService {
         profile.setGraduateYear(request.graduateYear());
         profile.setBirthPlace(request.birthPlace());
         profile.setAddress(request.address());
+        profile.setPriorityArea(request.priorityArea() == null ? "KV3" : request.priorityArea());
+        profile.setPriorityGroup(request.priorityGroup() == null ? "NONE" : request.priorityGroup());
         profile.setIdentityCard(request.identityCard());
         profile.setDOB(request.dob());
 

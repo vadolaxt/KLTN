@@ -32,6 +32,21 @@ interface LookupFaculty {
 
 const FACULTY_COLORS = ['#2d7a2d', '#1a6f9b', '#9a6b16', '#7b4a9e', '#b24c38', '#27766e'];
 
+const FACULTY_NAMES: Record<string, string> = {
+  CK: 'Cơ khí',
+  CNHHTP: 'Công nghệ hóa học & Thực phẩm',
+  CNTT: 'Công nghệ thông tin',
+  CNTY: 'Chăn nuôi - Thú Y',
+  KHSH: 'Khoa học sinh học',
+  KTE: 'Kinh tế',
+  LN: 'Lâm nghiệp',
+  MTTN: 'Môi trường tài nguyên',
+  NH: 'Nông học',
+  NNSP: 'Ngoại ngữ - Sư phạm',
+  QLDD: 'Quản lý đất đai',
+  TS: 'Thủy Sản',
+};
+
 const normalizeText = (value: string) =>
   value
     .normalize('NFD')
@@ -106,7 +121,7 @@ export default function SearchView() {
 
     return Array.from(groups.entries()).map(([departmentCode, items], index) => ({
       id: departmentCode,
-      name: `Khoa ${departmentCode}`,
+      name: FACULTY_NAMES[departmentCode.trim().toUpperCase()] ?? departmentCode,
       accent: FACULTY_COLORS[index % FACULTY_COLORS.length],
       majors: items.map((item) => ({
         id: item.id,
@@ -166,7 +181,7 @@ export default function SearchView() {
                   <input
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder="Tìm tên ngành, mã ngành, tổ hợp..."
+                    placeholder="Tìm tên khoa, tên ngành, mã ngành, tổ hợp..."
                     className="h-11 w-full rounded-lg border border-gray-mid bg-white pl-11 pr-11 text-[14px] font-semibold text-text-dark outline-none placeholder:font-medium placeholder:text-text-light focus:border-green-main focus:ring-3 focus:ring-green-main/10"
                   />
                   {searchQuery && (
@@ -259,14 +274,10 @@ export default function SearchView() {
                         <tr style={{ backgroundColor: `${faculty.accent}14` }}>
                           <td colSpan={9} className="border-y border-gray-mid px-3 py-3">
                             <div className="flex items-center justify-between gap-4">
-                              <div className="flex items-center gap-3">
-                                <span className="h-8 w-1.5 rounded-full" style={{ backgroundColor: faculty.accent }} />
+                              <div className="flex items-center">
                                 <div>
                                   <div className="text-[13px] font-black uppercase tracking-[0.4px] text-text-dark">
-                                    {facultyIndex + 1}. {faculty.name}
-                                  </div>
-                                  <div className="mt-0.5 text-[12px] font-semibold text-text-light">
-                                    {faculty.majors.length} ngành hiển thị
+                                    {facultyIndex + 1}. Khoa {faculty.name}
                                   </div>
                                 </div>
                               </div>

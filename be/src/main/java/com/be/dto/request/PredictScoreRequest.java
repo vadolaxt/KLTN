@@ -19,6 +19,9 @@ public record PredictScoreRequest(
 
         String subjectCombination,
         Double priorityScore,
-        int targetYear
+        String priorityArea,
+        String priorityGroup,
+        int targetYear,
+        Integer topK
 ) {
 }

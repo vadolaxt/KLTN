@@ -1,7 +1,4 @@
 // ─────────────────────────────────────────────
-// Footer — Footer toàn trang
-// ─────────────────────────────────────────────
-
 import Link from 'next/link';
 
 const FOOTER_COLS = [
@@ -10,58 +7,45 @@ const FOOTER_COLS = [
     links: [
       { label: 'Đề án tuyển sinh 2026', href: '/de-an-tuyen-sinh' },
       { label: 'Phương thức xét tuyển', href: '/de-an-tuyen-sinh#methods' },
-      { label: 'Ngành đào tạo', href: '#' },
-      { label: 'Học phí', href: '#' },
-      { label: 'Ký túc xá', href: '#' },
     ],
   },
   {
     title: 'Hỗ trợ',
     links: [
       { label: 'Tra cứu tuyển sinh', href: '/tra-cuu' },
-      { label: 'Quản lý hồ sơ', href: '#' },
-      { label: 'Cẩm nang tuyển sinh', href: '#' },
-      { label: 'Câu hỏi thường gặp', href: '#' },
-      { label: 'Liên hệ tư vấn', href: '/lien-he' },
+      { label: 'Quản lý hồ sơ', href: '/ho-so' },
+      { label: 'Cẩm nang tuyển sinh', href: '/cam-nang' },
     ],
   },
   {
     title: 'Nhà trường',
     links: [
-      { label: 'Đề án tuyển sinh', href: '/de-an-tuyen-sinh' },
-      { label: 'Đào tạo', href: '#' },
-      { label: 'Nghiên cứu khoa học', href: '#' },
-      { label: 'Hợp tác quốc tế', href: '#' },
-      { label: 'Cựu sinh viên', href: '#' },
+      { label: 'Số điện thoại: (84-28)-38966780', href: '#' },
+      { label: 'Số fax: 84-28-38960713', href: '#' },
+      { label: 'vptruong@hcmuaf.edu.vn', href: '//ado.hcmuaf.edu.vn' },
     ],
   },
 ];
 
 export default function Footer() {
   return (
-    <footer className="px-10 pt-10 pb-6 bg-green-dark text-[#a8d8a8]">
-      <div className="grid gap-10 mb-8 grid-cols-[2fr_1fr_1fr_1fr]">
+    <footer className="bg-green-dark px-4 pb-6 pt-8 text-[#a8d8a8] sm:px-6 lg:px-10 lg:pt-10">
+      <div className="mb-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] lg:gap-10">
         {/* Brand */}
         <div>
           <div className="flex items-center gap-3.5 mb-3.5">
-            <div className="w-[58px] h-[58px] rounded-full flex items-center justify-center text-[18px] font-black text-white flex-shrink-0 bg-white/10 border-[3px] border-gold">
-              NLU
-            </div>
             <div>
               <div className="text-[14px] font-extrabold uppercase text-white leading-tight">
-                Trường Đại Học Nông Lâm TP. HCM
-              </div>
-              <div className="text-[10px] uppercase tracking-[0.5px] text-[#8bc88b]">
-                University of Agriculture &amp; Forestry Ho Chi Minh City
+                TRƯỜNG ĐẠI HỌC NÔNG LÂM TP. HCM
               </div>
             </div>
           </div>
           <p className="text-[13px] leading-[1.7] text-[#8bc88b]">
-            Địa chỉ: Khu phố 33, phường Linh Xuân, TP. Hồ Chí Minh
+            Địa chỉ: Khu Phố 9, phường Linh Xuân, TP. Hồ Chí Minh, Việt Nam
             <br />
-            Điện thoại: 0773.284.806, 028.3896.3350
+            (ĐC cũ: Khu phố 6, Phường Linh Trung, Quận Thủ Đức, TP.HCM)
             <br />
-            Website: hcmuaf.edu.vn
+            Phân hiệu Ninh Thuận: Số 8 Yên Ninh, phường Ninh Chữ, tỉnh Khánh Hòa, Việt Nam
           </p>
         </div>
 
@@ -88,9 +72,9 @@ export default function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="pt-5 flex justify-between text-[12px] border-t border-white/10 text-[#5a8a5a]">
-        <span>© 2025 Trường Đại Học Nông Lâm TP. HCM. Bản quyền thuộc về nhà trường.</span>
-        <span>Thiết kế bởi Phòng Công nghệ thông tin - NLU</span>
+      <div className="flex flex-col gap-2 border-t border-white/10 pt-5 text-[11px] text-[#5a8a5a] sm:flex-row sm:justify-between sm:text-[12px]">
+        <span>© 2026 Trường Đại Học Nông Lâm TP. HCM. Bản quyền thuộc về nhà trường.</span>
+        <span>Thiết kế bởi Sinh viên Khoa Công nghệ thông tin</span>
       </div>
     </footer>
   );

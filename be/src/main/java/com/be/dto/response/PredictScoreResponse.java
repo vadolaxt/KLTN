@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 
+import java.util.List;
+
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PredictScoreResponse(
@@ -24,6 +26,12 @@ public record PredictScoreResponse(
 
             @JsonProperty("student_score")
             double studentScore,
+
+            @JsonProperty("priority_score")
+            double priorityScore,
+
+            @JsonProperty("raw_priority_score")
+            double rawPriorityScore,
 
             @JsonProperty("subject_combination")
             String subjectCombination,
@@ -58,11 +66,28 @@ public record PredictScoreResponse(
             @JsonProperty("two_years_ago_cutoff_score")
             Double twoYearsAgoCutoffScore,
 
+            @JsonProperty("top_k_majors")
+            List<TopMajor> topKMajors,
+
             @JsonProperty("model")
             String model,
 
             @JsonProperty("pipeline")
             String pipeline
+    ) {
+    }
+
+    @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record TopMajor(
+            @JsonProperty("major_code")
+            String majorCode,
+
+            @JsonProperty("major_name")
+            String majorName,
+
+            @JsonProperty("admission_probability")
+            double admissionProbability
     ) {
     }
 }

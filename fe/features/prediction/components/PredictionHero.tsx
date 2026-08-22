@@ -2,31 +2,17 @@
 
 export default function PredictionHero() {
   return (
-    <section className="bg-gradient-to-br from-[#0d2b0d] via-[#1e5c1e] to-[#1a4a1a] px-6 py-[52px] md:px-[60px]">
-      <div className="max-w-[1180px]">
-        <div className="mb-6 flex items-center gap-3.5">
-          <div className="flex h-[58px] w-[58px] flex-shrink-0 items-center justify-center rounded-full border-[3px] border-yellow-500 bg-green-700 text-[18px] font-black tracking-[1px] text-white">
-            NLU
-          </div>
-          <div>
-            <div className="text-[16px] font-extrabold uppercase leading-[1.2] tracking-[0.3px] text-white">
-              Trường Đại Học Nông Lâm TP. HCM
-            </div>
-            <div className="text-[10.5px] font-medium uppercase tracking-[0.5px] text-white/65">
-              University of Agriculture &amp; Forestry Ho Chi Minh City
-            </div>
-          </div>
-        </div>
-
+    <section className="bg-gradient-to-r from-[#0b3213] via-[#165b20] to-[#267c2c]">
+      <div className="mx-auto w-full max-w-[800px] px-4 py-8 sm:px-6 sm:py-10 lg:px-0 lg:py-12">
         <div>
-          <div className="mb-2.5 text-[12px] font-extrabold uppercase tracking-[2.5px] text-gold-light">
+          <div className="mb-4 inline-flex rounded-lg border border-gold-light/80 px-4 py-2 text-[10px] font-extrabold uppercase tracking-[2.4px] text-gold-light sm:text-[11px]">
             Công cụ hỗ trợ thí sinh 2026
           </div>
-          <h1 className="mb-3 text-[42px] font-black leading-[1.1] text-white">
-            Dự Đoán Khả Năng<br /><span className="text-gold-light">Trúng Tuyển</span>
+          <h1 className="mb-4 max-w-[720px] text-[29px] font-black leading-[1.08] text-white sm:text-[38px] lg:text-[42px]">
+            Tính điểm xét tuyển và<br className="hidden sm:block" /> Dự Đoán Khả Năng <span className="text-gold-light">Trúng Tuyển</span>
           </h1>
-          <p className="max-w-[640px] text-[15px] leading-[1.7] text-white/80">
-            Nhập điểm theo từng phương thức xét tuyển, hệ thống tự động quy đổi về thang 30 và tính xác suất trúng tuyển dựa trên dữ liệu điểm chuẩn các năm trước của Trường ĐH Nông Lâm TP.HCM.
+          <p className="max-w-[760px] text-[12px] leading-[1.75] text-white/75 sm:text-[13px]">
+            Công cụ hỗ trợ tính điểm xét tuyển nhanh chóng, chính xác theo các phương thức xét tuyển phổ biến hiện nay và tính xác suất trúng tuyển dựa trên dữ liệu điểm chuẩn các năm trước của Trường ĐH Nông Lâm TP.HCM.
           </p>
         </div>
       </div>
