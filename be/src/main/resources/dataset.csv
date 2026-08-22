@@ -257,97 +257,97 @@ NLU,2025,QLDD,Quản lý đất đai,7850103,170,21.45,"A00, A01, C01, C04, D01,
 NLU,2025,QLDD,Quản lý đất đai (Chương trình nâng cao),7850103C,40,21.45,"A00, A01, C01, C04, D01, X01",CLC,
 NLU,2025,TS,Công nghệ chế biến thủy sản,7540105,60,21.00,"A00, A01, B00, D01, B03, X04",Đại trà,
 NLU,2025,TS,Nuôi trồng thủy sản,7620301,140,19.00,"B00, D07, D08, D01, B03, X04",Đại trà,
-NLU,2026,CK,Công nghệ kỹ thuật cơ khí,7510201,115,,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CK,Công nghệ kỹ thuật cơ khí,7510201,115,23.65,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán, Vật lý"
-NLU,2026,CK,Công nghệ kỹ thuật cơ khí (Chương trình nâng cao),7510201C,30,,"A00, A01, A02, C01, X06, X07",CLC,"Tổ hợp gốc: A00
+NLU,2026,CK,Công nghệ kỹ thuật cơ khí (Chương trình nâng cao),7510201C,30,23.65,"A00, A01, A02, C01, X06, X07",CLC,"Tổ hợp gốc: A00
 Môn chung: Toán, Vật lý"
-NLU,2026,CK,Công nghệ kỹ thuật cơ – điện tử,7510203,80,,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CK,Công nghệ kỹ thuật cơ – điện tử,7510203,80,24.15,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán, Vật lý"
-NLU,2026,CK,Công nghệ kỹ thuật ô tô,7510205,75,,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CK,Công nghệ kỹ thuật ô tô,7510205,75,22.80,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán, Vật lý"
-NLU,2026,CK,Công nghệ kỹ thuật nhiệt,7510206,60,,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CK,Công nghệ kỹ thuật nhiệt,7510206,60,23.60,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán, Vật lý"
-NLU,2026,CK,Công nghệ kỹ thuật năng lượng tái tạo,7519007,60,,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CK,Công nghệ kỹ thuật năng lượng tái tạo,7519007,60,22.50,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán, Vật lý"
-NLU,2026,CK,Kỹ thuật điều khiển và tự động hóa,7520216,61,,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CK,Kỹ thuật điều khiển và tự động hóa,7520216,61,24.85,"A00, A01, A02, C01, X06, X07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán, Vật lý"
-NLU,2026,CNHHTP,Công nghệ kỹ thuật hóa học,7510401,109,,"A00, A01, A02, B00, D08, D07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CNHHTP,Công nghệ kỹ thuật hóa học,7510401,109,24.30,"A00, A01, A02, B00, D08, D07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNHHTP,Công nghệ kỹ thuật hóa học (Chương trình nâng cao),7510401C,30,,"A00, A01, A02, B00, D08, D07",CLC,"Tổ hợp gốc: A00
+NLU,2026,CNHHTP,Công nghệ kỹ thuật hóa học (Chương trình nâng cao),7510401C,30,24.30,"A00, A01, A02, B00, D08, D07",CLC,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNHHTP,Công nghệ thực phẩm,7540101,155,,"A00, A01, A02, B00, D07, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CNHHTP,Công nghệ thực phẩm,7540101,155,23.70,"A00, A01, A02, B00, D07, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNHHTP,Công nghệ thực phẩm (Chương trình nâng cao),7540101C,30,,"A00, A01, A02, B00, D07, D08",CLC,"Tổ hợp gốc: A00
+NLU,2026,CNHHTP,Công nghệ thực phẩm (Chương trình nâng cao),7540101C,30,23.70,"A00, A01, A02, B00, D07, D08",CLC,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNHHTP,Công nghệ thực phẩm (Chương trình tiên tiến),7540101T,30,,"A00, A01, A02, B00, D07, D08",Tiên tiến,"Tổ hợp gốc: A00
+NLU,2026,CNHHTP,Công nghệ thực phẩm (Chương trình tiên tiến),7540101T,30,23.70,"A00, A01, A02, B00, D07, D08",Tiên tiến,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNHHTP,Đảm bảo chất lượng và An toàn thực phẩm,7540106,50,,"A00, A01, A02, B00, D07, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CNHHTP,Đảm bảo chất lượng và An toàn thực phẩm,7540106,50,22.75,"A00, A01, A02, B00, D07, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNTT,Công nghệ thông tin,7480201,196,,"A00, A01, D07, X06, X10, X07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CNTT,Công nghệ thông tin,7480201,196,20.50,"A00, A01, D07, X06, X10, X07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNTT,Công nghệ thông tin (Chương trình nâng cao),7480201C,30,,"A00, A01, D07, X06, X10, X07",CLC,"Tổ hợp gốc: A00
+NLU,2026,CNTT,Công nghệ thông tin (Chương trình nâng cao),7480201C,30,20.50,"A00, A01, D07, X06, X10, X07",CLC,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNTY,Chăn nuôi,7620105,176,,"A00, B00, B03, C02, D07, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,CNTY,Chăn nuôi,7620105,176,20.80,"A00, B00, B03, C02, D07, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNTY,Chăn nuôi (Chương trình nâng cao),7620105C,30,,"A00, B00, B03, C02, D07, D08",CLC,"Tổ hợp gốc: A00
+NLU,2026,CNTY,Chăn nuôi (Chương trình nâng cao),7620105C,30,20.80,"A00, B00, B03, C02, D07, D08",CLC,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,CNTY,Thú y,7640101,192,,"A00, B00, B03, C02, D07, D08",Đại trà,"Tổ hợp gốc: B00
+NLU,2026,CNTY,Thú y,7640101,192,24.60,"A00, B00, B03, C02, D07, D08",Đại trà,"Tổ hợp gốc: B00
 Môn chung: Toán"
-NLU,2026,CNTY,Thú y (Chương trình tiên tiến),7640101T,50,,"A00, B00, B03, C02, D07, D08",Tiên tiến,"Tổ hợp gốc: B00
+NLU,2026,CNTY,Thú y (Chương trình tiên tiến),7640101T,50,24.60,"A00, B00, B03, C02, D07, D08",Tiên tiến,"Tổ hợp gốc: B00
 Môn chung: Toán"
-NLU,2026,KHSH,Công nghệ sinh học,7420201,171,,"A02, B00, B03, D08, X14",Đại trà,"Tổ hợp gốc: B00
+NLU,2026,KHSH,Công nghệ sinh học,7420201,171,23.50,"A02, B00, B03, D08, X14",Đại trà,"Tổ hợp gốc: B00
 Môn chung: Sinh học"
-NLU,2026,KHSH,Công nghệ sinh học (Chương trình nâng cao),7420201C,30,,"A02, B00, B03, D08, X14",CLC,"Tổ hợp gốc: B00
+NLU,2026,KHSH,Công nghệ sinh học (Chương trình nâng cao),7420201C,30,23.50,"A02, B00, B03, D08, X14",CLC,"Tổ hợp gốc: B00
 Môn chung: Sinh học"
-NLU,2026,KTE,Kinh tế,7310101,131,,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,KTE,Kinh tế,7310101,131,22.00,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,KTE,Kinh tế (Chương trình nâng cao),7310101C,30,,"A00, A01, D01, X01, X02, X25",CLC,"Tổ hợp gốc: A00
+NLU,2026,KTE,Kinh tế (Chương trình nâng cao),7310101C,30,22.00,"A00, A01, D01, X01, X02, X25",CLC,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,KTE,Quản trị kinh doanh,7340101,255,,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,KTE,Quản trị kinh doanh,7340101,255,21.30,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,KTE,Quản trị kinh doanh (Chương trình nâng cao),7340101C,30,,"A00, A01, D01, X01, X02, X25",CLC,"Tổ hợp gốc: A00
+NLU,2026,KTE,Quản trị kinh doanh (Chương trình nâng cao),7340101C,30,21.30,"A00, A01, D01, X01, X02, X25",CLC,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,KTE,Kế toán,7340301,108,,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,KTE,Kế toán,7340301,108,23.50,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,KTE,Kinh doanh nông nghiệp,7620114,60,,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,KTE,Kinh doanh nông nghiệp,7620114,60,21.60,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,KTE,Phát triển nông thôn,7620116,40,,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,KTE,Phát triển nông thôn,7620116,40,20.00,"A00, A01, D01, X01, X02, X25",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,LN,Công nghệ chế biến lâm sản,7549001,150,,"A00, A01, B00, C04, D01, X04",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,LN,Công nghệ chế biến lâm sản,7549001,150,19.20,"A00, A01, B00, C04, D01, X04",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,LN,Lâm học,7620201,60,,"B00, A00, C04, X01, D01, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,LN,Lâm học,7620201,60,19.70,"B00, A00, C04, X01, D01, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,LN,Lâm nghiệp đô thị,7620202,55,,"B00, A00, C04, X01, D01, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,LN,Lâm nghiệp đô thị,7620202,55,19.00,"B00, A00, C04, X01, D01, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,LN,Quản lý tài nguyên rừng,7620211,65,,"B00, A00, C04, X01, D01, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,LN,Quản lý tài nguyên rừng,7620211,65,19.70,"B00, A00, C04, X01, D01, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,MTTN,Hệ thống thông tin,7480104,85,,"A00, A01, A04, D01, D07, X26",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,MTTN,Hệ thống thông tin,7480104,85,21.50,"A00, A01, A04, D01, D07, X26",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,MTTN,Khoa học môi trường,7440301,57,,"A00, A01, A02, B00, D07, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,MTTN,Khoa học môi trường,7440301,57,21.55,"A00, A01, A02, B00, D07, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,MTTN,Kỹ thuật môi trường,7520320,78,,"A00, A01, B00, D08, D07, X28",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,MTTN,Kỹ thuật môi trường,7520320,78,21.75,"A00, A01, B00, D08, D07, X28",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,MTTN,Quản lý Tài nguyên và Môi trường,7850101,97,,"A00, A01, B00, D08, D01, D07",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,MTTN,Quản lý Tài nguyên và Môi trường,7850101,97,21.50,"A00, A01, B00, D08, D01, D07",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,MTTN,Tài nguyên và Du lịch Sinh thái,7859002,35,,"A00, B00, B02, D01, D07, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,MTTN,Tài nguyên và Du lịch Sinh thái,7859002,35,20.50,"A00, B00, B02, D01, D07, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,MTTN,Cảnh quan và Kỹ thuật hoa viên,7859007,35,,"A00, A02, B00, D01, D07, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,MTTN,Cảnh quan và Kỹ thuật hoa viên,7859007,35,19.00,"A00, A02, B00, D01, D07, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,NH,Nông học,7620109,240,,"A00, A01, B00, A02, D07, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,NH,Nông học,7620109,240,20.50,"A00, A01, B00, A02, D07, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,NH,Bảo vệ thực vật,7620112,120,,"A00, A01, B00, A02, D07, D08",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,NH,Bảo vệ thực vật,7620112,120,21.20,"A00, A01, B00, A02, D07, D08",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,NNSP,Sư phạm kỹ thuật nông nghiệp,7140215,30,,"A01, B00, D08, X12, X28, X16",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,NNSP,Sư phạm kỹ thuật nông nghiệp,7140215,30,24.00,"A01, B00, D08, X12, X28, X16",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,NNSP,Ngôn ngữ Anh,7220201,111,,"A01, D01, D09, D10, D14, D15",Đại trà,"Tổ hợp gốc: D01
+NLU,2026,NNSP,Ngôn ngữ Anh,7220201,111,23.10,"A01, D01, D09, D10, D14, D15",Đại trà,"Tổ hợp gốc: D01
 Môn chung: Tiếng Anh"
-NLU,2026,QLDD,Bất động sản,7340116,126,,"A00, A01, C01, C04, D01, X01",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,QLDD,Bất động sản,7340116,126,19.50,"A00, A01, C01, C04, D01, X01",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,QLDD,Quản lý đất đai,7850103,192,,"A00, A01, C01, C04, D01, X01",Đại trà,"Tổ hợp gốc: C01
+NLU,2026,QLDD,Quản lý đất đai,7850103,192,21.20,"A00, A01, C01, C04, D01, X01",Đại trà,"Tổ hợp gốc: C01
 Môn chung: Toán"
-NLU,2026,QLDD,Quản lý đất đai (Chương trình nâng cao),7850103C,30,,"A00, A01, C01, C04, D01, X01",CLC,"Tổ hợp gốc: C01
+NLU,2026,QLDD,Quản lý đất đai (Chương trình nâng cao),7850103C,30,21.20,"A00, A01, C01, C04, D01, X01",CLC,"Tổ hợp gốc: C01
 Môn chung: Toán"
-NLU,2026,TS,Công nghệ chế biến thủy sản,7540105,70,,"A00, A01, B00, D01, B03, X04",Đại trà,"Tổ hợp gốc: A00
+NLU,2026,TS,Công nghệ chế biến thủy sản,7540105,70,20.90,"A00, A01, B00, D01, B03, X04",Đại trà,"Tổ hợp gốc: A00
 Môn chung: Toán"
-NLU,2026,TS,Nuôi trồng thủy sản,7620301,140,,"B00, D07, D08, D01, B03, X04",Đại trà,"Tổ hợp gốc: B00
+NLU,2026,TS,Nuôi trồng thủy sản,7620301,140,20.00,"B00, D07, D08, D01, B03, X04",Đại trà,"Tổ hợp gốc: B00
 Môn chung: Toán"

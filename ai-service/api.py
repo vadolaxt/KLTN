@@ -162,6 +162,7 @@ async def predict_admission_endpoint(request: AdmissionPredictRequest):
             priority_score=request.priority_score or 0.0,
             admission_method=request.admission_method,
             target_year=request.target_year,
+            top_k=request.top_k,
         )
 
         return AdmissionPredictResponse(result=result)
