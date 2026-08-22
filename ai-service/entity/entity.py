@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Dict, Any, Union, Optional
@@ -21,6 +21,7 @@ class AdmissionPredictRequest(BaseModel):
     admission_method: Optional[str] = None
     priority_score: Optional[float] = 0.0
     subject_scores: Optional[Dict[str, float]] = None
+    top_k: int = Field(default=5, ge=1, le=500)
 
 class AdmissionPredictResponse(BaseModel):
     result: dict

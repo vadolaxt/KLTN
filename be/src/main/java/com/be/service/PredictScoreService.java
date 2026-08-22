@@ -2,6 +2,7 @@ package com.be.service;
 
 import com.be.dto.request.PredictScoreRequest;
 import com.be.dto.response.PredictScoreResponse;
+import com.be.dto.response.PredictedCutoffResponse;
 import com.be.entity.AdmissionInfo;
 import com.be.entity.Major;
 import com.be.entity.Subject;
@@ -267,6 +268,40 @@ public class PredictScoreService {
                         .pipeline(result.pipeline())
                         .build())
                 .build();
+    }
+
+    public PredictedCutoffResponse getPredictedCutoffs(String schoolCode, int targetYear) {
+        int normalizedTargetYear = targetYear > 0 ? targetYear : DEFAULT_TARGET_YEAR;
+        String url = normalizeFastApiBaseUrl()
+                + "/predicted-cutoffs?school_code=" + normalizeSchoolCode(schoolCode)
+                + "&target_year=" + normalizedTargetYear;
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .version(HttpClient.Version.HTTP_1_1)
+                    .timeout(Duration.ofSeconds(30))
+                    .header("Accept", "application/json")
+                    .GET()
+                    .build();
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 404) {
+                throw new AppException(ErrorCode.FASTAPI_CONNECTION_FAILED);
+            }
+            if (response.statusCode() >= 400) {
+                throw new AppException(ErrorCode.AI_PROCESSING_ERROR);
+            }
+
+            return OBJECT_MAPPER.readValue(response.body(), PredictedCutoffResponse.class);
+        } catch (JsonProcessingException e) {
+            throw new AppException(ErrorCode.AI_PROCESSING_ERROR);
+        } catch (IOException e) {
+            throw new AppException(ErrorCode.FASTAPI_CONNECTION_FAILED);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AppException(ErrorCode.AI_SERVICE_TIMEOUT);
+        }
     }
 
     private int normalizeTopK(Integer topK) {

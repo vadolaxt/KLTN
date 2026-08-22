@@ -82,11 +82,16 @@ const matchesQuery = (faculty: LookupFaculty, query: string) => {
 export default function SearchView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFacultyId, setSelectedFacultyId] = useState('all');
+  const [isPredictionOverview, setIsPredictionOverview] = useState(false);
   const [admissions, setAdmissions] = useState<LookupAdmission[]>([]);
+  const [predictedCutoffs, setPredictedCutoffs] = useState<Record<string, number>>({});
+  const [predictionYear, setPredictionYear] = useState<number | null>(null);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [selectedYear, setSelectedYear] = useState(2026);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPredictionLoading, setIsPredictionLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [predictionError, setPredictionError] = useState<string | null>(null);
 
   useEffect(() => {
     AdmissionLookupApi.getYears()
@@ -161,6 +166,39 @@ export default function SearchView() {
 
   const totalAdmissionQuota = admissions.reduce((total, item) => total + item.admissionQuota, 0);
 
+  const loadPredictedCutoffs = (year: number) => {
+    if (predictionYear === year) {
+      return;
+    }
+
+    setIsPredictionLoading(true);
+    setPredictionError(null);
+    setPredictedCutoffs({});
+    setPredictionYear(null);
+    AdmissionLookupApi.getPredictedCutoffs(year)
+      .then((predictions) => {
+        setPredictedCutoffs(Object.fromEntries(
+          predictions.map((item) => [item.major_code.trim().toUpperCase(), item.predicted_cutoff]),
+        ));
+        setPredictionYear(year);
+      })
+      .catch(() => {
+        setPredictedCutoffs({});
+        setPredictionError('Không thể tải dữ liệu dự đoán điểm chuẩn từ hệ thống.');
+      })
+      .finally(() => setIsPredictionLoading(false));
+  };
+
+  const togglePredictionOverview = () => {
+    if (isPredictionOverview) {
+      setIsPredictionOverview(false);
+      return;
+    }
+
+    setIsPredictionOverview(true);
+    loadPredictedCutoffs(selectedYear);
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-light font-vietnam">
       <TopBar />
@@ -170,9 +208,20 @@ export default function SearchView() {
       <main className="flex-1">
         <section className="bg-white px-5 py-7 lg:px-10">
           <div className="mx-auto max-w-[1180px]">
-            <h1 className="border-l-4 border-gold pl-4 text-[28px] font-black uppercase leading-tight text-green-dark lg:text-[32px]">
-              Tra cứu thông tin tuyển sinh {selectedYear}
-            </h1>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <h1 className="border-l-4 border-gold pl-4 text-[28px] font-black uppercase leading-tight text-green-dark lg:text-[32px]">
+                Tra cứu thông tin tuyển sinh {selectedYear}
+              </h1>
+              <button
+                type="button"
+                onClick={togglePredictionOverview}
+                className="w-full rounded-lg border-2 border-green-main bg-white px-4 py-3 text-[13px] font-extrabold text-green-main transition-colors hover:bg-green-main hover:text-white lg:w-auto lg:max-w-[360px]"
+              >
+                {isPredictionOverview
+                  ? 'Quay lại tra cứu thông tin tuyển sinh'
+                  : 'Tổng quan dự đoán xác suất trúng tuyển'}
+              </button>
+            </div>
 
             <div className="mt-5 rounded-xl border border-gray-mid bg-[#fafafa] p-4">
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(300px,1fr)_150px_290px_auto] lg:items-center">
@@ -200,8 +249,12 @@ export default function SearchView() {
                   aria-label="Năm tuyển sinh"
                   value={selectedYear}
                   onChange={(event) => {
-                    setSelectedYear(Number(event.target.value));
+                    const year = Number(event.target.value);
+                    setSelectedYear(year);
                     setSelectedFacultyId('all');
+                    if (isPredictionOverview) {
+                      loadPredictedCutoffs(year);
+                    }
                   }}
                   className="h-11 w-full rounded-lg border border-gray-mid bg-white px-3.5 text-[14px] font-bold text-text-dark outline-none focus:border-green-main"
                 >
@@ -245,6 +298,11 @@ export default function SearchView() {
                 {loadError}
               </div>
             )}
+            {isPredictionOverview && predictionError && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600">
+                {predictionError}
+              </div>
+            )}
             <div className="overflow-hidden rounded-[12px] border-1.5 border-gray-mid bg-white shadow-[0_8px_26px_rgba(0,0,0,0.04)]">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[1180px] border-collapse">
@@ -257,8 +315,17 @@ export default function SearchView() {
                       <th className="w-[120px] px-3 py-3 text-center text-[12px] font-extrabold uppercase tracking-[0.6px]">Chương trình</th>
                       <th className="w-[100px] px-3 py-3 text-center text-[12px] font-extrabold uppercase tracking-[0.6px]">Chỉ tiêu</th>
                       <th className="w-[110px] px-3 py-3 text-center text-[12px] font-extrabold uppercase tracking-[0.6px]">Điểm chuẩn</th>
-                      <th className="w-[180px] min-w-[180px] px-3 py-3 text-center text-[12px] font-extrabold uppercase tracking-[0.6px]">Tổ hợp môn</th>
-                      <th className="min-w-[180px] px-3 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">Ghi chú</th>
+                      {isPredictionOverview ? (
+                        <>
+                          <th className="w-[120px] px-3 py-3 text-center text-[12px] font-extrabold uppercase tracking-[0.6px]">Dự đoán</th>
+                          <th className="w-[120px] px-3 py-3 text-center text-[12px] font-extrabold uppercase tracking-[0.6px]">Chênh lệch</th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="w-[180px] min-w-[180px] px-3 py-3 text-center text-[12px] font-extrabold uppercase tracking-[0.6px]">Tổ hợp môn</th>
+                          <th className="min-w-[180px] px-3 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">Ghi chú</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -297,26 +364,54 @@ export default function SearchView() {
                             <td className="px-3 py-3 text-center text-[13px] font-bold text-green-dark">{major.programType}</td>
                             <td className="px-3 py-3 text-center text-[14px] font-black" style={{ color: faculty.accent }}>{major.quota}</td>
                             <td className="px-3 py-3 text-center text-[14px] font-black text-green-dark">{major.cutoffScore.toFixed(2)}</td>
-                            <td className="px-3 py-3">
-                              <div className="flex flex-wrap justify-center gap-1.5">
-                                {major.combinations.map((combination) => (
-                                  <span key={combination} className="rounded-md border border-gray-mid bg-gray-light px-2 py-1 text-[11px] font-semibold leading-tight text-text-mid">
-                                    {combination}
-                                  </span>
-                                ))}
-                              </div>
-                            </td>
-                            <td className="max-w-[220px] px-3 py-3 text-[12px] leading-5 text-text-mid">
-                              {getAdmissionNoteLines(major.note).length > 0 ? (
-                                <div className="space-y-1">
-                                  {getAdmissionNoteLines(major.note).map((line) => (
-                                    <div key={line}>{line}</div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-text-light">-</span>
-                              )}
-                            </td>
+                            {isPredictionOverview ? (() => {
+                              const prediction = predictedCutoffs[major.majorCode.trim().toUpperCase()];
+                              const difference = prediction === undefined ? undefined : prediction - major.cutoffScore;
+
+                              return (
+                                <>
+                                  <td className="px-3 py-3 text-center text-[14px] font-black text-green-main">
+                                    {isPredictionLoading ? '...' : prediction === undefined ? '-' : prediction.toFixed(2)}
+                                  </td>
+                                  <td className={`px-3 py-3 text-center text-[14px] font-black ${
+                                    difference === undefined
+                                      ? 'text-text-light'
+                                      : difference > 0
+                                        ? 'text-[#c62828]'
+                                        : difference < 0
+                                          ? 'text-green-main'
+                                          : 'text-text-mid'
+                                  }`}>
+                                    {isPredictionLoading || difference === undefined
+                                      ? isPredictionLoading ? '...' : '-'
+                                      : `${difference > 0 ? '+' : ''}${difference.toFixed(2)}`}
+                                  </td>
+                                </>
+                              );
+                            })() : (
+                              <>
+                                <td className="px-3 py-3">
+                                  <div className="flex flex-wrap justify-center gap-1.5">
+                                    {major.combinations.map((combination) => (
+                                      <span key={combination} className="rounded-md border border-gray-mid bg-gray-light px-2 py-1 text-[11px] font-semibold leading-tight text-text-mid">
+                                        {combination}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="max-w-[220px] px-3 py-3 text-[12px] leading-5 text-text-mid">
+                                  {getAdmissionNoteLines(major.note).length > 0 ? (
+                                    <div className="space-y-1">
+                                      {getAdmissionNoteLines(major.note).map((line) => (
+                                        <div key={line}>{line}</div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-text-light">-</span>
+                                  )}
+                                </td>
+                              </>
+                            )}
                           </tr>
                         ))}
                       </Fragment>
