@@ -82,6 +82,9 @@ interface MethodPrediction {
 const buildPredictionKey = (methodScore: MethodScore) =>
 	`${methodScore.type}-${methodScore.combination || 'NONE'}`;
 
+const getPredictionInputScore = (methodScore: MethodScore) =>
+	methodScore.type === 'COMBINE' ? methodScore.baseConvertedScore : methodScore.rawScore;
+
 const createPendingPrediction = (): MethodPrediction => ({
 	probability: null,
 	predictedCutoff: null,
@@ -160,9 +163,11 @@ export default function MajorMethodEvaluationPanel({
 							majorCode,
 							subjectCombination: methodScore.combination,
 							targetYear: TARGET_YEAR,
+							priorityArea: major?.priorityArea,
+							priorityGroup: major?.priorityGroup,
 							scores: [
 								{
-									score: methodScore.convertedScore,
+									score: getPredictionInputScore(methodScore),
 								},
 							],
 						});
@@ -253,7 +258,10 @@ export default function MajorMethodEvaluationPanel({
 							Điểm gốc
 						</th>
 						<th className="w-[160px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
-							Điểm quy đổi
+							Điểm ưu tiên
+						</th>
+						<th className="w-[160px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Điểm xét tuyển
 						</th>
 						<th className="w-[180px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
 							Xác suất trúng tuyển
@@ -263,7 +271,7 @@ export default function MajorMethodEvaluationPanel({
 					<tbody>
 					{allMethodScores.length === 0 && (
 						<tr>
-							<td colSpan={5} className="px-4 py-6 text-center text-[13px] font-bold text-text-mid">
+							<td colSpan={6} className="px-4 py-6 text-center text-[13px] font-bold text-text-mid">
 								Chưa có phương thức xét tuyển.
 							</td>
 						</tr>
@@ -287,6 +295,9 @@ export default function MajorMethodEvaluationPanel({
 							</td>
 							<td className="px-4 py-3 text-[13px] font-semibold text-text-mid">
 								{formatNumber(methodScore.rawScore) ?? <EmptyScoreCell label="Thiếu điểm"/>}
+							</td>
+							<td className="px-4 py-3 text-left text-[15px] font-black text-green-dark">
+								{formatNumber(methodScore.priorityScore) ?? <EmptyScoreCell label="0"/>}
 							</td>
 							<td className="px-4 py-3 text-left text-[15px] font-black text-green-dark">
 								{formatNumber(methodScore.convertedScore) ?? <EmptyScoreCell label="-"/>}

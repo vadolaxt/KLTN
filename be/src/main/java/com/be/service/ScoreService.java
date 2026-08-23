@@ -12,6 +12,7 @@ import com.be.repository.AcademicScoreProfileRepository;
 import com.be.repository.CandidateProfileRepository;
 import com.be.repository.MajorRepository;
 import com.be.repository.SubjectCombinationRepository;
+import com.be.score.AdmissionScorePolicy.ScoreBreakdown;
 import com.be.ultis.ScoreHelper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -42,10 +43,13 @@ public class ScoreService {
     // diem cac to hop pthuc hoc ba
     private List<ViewScoreResponse.CombinationScoreDTO> buildSchoolRecordCombination(
             List<SubjectCombination> combinations,
-            Map<String, Double> schoolRecord
+            Map<String, Double> schoolRecord,
+            double priorityLevel
     ) {
         return combinations.stream()
                 .map(combination -> {
+                    List<String> missingSubjects = scoreHelper.getMissingSubjectNames(combination, schoolRecord);
+                    boolean complete = missingSubjects.isEmpty();
                     double totalScore = 0.0;
 
                     if (combination.getSubjects() != null) {
@@ -54,11 +58,18 @@ public class ScoreService {
                                 .sum();
                     }
 
+                    ScoreBreakdown calculation = scoreHelper.calculateSchoolRecordAdmissionScore(
+                            complete ? totalScore : 0.0, priorityLevel);
+
                     return ViewScoreResponse.CombinationScoreDTO.builder()
                             .combination(combination.getCode())
                             .subjectList(scoreHelper.getSubjectNames(combination))
+                            .complete(complete)
+                            .missingSubjects(missingSubjects)
                             .score(totalScore)
-                            .convertScore(scoreHelper.convertSchoolRecordScore(totalScore))
+                            .priorityScore(calculation.sourcePriority())
+                            .totalScore(calculation.sourceTotal())
+                            .convertScore(calculation.convertedTotal())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -67,10 +78,13 @@ public class ScoreService {
     // diem cac to hop pthuc thpt
     private List<ViewScoreResponse.CombinationScoreDTO> buildNationalCombination(
             List<SubjectCombination> combinations,
-            Map<String, Double> nationalScoreMap
+            Map<String, Double> nationalScoreMap,
+            double priorityLevel
     ) {
         return combinations.stream()
                 .map(combination -> {
+                    List<String> missingSubjects = scoreHelper.getMissingSubjectNames(combination, nationalScoreMap);
+                    boolean complete = missingSubjects.isEmpty();
                     double totalScore = 0.0;
 
                     if (combination.getSubjects() != null) {
@@ -78,13 +92,18 @@ public class ScoreService {
                                 .mapToDouble(subject -> nationalScoreMap.getOrDefault(subject.getId(), 0.0))
                                 .sum();
                     }
-
-
+                    double priorityScore = complete && totalScore > 0
+                            ? scoreHelper.calculatePriorityScore(totalScore, priorityLevel) : 0.0;
+                    double finalScore = complete ? Math.min(totalScore + priorityScore, 30.0) : 0.0;
                     return ViewScoreResponse.CombinationScoreDTO.builder()
                             .combination(combination.getCode())
                             .subjectList(scoreHelper.getSubjectNames(combination))
+                            .complete(complete)
+                            .missingSubjects(missingSubjects)
                             .score(totalScore)
-                            .convertScore(scoreHelper.convertNationalScore(totalScore))
+                            .priorityScore(priorityScore)
+                            .totalScore(finalScore)
+                            .convertScore(finalScore)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -94,7 +113,8 @@ public class ScoreService {
     private List<ViewScoreResponse.CombineMethodScoreDTO> buildCombineMethodCombination(
             List<SubjectCombination> combinations,
             Map<String, Double> schoolRecord,
-            Map<String, Double> nationalScoreMap
+            Map<String, Double> nationalScoreMap,
+            double priorityLevel
     ) {
         return combinations.stream()
                 .map(combination -> {
@@ -110,16 +130,27 @@ public class ScoreService {
                             schoolRecord,
                             nationalScoreMap
                     );
+                    List<String> missingSubjects = scoreHelper.getMissingCombinedSubjectNames(
+                            combination, replacementSubject, schoolRecord, nationalScoreMap);
+                    boolean complete = missingSubjects.isEmpty();
+                    double priorityScore = complete && totalScore > 0
+                            ? scoreHelper.calculatePriorityScore(totalScore, priorityLevel) : 0.0;
+                    double finalScore = complete ? Math.min(totalScore + priorityScore, 30.0) : 0.0;
 
                     return ViewScoreResponse.CombineMethodScoreDTO.builder()
                             .combination(combination.getCode())
                             .subjectList(scoreHelper.getSubjectNames(combination))
+                            .complete(complete)
+                            .missingSubjects(missingSubjects)
                             .replacedSubject(
                                     replacementSubject == null
                                             ? null
                                             : replacementSubject.getSubjectName()
                             )
                             .score(totalScore)
+                            .priorityScore(priorityScore)
+                            .totalScore(finalScore)
+                            .convertScore(finalScore)
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -152,6 +183,8 @@ public class ScoreService {
                 .orElseGet(() -> CandidateProfile.builder().userId(userId).build());
 
         Map<String, Double> schoolRecord = profile.getSchoolRecord().getAvgScore();
+        double priorityLevel = scoreHelper.resolvePriorityLevel(
+                candidateProfile.getPriorityArea(), candidateProfile.getPriorityGroup());
 
         NationalExamResult nationalExamResult = profile.getNationalExamResult();
         Map<String, Double> nationalScoreMap = nationalExamResult.getSubjectScores().stream()
@@ -163,13 +196,13 @@ public class ScoreService {
                 ));
 
         List<ViewScoreResponse.CombinationScoreDTO> schoolRecordCombination =
-                buildSchoolRecordCombination(combinations, schoolRecord);
+                buildSchoolRecordCombination(combinations, schoolRecord, priorityLevel);
 
         List<ViewScoreResponse.CombinationScoreDTO> nationalCombination =
-                buildNationalCombination(combinations, nationalScoreMap);
+                buildNationalCombination(combinations, nationalScoreMap, priorityLevel);
 
         List<ViewScoreResponse.CombineMethodScoreDTO> combineMethodCombination =
-                buildCombineMethodCombination(combinations, schoolRecord, nationalScoreMap);
+                buildCombineMethodCombination(combinations, schoolRecord, nationalScoreMap, priorityLevel);
 
         ViewScoreResponse.CompetencyScoreDTO competencyScore = buildCompetencyScore(profile, candidateProfile);
 
@@ -191,6 +224,8 @@ public class ScoreService {
                 .orElseGet(() -> CandidateProfile.builder().userId(userId).build());
 
         Map<String, Double> schoolRecord = profile.getSchoolRecord().getAvgScore();
+        double priorityLevel = scoreHelper.resolvePriorityLevel(
+                candidateProfile.getPriorityArea(), candidateProfile.getPriorityGroup());
 
         NationalExamResult nationalExamResult = profile.getNationalExamResult();
         Map<String, Double> nationalScoreMap = nationalExamResult.getSubjectScores().stream()
@@ -219,19 +254,24 @@ public class ScoreService {
 
                     // học bạ
                     majorCombinations.stream()
+                            .filter(combination -> scoreHelper.getMissingSubjectNames(
+                                    combination, schoolRecord).isEmpty())
                             .map(combination -> {
                                 double rawScore = scoreHelper.calculateTotalScore(
                                         combination,
                                         schoolRecord
                                 );
 
-                                double convertedScore = scoreHelper.convertSchoolRecordScore(rawScore);
+                                ScoreBreakdown calculation = scoreHelper.calculateSchoolRecordAdmissionScore(
+                                        rawScore, priorityLevel);
 
                                 return MajorScoreResponse.MethodScoreDTO.builder()
                                         .type("SCHOOL_RECORD")
                                         .combination(combination.getCode())
                                         .rawScore(rawScore)
-                                        .convertedScore(convertedScore)
+                                        .baseConvertedScore(calculation.convertedBase())
+                                        .priorityScore(calculation.sourcePriority())
+                                        .convertedScore(calculation.convertedTotal())
                                         .build();
                             })
                             .max(Comparator.comparingDouble(
@@ -241,17 +281,23 @@ public class ScoreService {
 
                     // thpt
                     majorCombinations.stream()
+                            .filter(combination -> scoreHelper.getMissingSubjectNames(
+                                    combination, nationalScoreMap).isEmpty())
                             .map(combination -> {
                                 double rawScore = scoreHelper.calculateTotalScore(
                                         combination,
                                         nationalScoreMap
                                 );
+                                double priorityScore = rawScore > 0
+                                        ? scoreHelper.calculatePriorityScore(rawScore, priorityLevel) : 0.0;
 
                                 return MajorScoreResponse.MethodScoreDTO.builder()
                                         .type("NATIONAL")
                                         .combination(combination.getCode())
                                         .rawScore(rawScore)
-                                        .convertedScore(rawScore)
+                                        .baseConvertedScore(rawScore)
+                                        .priorityScore(priorityScore)
+                                        .convertedScore(Math.min(rawScore + priorityScore, 30.0))
                                         .build();
                             })
                             .max(Comparator.comparingDouble(
@@ -261,6 +307,12 @@ public class ScoreService {
 
                     // kết hợp
                     majorCombinations.stream()
+                            .filter(combination -> {
+                                Subject replacementSubject = scoreHelper.getReplacementSubject(
+                                        combination, schoolRecord, nationalScoreMap);
+                                return scoreHelper.getMissingCombinedSubjectNames(
+                                        combination, replacementSubject, schoolRecord, nationalScoreMap).isEmpty();
+                            })
                             .map(combination -> {
                                 Subject replacementSubject = scoreHelper.getReplacementSubject(
                                         combination,
@@ -282,12 +334,16 @@ public class ScoreService {
                                         schoolRecord,
                                         nationalScoreMap
                                 );
+                                double priorityScore = convertedScore > 0
+                                        ? scoreHelper.calculatePriorityScore(convertedScore, priorityLevel) : 0.0;
 
                                 return MajorScoreResponse.MethodScoreDTO.builder()
                                         .type("COMBINE")
                                         .combination(combination.getCode())
                                         .rawScore(rawScore)
-                                        .convertedScore(convertedScore)
+                                        .baseConvertedScore(convertedScore)
+                                        .priorityScore(priorityScore)
+                                        .convertedScore(Math.min(convertedScore + priorityScore, 30.0))
                                         .build();
                             })
                             .max(Comparator.comparingDouble(
@@ -297,6 +353,8 @@ public class ScoreService {
 
                     // dgnl
                     if (competency != null && competency.getConvertScore() != null) {
+                        double rawCompetencyScore = profile.getCompetencyTestResult().getScore();
+                        Map<String, Double> baseCompetencyScores = scoreHelper.convertCompetencyScore(rawCompetencyScore);
                         majorCombinations.stream()
                                 .map(SubjectCombination::getCode)
                                 .filter(Objects::nonNull)
@@ -304,7 +362,11 @@ public class ScoreService {
                                 .map(combinationCode -> MajorScoreResponse.MethodScoreDTO.builder()
                                         .type("COMPETENCY")
                                         .combination(combinationCode)
-                                        .rawScore(competency.getTotalScore())
+                                        .rawScore(rawCompetencyScore)
+                                        .baseConvertedScore(baseCompetencyScores.getOrDefault(combinationCode, 0.0))
+                                        .priorityScore(scoreHelper.roundToTwoDecimals(Math.max(
+                                                competency.getConvertScore().get(combinationCode)
+                                                        - baseCompetencyScores.getOrDefault(combinationCode, 0.0), 0.0)))
                                         .convertedScore(competency.getConvertScore().get(combinationCode))
                                         .build()
                                 )
@@ -317,6 +379,8 @@ public class ScoreService {
                     return MajorScoreResponse.MajorDTO.builder()
                             .majorCode(major.getCode())
                             .majorName(major.getName())
+                            .priorityArea(candidateProfile.getPriorityArea())
+                            .priorityGroup(candidateProfile.getPriorityGroup())
                             .scores(scores)
                             .build();
                 })
@@ -324,6 +388,8 @@ public class ScoreService {
 
         return MajorScoreResponse.builder()
                 .majorScores(majorScores)
+                .priorityArea(candidateProfile.getPriorityArea())
+                .priorityGroup(candidateProfile.getPriorityGroup())
                 .build();
     }
 }

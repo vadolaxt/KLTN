@@ -33,6 +33,7 @@ public class SchoolRecord {
         }
 
         return subjectScoreRecords.stream()
+                .filter(score -> score != null && score.getSubject() != null && score.getScore() > 0)
                 .collect(Collectors.groupingBy(
                         score -> score.getSubject().getId(),
                         LinkedHashMap::new,

@@ -7,13 +7,17 @@ import java.util.List;
 
 @Builder
 public record MajorScoreResponse(
-        List<MajorDTO> majorScores
+        List<MajorDTO> majorScores,
+        String priorityArea,
+        String priorityGroup
 ) {
     @Builder
     @Getter
     public static class MajorDTO {
         String majorCode;
         String majorName;
+        String priorityArea;
+        String priorityGroup;
         List<MethodScoreDTO> scores;
     }
 
@@ -23,6 +27,8 @@ public record MajorScoreResponse(
         String type;
         String combination;
         double rawScore;
+        double baseConvertedScore;
+        double priorityScore;
         double convertedScore;
     }
 }
