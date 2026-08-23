@@ -20,6 +20,15 @@ export interface LookupAdmission {
   note?: string;
 }
 
+export interface PredictedCutoff {
+  major_code: string;
+  predicted_cutoff: number;
+}
+
+interface PredictionOverviewResponse {
+  predictions: PredictedCutoff[];
+}
+
 export const AdmissionLookupApi = {
   getYears: async (schoolCode = 'NLU'): Promise<number[]> => {
     const response = await apiClient.get<ApiResponse<number[]>>('/admissions/years', {
@@ -33,5 +42,13 @@ export const AdmissionLookupApi = {
       params: { year, schoolCode },
     });
     return response.data.data;
+  },
+
+  getPredictedCutoffs: async (targetYear: number, schoolCode = 'NLU'): Promise<PredictedCutoff[]> => {
+    const response = await apiClient.get<ApiResponse<PredictionOverviewResponse>>('/predict/overview', {
+      params: { targetYear, schoolCode },
+      headers: { 'X-Skip-Auth': 'true' },
+    });
+    return response.data.data.predictions;
   },
 };

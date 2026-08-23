@@ -57,6 +57,43 @@ public class ScoreHelper {
         return result;
     }
 
+    public double calculatePriorityScore(double convertedBaseScore, double rawPriorityScore) {
+        if (!Double.isFinite(convertedBaseScore) || !Double.isFinite(rawPriorityScore) || rawPriorityScore <= 0) {
+            return 0.0;
+        }
+
+        double priorityScore = convertedBaseScore >= 22.5
+                ? ((30.0 - Math.min(convertedBaseScore, 30.0)) / 7.5) * rawPriorityScore
+                : rawPriorityScore;
+        return roundToTwoDecimals(Math.max(priorityScore, 0.0));
+    }
+
+    public double resolveCompetencyPriorityLevel(String priorityArea, String priorityGroup) {
+        double areaScore = switch (priorityArea == null ? "KV3" : priorityArea.trim().toUpperCase()) {
+            case "KV1" -> 30.0;
+            case "KV2-NT" -> 20.0;
+            case "KV2" -> 10.0;
+            default -> 0.0;
+        };
+        double groupScore = switch (priorityGroup == null ? "NONE" : priorityGroup.trim().toUpperCase()) {
+            case "UT1" -> 80.0;
+            case "UT2" -> 40.0;
+            default -> 0.0;
+        };
+        return areaScore + groupScore;
+    }
+
+    public double calculateCompetencyPriorityScore(double rawCompetencyScore, double priorityLevel) {
+        if (!Double.isFinite(rawCompetencyScore) || !Double.isFinite(priorityLevel) || priorityLevel <= 0) {
+            return 0.0;
+        }
+        double score = Math.max(0.0, Math.min(rawCompetencyScore, 1200.0));
+        double priorityScore = score >= 900.0
+                ? ((1200.0 - score) / 300.0) * priorityLevel
+                : priorityLevel;
+        return roundToTwoDecimals(Math.max(priorityScore, 0.0));
+    }
+
 
     // doc file csv (bach phan vi) va lay ra cac cận trong file bach phan vi
     private double[] getPercentileValue(double score, String combination) {
@@ -265,8 +302,8 @@ public class ScoreHelper {
 
             if (isCoreSubject) {
                 // môn chung nhân hệ số 2
-//                weightedTotalScore += subjectScore * 2;
-                weightedTotalScore += subjectScore * 1;
+                weightedTotalScore += subjectScore * 2;
+//                weightedTotalScore += subjectScore * 1;
                 matchedCoreSubjectCount++;
             } else {
                 weightedTotalScore += subjectScore;
@@ -274,13 +311,13 @@ public class ScoreHelper {
         }
 
         if (matchedCoreSubjectCount >= 2) {
-//            return roundToTwoDecimals(weightedTotalScore * 30 / 50);
-            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
+            return roundToTwoDecimals(weightedTotalScore * 30 / 50);
+//            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
         }
 
         if (matchedCoreSubjectCount == 1) {
-//            return roundToTwoDecimals(weightedTotalScore * 30 / 40);
-            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
+            return roundToTwoDecimals(weightedTotalScore * 30 / 40);
+//            return roundToTwoDecimals(weightedTotalScore * 30 / 30);
         }
 
         return roundToTwoDecimals(weightedTotalScore);

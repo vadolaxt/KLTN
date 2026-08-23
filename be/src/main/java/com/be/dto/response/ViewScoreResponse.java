@@ -26,6 +26,8 @@ public record ViewScoreResponse(
     @Getter
     public static class CompetencyScoreDTO {
         private double score;
+        private double priorityScore;
+        private double totalScore;
         private Map<String, Double> convertScore;
     }
 

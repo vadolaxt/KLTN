@@ -3,6 +3,7 @@ package com.be.controller;
 import com.be.dto.ApiResponse;
 import com.be.dto.request.PredictScoreRequest;
 import com.be.dto.response.PredictScoreResponse;
+import com.be.dto.response.PredictedCutoffResponse;
 import com.be.entity.Major;
 import com.be.repository.MajorRepository;
 import com.be.service.PredictScoreService;
@@ -38,6 +39,17 @@ public class PredictController {
                 .toList();
         return ResponseEntity.ok(
                 ApiResponse.success(HttpStatus.OK, "Majors loaded successfully", majors)
+        );
+    }
+
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<PredictedCutoffResponse>> getPredictionOverview(
+            @RequestParam(defaultValue = "NLU") String schoolCode,
+            @RequestParam(defaultValue = "2026") int targetYear
+    ) {
+        PredictedCutoffResponse response = predictScoreService.getPredictedCutoffs(schoolCode, targetYear);
+        return ResponseEntity.ok(
+                ApiResponse.success(HttpStatus.OK, "Prediction overview loaded successfully", response)
         );
     }
 

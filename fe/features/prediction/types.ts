@@ -35,6 +35,8 @@ export interface Major {
 export interface PredictApiResult {
   target_year: string;
   student_score?: number;
+  priority_score?: number;
+  raw_priority_score?: number;
   school_code?: string;
   school_name?: string;
   combination_matched: boolean;
@@ -45,6 +47,13 @@ export interface PredictApiResult {
   previous_year_cutoff_score?: number | null;
   two_years_ago?: number;
   two_years_ago_cutoff_score?: number | null;
+  top_k_majors?: TopMajorPrediction[];
+}
+
+export interface TopMajorPrediction {
+  major_code: string;
+  major_name: string;
+  admission_probability: number;
 }
 
 export interface PredictionResultState {

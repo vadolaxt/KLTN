@@ -16,6 +16,8 @@ public record ProfileResponse(
         int graduateYear,
         String birthPlace,
         String address,
+        String priorityArea,
+        String priorityGroup,
         String email,
         CertificateResult certificateResult
 ) {

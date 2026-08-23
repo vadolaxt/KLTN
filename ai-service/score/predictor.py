@@ -30,6 +30,30 @@ def _probability_scale(metrics: Mapping[str, float]) -> float:
     return max(mae, 0.5)
 
 
+def _student_score_for_prediction(
+    item: pd.Series,
+    student_score: float,
+    subject_combination: str | None,
+    subject_scores: dict[str, float] | None,
+    priority_score: float,
+    admission_method: str | None,
+) -> float:
+    """Tính điểm dùng dự đoán bằng cùng một công thức cho ngành chính và top-k."""
+    final_student_score = float(student_score)
+    common_subjects = item.get("Common_Subjects", [])
+    has_common_subjects = isinstance(common_subjects, list) and len(common_subjects) > 0
+    method = (admission_method or "").strip().lower()
+    if method not in {"hb", "dgnl"} and subject_scores and subject_combination and has_common_subjects:
+        final_student_score = compute_student_score_with_common_subject(
+            subject_scores=subject_scores,
+            combo=subject_combination,
+            common_subjects=common_subjects,
+        )
+
+    final_student_score += max(float(priority_score or 0.0), 0.0)
+    return min(final_student_score, 30.0)
+
+
 def _latest_major_rows(raw_data: pd.DataFrame, target_year: int, school_code: str) -> pd.DataFrame:
     """Lấy dòng mới nhất trước năm dự đoán khi chưa có dữ liệu năm đích.
 
@@ -119,7 +143,12 @@ def predict_next_year_cutoffs(
     frame = _scenario_rows(bundle, target_year=target_year, quota_overrides=quota_overrides)
     feature_cols = required_feature_columns(bundle.feature_spec)
     pred_delta = bundle.estimator.predict(frame[feature_cols])
-    frame["Predicted_Cutoff"] = np.clip(frame["Prev_Year_Score"].to_numpy(dtype=float) + pred_delta, 0, 30)
+    cutoff_bias = float(getattr(bundle, "cutoff_bias", 0.0) or 0.0)
+    frame["Predicted_Cutoff"] = np.clip(
+        frame["Prev_Year_Score"].to_numpy(dtype=float) + pred_delta + cutoff_bias,
+        0,
+        30,
+    )
 
     # NLU dùng chung điểm chuẩn cho các tổ hợp của cùng ngành; SGU giữ riêng
     # từng tổ hợp vì dữ liệu công bố có điểm chuẩn khác nhau theo tổ hợp.
@@ -154,6 +183,7 @@ def predict_admission(
     priority_score: float = 0.0,
     admission_method: str | None = None,
     target_year: int = 2026,
+    top_k: int = 5,
     quota_overrides: Mapping[str, float] | None = None,
 ) -> dict[str, object]:
     """Dự đoán xác suất trúng tuyển cho một ngành và một tổ hợp.
@@ -162,7 +192,7 @@ def predict_admission(
     1. Dự đoán điểm chuẩn năm đích cho tất cả ngành/tổ hợp.
     2. Lọc đúng ngành và ưu tiên dòng khớp mã tổ hợp người dùng chọn.
     3. Tính lại điểm thí sinh nếu ngành có môn chung/môn chính.
-    4. Cộng điểm ưu tiên, riêng học bạ chia 1.125 theo công thức quy đổi.
+    4. Cộng điểm ưu tiên; điểm ĐGNL/Học bạ đã được backend dùng chung với Hồ sơ để quy đổi.
     5. So sánh điểm thí sinh với điểm chuẩn dự đoán để tính xác suất.
 
     Hàm này được gọi từ đường dẫn FastAPI /api/predict-admission.
@@ -176,27 +206,27 @@ def predict_admission(
     row = predictions[predictions["Major_Code"].map(normalize_major_code).eq(code)]
     if row.empty:
         raise ValueError(f"Không tìm thấy mã ngành trong dữ liệu lịch sử: {major_code}")
-    if subject_combination:
+    is_dgnl = (admission_method or "").strip().lower() == "dgnl"
+    if subject_combination and not is_dgnl:
         combo = subject_combination.strip().upper()
         combo_row = row[row["Combination_Key"].map(lambda value: combo in split_combinations(value))]
         if not combo_row.empty:
             row = combo_row
+    elif is_dgnl:
+        # ĐGNL không phụ thuộc tổ hợp; nếu dữ liệu có nhiều dòng cho cùng ngành
+        # thì dùng dòng có ngưỡng dự đoán thuận lợi nhất, nhất quán với top-k.
+        row = row.sort_values("Predicted_Cutoff", ascending=True)
 
     item = row.iloc[0]
-    final_student_score = float(student_score)
     common_subjects = item.get("Common_Subjects", [])
-    has_common_subjects = isinstance(common_subjects, list) and len(common_subjects) > 0
-    if subject_scores and subject_combination and has_common_subjects:
-        final_student_score = compute_student_score_with_common_subject(
-            subject_scores=subject_scores,
-            combo=subject_combination,
-            common_subjects=common_subjects,
-        )
-    final_student_score = final_student_score + max(float(priority_score or 0.0), 0.0)
-    if (admission_method or "").strip().lower() == "hb":
-        final_student_score = final_student_score / 1.125
-    else:
-        final_student_score = min(final_student_score, 30.0)
+    final_student_score = _student_score_for_prediction(
+        item=item,
+        student_score=student_score,
+        subject_combination=subject_combination,
+        subject_scores=subject_scores,
+        priority_score=priority_score,
+        admission_method=admission_method,
+    )
 
     cutoff = float(item["Predicted_Cutoff"])
     margin = final_student_score - cutoff
@@ -204,9 +234,30 @@ def predict_admission(
     probability = _sigmoid(margin / scale)
 
     matched_combination = True
-    if subject_combination:
+    if subject_combination and not is_dgnl:
         official = split_combinations(item["Combination_Key"])
         matched_combination = subject_combination.strip().upper() in official
+
+    top_majors = suggest_majors(
+        bundle=bundle,
+        student_score=student_score,
+        subject_combination=subject_combination,
+        subject_scores=subject_scores,
+        priority_score=priority_score,
+        admission_method=admission_method,
+        top_k=top_k,
+        target_year=target_year,
+        quota_overrides=quota_overrides,
+        predictions=predictions,
+    )
+    top_k_majors = [
+        {
+            "major_code": row.Major_Code,
+            "major_name": row.Major_Name,
+            "admission_probability": round(float(row.Admission_Probability), 2),
+        }
+        for row in top_majors.itertuples(index=False)
+    ]
 
     return {
         "major_code": code,
@@ -214,6 +265,7 @@ def predict_admission(
         "school_code": bundle.school_code,
         "target_year": int(target_year),
         "student_score": round(final_student_score, 2),
+        "priority_score": round(max(float(priority_score or 0.0), 0.0), 2),
         "raw_student_score": float(student_score),
         "subject_combination": subject_combination,
         "combination_matched": bool(matched_combination),
@@ -221,6 +273,7 @@ def predict_admission(
         "predicted_cutoff": round(cutoff, 2),
         "margin": round(margin, 2),
         "admission_probability": round(probability * 100, 2),
+        "top_k_majors": top_k_majors,
         "model": bundle.model_name,
         "pipeline": bundle.pipeline_name,
     }
@@ -230,34 +283,52 @@ def suggest_majors(
     bundle: ModelBundle,
     student_score: float,
     subject_combination: str | None = None,
+    subject_scores: dict[str, float] | None = None,
+    priority_score: float = 0.0,
+    admission_method: str | None = None,
     top_k: int = 5,
     target_year: int = 2026,
     quota_overrides: Mapping[str, float] | None = None,
+    predictions: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Gợi ý các ngành phù hợp nhất với điểm của thí sinh.
 
-    Hàm hiện dùng cho tiện ích nội bộ/thử nghiệm, chưa phải luồng chính của UI.
+    Với các phương thức theo tổ hợp, chỉ giữ ngành hỗ trợ tổ hợp thí sinh đã
+    chọn. Riêng ĐGNL xét toàn bộ ngành, không lọc theo tổ hợp.
     """
-    predictions = predict_next_year_cutoffs(
-        bundle,
-        target_year=target_year,
-        quota_overrides=quota_overrides,
-    )
-    if subject_combination:
+    if predictions is None:
+        predictions = predict_next_year_cutoffs(
+            bundle,
+            target_year=target_year,
+            quota_overrides=quota_overrides,
+        )
+    else:
+        predictions = predictions.copy()
+
+    is_dgnl = (admission_method or "").strip().lower() == "dgnl"
+    if subject_combination and not is_dgnl:
         combo = subject_combination.strip().upper()
         predictions["Combination_Matched"] = predictions["Combination_Key"].map(
             lambda value: combo in split_combinations(value)
         )
         filtered = predictions[predictions["Combination_Matched"]].copy()
-        if filtered.empty:
-            filtered = predictions.copy()
-            filtered["Combination_Matched"] = False
     else:
         filtered = predictions.copy()
         filtered["Combination_Matched"] = True
 
     scale = _probability_scale(bundle.metrics)
-    filtered["Margin"] = float(student_score) - filtered["Predicted_Cutoff"]
+    filtered["Student_Score"] = filtered.apply(
+        lambda item: _student_score_for_prediction(
+            item=item,
+            student_score=student_score,
+            subject_combination=subject_combination,
+            subject_scores=subject_scores,
+            priority_score=priority_score,
+            admission_method=admission_method,
+        ),
+        axis=1,
+    )
+    filtered["Margin"] = filtered["Student_Score"] - filtered["Predicted_Cutoff"]
     filtered["Admission_Probability"] = filtered["Margin"].map(lambda margin: _sigmoid(float(margin) / scale) * 100)
     filtered["Distance_To_Cutoff"] = filtered["Margin"].abs()
 
@@ -267,7 +338,8 @@ def suggest_majors(
     )
     sorted_suggestions = sorted_suggestions.drop_duplicates("Major_Code", keep="first")
 
-    return sorted_suggestions.head(top_k)[
+    safe_top_k = max(1, min(int(top_k or 5), 500))
+    return sorted_suggestions.head(safe_top_k)[
         [
             "Major_Code",
             "Major_Name",
