@@ -63,16 +63,16 @@ const VSAT_CONVERSION_SEGMENTS = [
 ];
 
 const PRIORITY_AREAS = [
-  { value: 'KV1', label: 'KV1', score: 0.75 },
-  { value: 'KV2', label: 'KV2', score: 0.25 },
-  { value: 'KV2-NT', label: 'KV2-NT', score: 0.5 },
-  { value: 'KV3', label: 'KV3', score: 0 },
+  { value: 'KV1', label: 'KV1' },
+  { value: 'KV2', label: 'KV2' },
+  { value: 'KV2-NT', label: 'KV2-NT' },
+  { value: 'KV3', label: 'KV3' },
 ];
 
 const PRIORITY_GROUPS = [
-  { value: 'NONE', label: 'Không thuộc đối tượng ưu tiên', score: 0 },
-  { value: 'UT1', label: 'Nhóm 01', score: 2 },
-  { value: 'UT2', label: 'Nhóm 02', score: 1 },
+  { value: 'NONE', label: 'Không thuộc đối tượng ưu tiên' },
+  { value: 'UT1', label: 'Nhóm 01' },
+  { value: 'UT2', label: 'Nhóm 02' },
 ];
 
 const convertVsatToThptScore = (rawScore: number) => {
@@ -111,17 +111,6 @@ const labelClass = 'text-[12px] font-bold uppercase tracking-[0.6px] text-text-m
 
 const parseScore = (value: string) => Number(value.replace(',', '.'));
 
-const calculatePriorityScore = (baseScore: number, rawPriorityScore: number) => {
-  if (!Number.isFinite(baseScore) || !Number.isFinite(rawPriorityScore) || rawPriorityScore <= 0) {
-    return 0;
-  }
-
-  const priorityScore = baseScore >= 22.5
-    ? ((30 - Math.min(baseScore, 30)) / 7.5) * rawPriorityScore
-    : rawPriorityScore;
-
-  return Number(Math.max(0, priorityScore).toFixed(2));
-};
 const normalizeNumericInput = (value: string, max?: number) => {
   const cleaned = value.replace(',', '.').replace(/[^\d.]/g, '');
   if (cleaned === '') {
@@ -298,22 +287,6 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
       ? rawSubjectTotal
       : admissionBaseScore;
 
-  const rawPriorityScore = useMemo(() => {
-    const areaScore = PRIORITY_AREAS.find((item) => item.value === priorityArea)?.score ?? 0;
-    const groupScore = PRIORITY_GROUPS.find((item) => item.value === priorityGroup)?.score ?? 0;
-    return areaScore + groupScore;
-  }, [priorityArea, priorityGroup]);
-
-  const priorityScore = useMemo(
-    () => method === 'dgnl' || method === 'hb'
-      ? rawPriorityScore
-      : calculatePriorityScore(admissionBaseScore, rawPriorityScore),
-    [admissionBaseScore, method, rawPriorityScore],
-  );
-
-  const scoreWithPriority = admissionBaseScore + priorityScore;
-  const finalScore = Number(Math.min(scoreWithPriority, 30).toFixed(2));
-
   const updateSubjectScore = (index: number, value: string) => {
     const normalized = normalizeNumericInput(value, method === 'vsat' ? 150 : undefined);
     setSubjectScores((current) => {
@@ -455,7 +428,6 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
             // API vẫn dùng cùng luồng dự đoán; lấy đủ danh sách để nút "Xem thêm"
             // có thể cuộn qua toàn bộ ngành phù hợp. Giao diện mặc định chỉ hiện 5.
             topK: 500,
-            priorityScore,
             priorityArea,
             priorityGroup,
             scores,
@@ -465,10 +437,10 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
 
       onResult({
         result,
-        studentScore: Number((result.student_score ?? finalScore).toFixed(2)),
+        studentScore: Number((result.student_score ?? admissionBaseScore).toFixed(2)),
         // Điểm gốc dùng riêng cho phần "Tổng điểm xét tuyển - chưa quy đổi".
         baseScore: Number(rawMethodScore.toFixed(2)),
-        priorityScore: result.raw_priority_score ?? result.priority_score ?? priorityScore,
+        priorityScore: result.raw_priority_score ?? result.priority_score ?? 0,
         majorCode: selectedMajor.code,
         majorName: selectedMajor.name,
         schoolCode: result.school_code ?? selectedMajor.schoolCode ?? schoolCode,

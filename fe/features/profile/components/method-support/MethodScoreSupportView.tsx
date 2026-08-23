@@ -70,8 +70,7 @@ export default function MethodScoreSupportView() {
 	}, []);
 
 	return (
-		<div className="mb-7 overflow-hidden rounded-[14px] border-1.5 border-gray-mid bg-white shadow-[0_16px_38px_rgba(26,74,26,0.08)]">
-			<div className="p-5">
+		<>
 				{visibleMethods.length > 0 && (
 					<div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 						<MethodSwitcher
@@ -119,7 +118,6 @@ export default function MethodScoreSupportView() {
 						Chưa có dữ liệu cho phương thức này.
 					</div>
 				)}
-			</div>
-		</div>
+		</>
 	);
 }

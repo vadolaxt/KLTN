@@ -10,6 +10,7 @@ import com.be.sgu.entity.SguMajor;
 import com.be.sgu.entity.SguSubjectCombination;
 import com.be.sgu.repository.SguAdmissionInfoRepository;
 import com.be.sgu.repository.SguMajorRepository;
+import com.be.score.AdmissionScorePolicy.ScoreBreakdown;
 import com.be.ultis.ScoreHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,7 +74,8 @@ public class SguPredictService {
         int targetYear = request.targetYear() > 0 ? request.targetYear() : DEFAULT_TARGET_YEAR;
         double totalScore = scores.stream().mapToDouble(SubjectScore::getScore).sum();
         double predictionBaseScore = totalScore;
-        double predictionPriorityScore = request.priorityScore() == null ? 0.0 : request.priorityScore();
+        double requestedPriorityLevel = request.priorityScore() == null ? 0.0 : request.priorityScore();
+        double predictionPriorityScore = 0.0;
         double rawPriorityScore = predictionPriorityScore;
         if (isCompetencyMethod(request.admissionMethod())) {
             Double convertedScore = scoreHelper.convertCompetencyScore(totalScore)
@@ -91,12 +93,26 @@ public class SguPredictService {
             predictionPriorityScore = convertedScoreWithPriority == null
                     ? 0.0
                     : scoreHelper.roundToTwoDecimals(Math.max(convertedScoreWithPriority - predictionBaseScore, 0.0));
-        } else if (isSchoolRecordMethod(request.admissionMethod())) {
-            predictionBaseScore = scoreHelper.convertSchoolRecordScore(totalScore);
-            predictionPriorityScore = scoreHelper.calculatePriorityScore(
-                    predictionBaseScore,
-                    predictionPriorityScore
-            );
+        } else {
+            double sourceScore = predictionBaseScore;
+            if (isSchoolRecordMethod(request.admissionMethod())) {
+                predictionBaseScore = scoreHelper.convertSchoolRecordScore(totalScore);
+            }
+            double resolvedPriorityLevel = scoreHelper.resolvePriorityLevel(
+                    request.priorityArea(), request.priorityGroup());
+            if (request.priorityArea() == null && request.priorityGroup() == null) {
+                resolvedPriorityLevel = requestedPriorityLevel;
+            }
+            if (isSchoolRecordMethod(request.admissionMethod())) {
+                ScoreBreakdown calculation = scoreHelper.calculateSchoolRecordAdmissionScore(
+                        sourceScore, resolvedPriorityLevel);
+                rawPriorityScore = calculation.sourcePriority();
+                predictionPriorityScore = calculation.convertedPriority();
+            } else {
+                rawPriorityScore = sourceScore > 0
+                        ? scoreHelper.calculatePriorityScore(sourceScore, resolvedPriorityLevel) : 0.0;
+                predictionPriorityScore = rawPriorityScore;
+            }
         }
 
         Map<String, Object> body = new LinkedHashMap<>();
