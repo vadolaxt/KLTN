@@ -3,15 +3,12 @@ package com.be.ultis;
 import com.be.entity.Subject;
 import com.be.entity.SubjectCombination;
 import com.be.entity.SubjectScore;
+import com.be.score.AdmissionScorePolicy;
+import com.be.score.AdmissionScorePolicy.ScoreBreakdown;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,128 +17,51 @@ import java.util.stream.Collectors;
 
 @Component
 public class ScoreHelper {
+    private final AdmissionScorePolicy admissionScorePolicy;
 
-    private static final String PERCENTILE_FILE = "bach phan vi.csv";
-    private static final List<String> COMPETENCY_COMBINATIONS = List.of("A00", "A01", "B00", "C01", "D01");
-
+    public ScoreHelper(AdmissionScorePolicy admissionScorePolicy) {
+        this.admissionScorePolicy = admissionScorePolicy;
+    }
 
     public double convertNationalScore(double score) {
         return roundToTwoDecimals(score);
     }
 
     public double convertSchoolRecordScore(double score) {
-        return roundToTwoDecimals(score / 1.125);
+        return admissionScorePolicy.convertSchoolRecordToNational(score);
+    }
+
+    public double convertNationalToSchoolRecord(double score) {
+        return admissionScorePolicy.convertNationalToSchoolRecord(score);
+    }
+
+    public double convertNationalToCompetency(double score, String combination) {
+        return admissionScorePolicy.convertNationalToCompetency(score, combination);
     }
 
     public Map<String, Double> convertCompetencyScore(double score) {
-        Map<String, Double> result = new LinkedHashMap<>();
-
-        for (String combination : COMPETENCY_COMBINATIONS) {
-            // gia tri abcd trong bach phan vi
-            double[] abcd = getPercentileValue(score, combination);
-
-            double a = abcd[0];
-            double b = abcd[1];
-            double c = abcd[2];
-            double d = abcd[3];
-
-            double convertedScore = 0.0;
-
-            if (d != c) {
-                convertedScore = a + ((score - c) * (b - a)) / (d - c);
-            }
-
-            result.put(combination, roundToTwoDecimals(convertedScore));
-        }
-
-        return result;
+        return admissionScorePolicy.convertCompetencyToNational(score);
     }
 
     public double calculatePriorityScore(double convertedBaseScore, double rawPriorityScore) {
-        if (!Double.isFinite(convertedBaseScore) || !Double.isFinite(rawPriorityScore) || rawPriorityScore <= 0) {
-            return 0.0;
-        }
+        return admissionScorePolicy.calculateStandardPriority(convertedBaseScore, rawPriorityScore);
+    }
 
-        double priorityScore = convertedBaseScore >= 22.5
-                ? ((30.0 - Math.min(convertedBaseScore, 30.0)) / 7.5) * rawPriorityScore
-                : rawPriorityScore;
-        return roundToTwoDecimals(Math.max(priorityScore, 0.0));
+    public ScoreBreakdown calculateSchoolRecordAdmissionScore(double score, double priorityLevel) {
+        return admissionScorePolicy.calculateSchoolRecordAdmissionScore(score, priorityLevel);
+    }
+
+    public double resolvePriorityLevel(String priorityArea, String priorityGroup) {
+        return admissionScorePolicy.resolveStandardPriorityLevel(priorityArea, priorityGroup);
     }
 
     public double resolveCompetencyPriorityLevel(String priorityArea, String priorityGroup) {
-        double areaScore = switch (priorityArea == null ? "KV3" : priorityArea.trim().toUpperCase()) {
-            case "KV1" -> 30.0;
-            case "KV2-NT" -> 20.0;
-            case "KV2" -> 10.0;
-            default -> 0.0;
-        };
-        double groupScore = switch (priorityGroup == null ? "NONE" : priorityGroup.trim().toUpperCase()) {
-            case "UT1" -> 80.0;
-            case "UT2" -> 40.0;
-            default -> 0.0;
-        };
-        return areaScore + groupScore;
+        return admissionScorePolicy.resolveCompetencyPriorityLevel(priorityArea, priorityGroup);
     }
 
     public double calculateCompetencyPriorityScore(double rawCompetencyScore, double priorityLevel) {
-        if (!Double.isFinite(rawCompetencyScore) || !Double.isFinite(priorityLevel) || priorityLevel <= 0) {
-            return 0.0;
-        }
-        double score = Math.max(0.0, Math.min(rawCompetencyScore, 1200.0));
-        double priorityScore = score >= 900.0
-                ? ((1200.0 - score) / 300.0) * priorityLevel
-                : priorityLevel;
-        return roundToTwoDecimals(Math.max(priorityScore, 0.0));
+        return admissionScorePolicy.calculateCompetencyPriority(rawCompetencyScore, priorityLevel);
     }
-
-
-    // doc file csv (bach phan vi) va lay ra cac cận trong file bach phan vi
-    private double[] getPercentileValue(double score, String combination) {
-        InputStream inputStream = getClass()
-                .getClassLoader()
-                .getResourceAsStream(PERCENTILE_FILE);
-
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(inputStream, StandardCharsets.UTF_8)
-        )) {
-            String line;
-            int combinationIndex = COMPETENCY_COMBINATIONS.indexOf(combination);
-
-            while ((line = reader.readLine()) != null) {
-                if (line.isBlank()) {
-                    continue;
-                }
-
-                String[] columns = line.split(",", -1);
-
-                int startColumn = 1 + combinationIndex * 4;
-
-                String dgnlUpper = columns[startColumn];      // can tren dgnl
-                String dgnlLower = columns[startColumn + 1];  // can duoi dgnl
-                String thptUpper = columns[startColumn + 2];  // can tren thpt
-                String thptLower = columns[startColumn + 3];  // can duoi thpt
-
-
-                double d = Double.parseDouble(dgnlUpper);
-                double c = Double.parseDouble(dgnlLower);
-                double b = Double.parseDouble(thptUpper);
-                double a = Double.parseDouble(thptLower);
-
-                if (score >= c && score <= d) {
-                    return new double[]{
-                            a,
-                            b,
-                            c,
-                            d
-                    };
-                }
-            }
-        } catch (Exception ignored) {
-        }
-
-        return new double[]{0, 0, 0, 0};
-    }
-
 
     // lay ra mon thay the de tinh toan cho pthuc ket hop
     // ko lay 2 mon toan va van
@@ -184,6 +104,41 @@ public class ScoreHelper {
                 .filter(subject -> subject != null)
                 .map(Subject::getSubjectName)
                 .collect(Collectors.toList());
+    }
+
+    public List<String> getMissingSubjectNames(
+            SubjectCombination combination,
+            Map<String, Double> subjectScoreMap
+    ) {
+        if (combination == null || combination.getSubjects() == null) {
+            return List.of();
+        }
+        return combination.getSubjects().stream()
+                .filter(subject -> subject != null)
+                .filter(subject -> subjectScoreMap.getOrDefault(subject.getId(), 0.0) <= 0)
+                .map(Subject::getSubjectName)
+                .toList();
+    }
+
+    public List<String> getMissingCombinedSubjectNames(
+            SubjectCombination combination,
+            Subject replacementSubject,
+            Map<String, Double> schoolRecord,
+            Map<String, Double> nationalScoreMap
+    ) {
+        if (combination == null || combination.getSubjects() == null) {
+            return List.of();
+        }
+        return combination.getSubjects().stream()
+                .filter(subject -> subject != null)
+                .filter(subject -> {
+                    double score = replacementSubject != null && replacementSubject.getId().equals(subject.getId())
+                            ? schoolRecord.getOrDefault(subject.getId(), 0.0)
+                            : nationalScoreMap.getOrDefault(subject.getId(), 0.0);
+                    return score <= 0;
+                })
+                .map(Subject::getSubjectName)
+                .toList();
     }
 
     // lam tron toi 2 chu so thap phan

@@ -11,6 +11,7 @@ import com.be.exception.AppException;
 import com.be.exception.ErrorCode;
 import com.be.repository.AdmissionInfoRepository;
 import com.be.repository.MajorRepository;
+import com.be.score.AdmissionScorePolicy.ScoreBreakdown;
 import com.be.entity.SubjectScore;
 import com.be.ultis.ScoreHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -86,7 +87,8 @@ public class PredictScoreService {
                 .sum();
 
         double predictionBaseScore = totalScore;
-        double predictionPriorityScore = request.priorityScore() == null ? 0.0 : request.priorityScore();
+        double requestedPriorityLevel = request.priorityScore() == null ? 0.0 : request.priorityScore();
+        double predictionPriorityScore = 0.0;
         double rawPriorityScore = predictionPriorityScore;
         if (isCompetencyMethod(request.admissionMethod())) {
             Double convertedScore = scoreHelper.convertCompetencyScore(totalScore)
@@ -104,12 +106,26 @@ public class PredictScoreService {
             predictionPriorityScore = convertedScoreWithPriority == null
                     ? 0.0
                     : scoreHelper.roundToTwoDecimals(Math.max(convertedScoreWithPriority - predictionBaseScore, 0.0));
-        } else if (isSchoolRecordMethod(request.admissionMethod())) {
-            predictionBaseScore = scoreHelper.convertSchoolRecordScore(totalScore);
-            predictionPriorityScore = scoreHelper.calculatePriorityScore(
-                    predictionBaseScore,
-                    predictionPriorityScore
-            );
+        } else {
+            double sourceScore = predictionBaseScore;
+            if (isSchoolRecordMethod(request.admissionMethod())) {
+                predictionBaseScore = scoreHelper.convertSchoolRecordScore(totalScore);
+            }
+            double resolvedPriorityLevel = scoreHelper.resolvePriorityLevel(
+                    request.priorityArea(), request.priorityGroup());
+            if (request.priorityArea() == null && request.priorityGroup() == null) {
+                resolvedPriorityLevel = requestedPriorityLevel;
+            }
+            if (isSchoolRecordMethod(request.admissionMethod())) {
+                ScoreBreakdown calculation = scoreHelper.calculateSchoolRecordAdmissionScore(
+                        sourceScore, resolvedPriorityLevel);
+                rawPriorityScore = calculation.sourcePriority();
+                predictionPriorityScore = calculation.convertedPriority();
+            } else {
+                rawPriorityScore = sourceScore > 0
+                        ? scoreHelper.calculatePriorityScore(sourceScore, resolvedPriorityLevel) : 0.0;
+                predictionPriorityScore = rawPriorityScore;
+            }
         }
 
         int targetYear = request.targetYear() > 0 ? request.targetYear() : DEFAULT_TARGET_YEAR;

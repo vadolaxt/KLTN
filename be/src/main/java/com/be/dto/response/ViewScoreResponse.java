@@ -18,7 +18,11 @@ public record ViewScoreResponse(
     public static class CombinationScoreDTO {
         private String combination;
         private List<String> subjectList;
+        private boolean complete;
+        private List<String> missingSubjects;
         private double score;
+        private double priorityScore;
+        private double totalScore;
         private double convertScore;
     }
 
@@ -37,7 +41,11 @@ public record ViewScoreResponse(
         private String combination;
         private List<String> subjectList;
         private String replacedSubject;
+        private boolean complete;
+        private List<String> missingSubjects;
         private double score;
+        private double priorityScore;
+        private double totalScore;
         private double convertScore;
     }
 

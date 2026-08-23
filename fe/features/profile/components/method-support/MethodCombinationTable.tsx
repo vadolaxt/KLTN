@@ -18,8 +18,7 @@ export default function MethodCombinationTable({
 																  isLoading = false,
 																  error = '',
 															  }: MethodCombinationTableProps) {
-	const isCombinedMethod = activeMethod === 'kh';
-	const columnCount = 4;
+	const columnCount = 5;
 
 	return (
 		<div className="overflow-hidden rounded-[12px] border-1.5 border-gray-mid bg-white">
@@ -45,11 +44,12 @@ export default function MethodCombinationTable({
 							Tổng điểm
 						</th>
 
-						{!isCombinedMethod && (
-							<th className="w-[150px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
-								Quy đổi
-							</th>
-						)}
+						<th className="w-[150px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Điểm ưu tiên
+						</th>
+						<th className="w-[180px] px-4 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Điểm xét tuyển
+						</th>
 					</tr>
 					</thead>
 
@@ -119,22 +119,23 @@ export default function MethodCombinationTable({
 								{/*)}*/}
 
 								<td className="px-4 py-3 text-[14px] font-black text-green-dark">
-									{combination.score > 0 ? (
+									{combination.complete === false ? (
+										<EmptyScoreCell label={`Thiếu ${combination.missingSubjects?.length ?? 0} môn`}/>
+									) : combination.score > 0 ? (
 										formatScore(combination.score)
 									) : (
 										<EmptyScoreCell label="Chưa có điểm"/>
 									)}
 								</td>
 
-								{!isCombinedMethod && (
-									<td className="px-4 py-3 text-[14px] font-black text-green-main">
-										{combination.convertScore > 0 ? (
-											formatScore(combination.convertScore)
-										) : (
-											<EmptyScoreCell label="Chờ quy đổi"/>
-										)}
-									</td>
-								)}
+								<td className="px-4 py-3 text-[14px] font-black text-green-main">
+									{combination.complete === false ? '-' : formatScore(combination.priorityScore ?? 0)}
+								</td>
+								<td className="px-4 py-3 text-[14px] font-black text-green-dark">
+									{combination.convertScore > 0 ? formatScore(combination.convertScore) : (
+										<EmptyScoreCell label={combination.complete === false ? 'Chưa đủ điểm' : 'Ngoài khung quy đổi'}/>
+									)}
+								</td>
 							</tr>
 						))}
 					</tbody>

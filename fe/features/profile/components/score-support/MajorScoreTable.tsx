@@ -147,14 +147,17 @@ export default function MajorScoreTable({
 							Điểm gốc
 						</th>
 						<th className="w-[130px] px-3 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
-							Điểm quy đổi
+							Điểm ưu tiên
+						</th>
+						<th className="w-[130px] px-3 py-3 text-left text-[12px] font-extrabold uppercase tracking-[0.6px]">
+							Điểm xét tuyển
 						</th>
 					</tr>
 					</thead>
 					<tbody>
 					{tableIsLoading && (
 						<tr>
-							<td colSpan={6} className="px-6 py-10 text-center text-[13px] font-bold text-text-mid">
+							<td colSpan={7} className="px-6 py-10 text-center text-[13px] font-bold text-text-mid">
 								Đang tải dữ liệu...
 							</td>
 						</tr>
@@ -162,7 +165,7 @@ export default function MajorScoreTable({
 
 					{!tableIsLoading && tableError && (
 						<tr>
-							<td colSpan={6} className="px-6 py-10 text-center text-[13px] font-bold text-red-600">
+							<td colSpan={7} className="px-6 py-10 text-center text-[13px] font-bold text-red-600">
 								{tableError}
 							</td>
 						</tr>
@@ -204,13 +207,16 @@ export default function MajorScoreTable({
 											{formatScore(defaultMethodScore?.rawScore) ?? <EmptyScoreCell label="Chưa có"/>}
 										</td>
 										<td className="px-3 py-3 text-[15px] font-black text-green-dark">
+											{formatScore(defaultMethodScore?.priorityScore) ?? <EmptyScoreCell label="0"/>}
+										</td>
+										<td className="px-3 py-3 text-[15px] font-black text-green-dark">
 											{formatScore(defaultMethodScore?.convertedScore) ?? <EmptyScoreCell label="Chưa có"/>}
 										</td>
 									</tr>
 
 									{isSelected && (
 										<tr className="border-b border-gray-mid bg-gray-light/60">
-											<td colSpan={6} className="px-3 py-3">
+											<td colSpan={7} className="px-3 py-3">
 												<div className="animate-fade-in">
 													<MajorMethodEvaluationPanel major={row} methodScores={remainingMethodScores} embedded/>
 												</div>

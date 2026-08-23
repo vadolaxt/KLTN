@@ -102,6 +102,11 @@ export default function MajorScoreSupportView() {
 				onSearch={handleMajorSearch}
 				onClear={handleClearSearch}
 			/>
+			<div className="mb-4 flex justify-end">
+				<div className="rounded-lg border border-green-light/30 bg-green-pale px-4 py-3 text-right text-[12px] font-bold leading-[1.6] text-green-dark">
+					Lưu ý: Các ngành được sắp xếp dựa theo xác suất trúng tuyển.
+				</div>
+			</div>
 			<MajorScoreTable
 				rows={filteredRows}
 				isLoading={isLoading}
