@@ -109,32 +109,6 @@ const selectClass =
 
 const labelClass = 'text-[12px] font-bold uppercase tracking-[0.6px] text-text-mid';
 
-const formatCombinedThptLabel = (subjectName: string) => {
-  const normalizedSubject = subjectName.trim().toLocaleLowerCase('vi-VN');
-
-  if (normalizedSubject === 'toán') {
-    return 'THPT + Toán';
-  }
-
-  if (normalizedSubject === 'ngữ văn' || normalizedSubject === 'văn') {
-    return 'THPT + Văn';
-  }
-
-  return 'THPT';
-};
-
-const normalizeSubjectName = (subjectName: string) =>
-  subjectName
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('vi-VN')
-    .trim();
-
-const isRestrictedTranscriptSubject = (subjectName: string) => {
-  const normalizedSubject = normalizeSubjectName(subjectName);
-  return normalizedSubject === 'toan' || normalizedSubject === 'ngu van' || normalizedSubject === 'van';
-};
-
 const parseScore = (value: string) => Number(value.replace(',', '.'));
 
 const calculatePriorityScore = (baseScore: number, rawPriorityScore: number) => {
@@ -188,8 +162,6 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
   const [subjectScores, setSubjectScores] = useState<string[]>(['', '', '']);
   const [dgnlProvider, setDgnlProvider] = useState<'hcm' | 'hn'>('hcm');
   const [dgnlScore, setDgnlScore] = useState('');
-  const [combinedThptScores, setCombinedThptScores] = useState<Record<string, string>>({});
-  const [combinedTranscriptScores, setCombinedTranscriptScores] = useState<Record<string, string>>({});
   const [loadingMajors, setLoadingMajors] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -222,8 +194,6 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
         setSelectedSubCombinationCode(firstSubCombo?.code ?? firstCombo?.code ?? '');
         const subjectsCount = firstSubCombo?.subjects?.length ?? firstCombo?.subjects?.length ?? 3;
         setSubjectScores(Array(Math.max(subjectsCount, 3)).fill(''));
-        setCombinedThptScores({});
-        setCombinedTranscriptScores({});
       } catch (loadError) {
         if (!active) {
           return;
@@ -283,56 +253,17 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
     [selectedCombination],
   ); */
 
-  const transcriptSubjects = useMemo(
-    () => subjectLabels.filter((subject) => !isRestrictedTranscriptSubject(subject)),
-    [subjectLabels],
-  );
-
-  const hocBaSubject = useMemo(() => {
-    const scoredTranscriptSubjects = transcriptSubjects
-      .map((subject) => ({
-        subject,
-        score: parseScore(combinedTranscriptScores[subject] ?? ''),
-      }))
-      .filter((item) => Number.isFinite(item.score));
-
-    if (!scoredTranscriptSubjects.length) {
-      return transcriptSubjects[0] ?? '';
-    }
-
-    return scoredTranscriptSubjects.reduce((bestSubject, currentSubject) =>
-      currentSubject.score > bestSubject.score ? currentSubject : bestSubject,
-    ).subject;
-  }, [combinedTranscriptScores, transcriptSubjects]);
-
-  const hocBaScore = combinedTranscriptScores[hocBaSubject] ?? '';
-
-  const thptSubjects = useMemo(() => {
-    if (!hocBaSubject) {
-      return [];
-    }
-
-    return subjectLabels.filter((subject) => subject !== hocBaSubject).slice(0, 2);
-  }, [hocBaSubject, subjectLabels]);
-
   const resetEnteredScores = (nextSubjectCount = subjectLabels.length) => {
     setSubjectScores(Array(Math.max(nextSubjectCount, 3)).fill(''));
-    setCombinedThptScores({});
-    setCombinedTranscriptScores({});
   };
 
   const dgnlMaxScore = 1200;
   const parsedDgnlScore = parseScore(dgnlScore);
-  const convertedDgnlScore = Number.isFinite(parsedDgnlScore)
-    ? Math.min((parsedDgnlScore / dgnlMaxScore) * 30, 30)
-    : 0;
 
-  const parsedHocBaScore = parseScore(hocBaScore);
-  const parsedThptScores = thptSubjects.map((subject) => parseScore(combinedThptScores[subject] ?? ''));
-  const combinedScore = parsedThptScores.length === 2
-    && parsedThptScores.every((score) => Number.isFinite(score))
-    && Number.isFinite(parsedHocBaScore)
-    ? parsedThptScores[0] + parsedThptScores[1] + parsedHocBaScore
+  const parsedCombinedScores = subjectScores.slice(0, 3).map(parseScore);
+  const combinedScore = parsedCombinedScores.length === 3
+    && parsedCombinedScores.every((score) => Number.isFinite(score))
+    ? parsedCombinedScores.reduce((total, score) => total + score, 0)
     : 0;
 
   const subjectTotal = subjectScores
@@ -346,13 +277,26 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
       return total + (method === 'vsat' ? convertVsatToThptScore(parsedScore) : parsedScore);
     }, 0);
 
-  const displayScore = method === 'dgnl'
-    ? convertedDgnlScore
-    : method === 'kh'
+  const rawSubjectTotal = subjectScores
+    .slice(0, subjectLabels.length || 3)
+    .reduce((total, score) => {
+      const parsedScore = parseScore(score);
+      return Number.isFinite(parsedScore) ? total + parsedScore : total;
+    }, 0);
+
+  const displayScore = method === 'kh'
       ? combinedScore
       : subjectTotal;
 
-  const admissionBaseScore = displayScore;
+  // ĐGNL luôn giữ điểm gốc; backend dùng chung ScoreHelper của Hồ sơ để quy đổi.
+  const admissionBaseScore = method === 'dgnl'
+    ? (Number.isFinite(parsedDgnlScore) ? parsedDgnlScore : 0)
+    : displayScore;
+  const rawMethodScore = method === 'dgnl'
+    ? (Number.isFinite(parsedDgnlScore) ? parsedDgnlScore : 0)
+    : method === 'vsat'
+      ? rawSubjectTotal
+      : admissionBaseScore;
 
   const rawPriorityScore = useMemo(() => {
     const areaScore = PRIORITY_AREAS.find((item) => item.value === priorityArea)?.score ?? 0;
@@ -361,16 +305,14 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
   }, [priorityArea, priorityGroup]);
 
   const priorityScore = useMemo(
-    () => calculatePriorityScore(admissionBaseScore, rawPriorityScore),
-    [admissionBaseScore, rawPriorityScore],
+    () => method === 'dgnl' || method === 'hb'
+      ? rawPriorityScore
+      : calculatePriorityScore(admissionBaseScore, rawPriorityScore),
+    [admissionBaseScore, method, rawPriorityScore],
   );
 
   const scoreWithPriority = admissionBaseScore + priorityScore;
-  const finalScore = Number((
-    method === 'hb'
-      ? scoreWithPriority / 1.125
-      : Math.min(scoreWithPriority, 30)
-  ).toFixed(2));
+  const finalScore = Number(Math.min(scoreWithPriority, 30).toFixed(2));
 
   const updateSubjectScore = (index: number, value: string) => {
     const normalized = normalizeNumericInput(value, method === 'vsat' ? 150 : undefined);
@@ -379,22 +321,6 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
       next[index] = normalized;
       return next;
     });
-  };
-
-  const updateCombinedThptScore = (subject: string, value: string) => {
-    const normalized = normalizeNumericInput(value);
-    setCombinedThptScores((current) => ({
-      ...current,
-      [subject]: normalized,
-    }));
-  };
-
-  const updateCombinedTranscriptScore = (subject: string, value: string) => {
-    const normalized = normalizeNumericInput(value);
-    setCombinedTranscriptScores((current) => ({
-      ...current,
-      [subject]: normalized,
-    }));
   };
 
   const handleMajorChange = (majorCode: string) => {
@@ -479,14 +405,10 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
         : '';
     }
 
-    if (!hocBaSubject) {
-      return 'Tổ hợp xét tuyển chưa xác định được môn học bạ hợp lệ.';
-    }
-
-    const invalidCombinedScore = [...parsedThptScores, parsedHocBaScore].some(
+    const invalidCombinedScore = parsedCombinedScores.some(
       (score) => !Number.isFinite(score) || score < 0 || score > 10,
     );
-    return invalidCombinedScore || parsedThptScores.length !== 2
+    return invalidCombinedScore || parsedCombinedScores.length !== 3
       ? 'Nhập sai, vui lòng nhập đúng điểm.'
       : '';
   };
@@ -530,7 +452,12 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
             majorCode: selectedMajor.code,
             subjectCombination: schoolCode === 'SGU' ? selectedSubCombinationCode : selectedCombination.code,
             targetYear: TARGET_YEAR,
+            // API vẫn dùng cùng luồng dự đoán; lấy đủ danh sách để nút "Xem thêm"
+            // có thể cuộn qua toàn bộ ngành phù hợp. Giao diện mặc định chỉ hiện 5.
+            topK: 500,
             priorityScore,
+            priorityArea,
+            priorityGroup,
             scores,
           }, {
             headers: { 'X-Skip-Auth': 'true' },
@@ -539,8 +466,9 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
       onResult({
         result,
         studentScore: Number((result.student_score ?? finalScore).toFixed(2)),
-        baseScore: Number(admissionBaseScore.toFixed(2)),
-        priorityScore,
+        // Điểm gốc dùng riêng cho phần "Tổng điểm xét tuyển - chưa quy đổi".
+        baseScore: Number(rawMethodScore.toFixed(2)),
+        priorityScore: result.raw_priority_score ?? result.priority_score ?? priorityScore,
         majorCode: selectedMajor.code,
         majorName: selectedMajor.name,
         schoolCode: result.school_code ?? selectedMajor.schoolCode ?? schoolCode,
@@ -559,13 +487,13 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
   };
 
   return (
-    <form onSubmit={handleSubmit} className="overflow-hidden rounded-[14px] border-1.5 border-gray-mid bg-white">
-      <div className="bg-green-dark px-7 py-5">
+    <form onSubmit={handleSubmit} className="min-w-0 overflow-hidden rounded-[14px] border-1.5 border-gray-mid bg-white">
+      <div className="bg-green-dark px-4 py-4 sm:px-7 sm:py-5">
         <h2 className="text-[16px] font-extrabold text-white">Thông tin xét tuyển</h2>
         <p className="mt-1 text-[12px] text-white/75">{SCHOOL_LABEL[schoolCode]} - năm xét tuyển 2026</p>
       </div>
 
-      <div className="p-7">
+      <div className="p-4 sm:p-7">
         <div className="mb-7">
           <div className="mb-3 border-b-2 border-green-pale pb-2 text-[11px] font-extrabold uppercase tracking-[1.5px] text-text-light">
             Bước 1 - Chọn thông tin xét tuyển
@@ -589,7 +517,7 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
               </select>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="flex flex-col gap-1.5">
                 <label className={labelClass}>Tổ hợp xét tuyển <span className="text-[#e53935]">*</span></label>
                 <select
@@ -650,7 +578,7 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
             Bước 2 - Nhập điểm theo phương thức
           </div>
 
-          <div className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <div className={`mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2 ${availableMethods.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
             {availableMethods.map((item) => (
               <button
                 key={item.value}
@@ -668,8 +596,15 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
             ))}
           </div>
 
-          <div className="rounded-[10px] border-1.5 border-gray-mid bg-gray-light p-5">
-            <div className="mb-3 text-[11px] font-extrabold uppercase tracking-[1px] text-text-light">Điểm của thí sinh</div>
+          <div className="rounded-[10px] border-1.5 border-gray-mid bg-gray-light p-3 sm:p-5">
+            <div className="mb-3 flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+              <div className="shrink-0 text-[11px] font-extrabold uppercase tracking-[1px] text-text-light">Điểm của thí sinh</div>
+              {method === 'kh' && (
+                <p className="max-w-[570px] text-[10px] font-semibold normal-case leading-[1.55] text-text-light sm:text-right sm:text-[11px]">
+                  Môn thay thế bằng điểm học bạ là trung bình 6 học kì, không thay thế môn Toán và Ngữ Văn
+                </p>
+              )}
+            </div>
 
             {(method === 'hb' || method === 'thpt' || method === 'vsat') && (
               <div className="grid grid-cols-1 overflow-hidden rounded-lg border border-gray-mid bg-white sm:grid-cols-3">
@@ -678,7 +613,7 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
                   const showScoreError = method !== 'vsat' && isScoreAboveTen(inputValue);
 
                   return (
-                    <div key={`${subjectName}-${index}`} className="border-b border-gray-mid p-3 text-center sm:border-l sm:first:border-l-0">
+                    <div key={`${subjectName}-${index}`} className="border-b border-gray-mid p-3 text-center last:border-b-0 sm:border-b-0 sm:border-l sm:first:border-l-0">
                       <label className="mb-1 block text-[10px] font-bold uppercase tracking-[0.5px] text-text-light">
                         {subjectName}
                       </label>
@@ -737,78 +672,37 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
             )}
 
             {method === 'kh' && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {transcriptSubjects.map((subject) => {
-                    const isSelectedTranscriptSubject = subject === hocBaSubject;
-                    const inputValue = combinedTranscriptScores[subject] ?? '';
-                    const showScoreError = isScoreAboveTen(inputValue);
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {['Môn THPT 1', 'Môn THPT 2', 'Môn học bạ'].map((label, index) => {
+                  const inputValue = subjectScores[index] ?? '';
+                  const showScoreError = isScoreAboveTen(inputValue);
 
-                    return (
-                      <div key={`hoc-ba-${subject}`} className="flex flex-col gap-1.5">
-                        <label className={labelClass}>
-                          Học bạ - {subject}{isSelectedTranscriptSubject ? ' (cao nhất)' : ''}
-                        </label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                          min="0"
-                          max="10"
-                          step="0.01"
-                          value={inputValue}
-                          onChange={(event) => updateCombinedTranscriptScore(subject, event.target.value)}
-                          className={scoreInputClass}
-                          placeholder="0.00"
-                        />
-                        {showScoreError && (
-                          <p className="text-[11px] font-bold text-[#b71c1c]">
-                            Nhập sai, vui lòng nhập đúng điểm.
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {thptSubjects.map((subject) => {
-                    const label = formatCombinedThptLabel(subject);
-                    const inputValue = combinedThptScores[subject] ?? '';
-                    const showScoreError = isScoreAboveTen(inputValue);
-
-                    return (
-                      <div key={`thpt-${subject}`} className="flex flex-col gap-1.5">
-                        <label className={labelClass}>
-                          {label === 'THPT' ? `THPT - ${subject}` : label}
-                        </label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          pattern="^[0-9]*[.,]?[0-9]{0,2}$"
-                          min="0"
-                          max="10"
-                          step="0.01"
-                          value={inputValue}
-                          onChange={(event) => updateCombinedThptScore(subject, event.target.value)}
-                          className={scoreInputClass}
-                          placeholder="0.00"
-                        />
-                        {showScoreError && (
-                          <p className="text-[11px] font-bold text-[#b71c1c]">
-                            Nhập sai, vui lòng nhập đúng điểm.
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                  return (
+                    <div key={label} className="flex min-w-0 flex-col gap-1.5">
+                      <label className={labelClass}>{label}</label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="^[0-9]*[.,]?[0-9]{0,2}$"
+                        min="0"
+                        max="10"
+                        step="0.01"
+                        value={inputValue}
+                        onChange={(event) => updateSubjectScore(index, event.target.value)}
+                        className={scoreInputClass}
+                        placeholder="0.00"
+                      />
+                      {showScoreError && (
+                        <p className="text-[11px] font-bold text-[#b71c1c]">
+                          Nhập sai, vui lòng nhập đúng điểm.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            <div className="mt-3 rounded-md border border-green-light/30 bg-green-pale px-3 py-2 text-center text-[12px] font-bold text-green-main">
-              Điểm quy đổi xét tuyển: <span className="text-[16px] font-black">{finalScore.toFixed(2)}</span>
-            </div>
           </div>
         </div>
 
@@ -823,7 +717,7 @@ export default function PredictionInputPanel({ schoolCode, onResult }: Predictio
           disabled={submitting || loadingMajors}
           className="w-full rounded-[10px] bg-green-main p-4 text-[16px] font-extrabold text-white transition-all hover:bg-green-dark disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting ? 'Đang phân tích...' : 'Phân tích dự đoán'}
+          {submitting ? 'Đang tính điểm...' : 'Tính điểm xét tuyển'}
         </button>
       </div>
     </form>

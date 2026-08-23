@@ -1,7 +1,7 @@
 'use client';
 
 import {FormEvent, ReactNode} from 'react';
-import {CalendarDays, IdCard, MapPin, Save, UserRound, Loader2} from 'lucide-react';
+import {IdCard, MapPin, Save, UserRound, Loader2} from 'lucide-react';
 import {useCandidateProfile} from "@/hooks/use-candidate-profile";
 import {CandidateProfileRequest} from "@/types";
 
@@ -30,7 +30,7 @@ const formatDateForInput = (dateString?: string | Date | null) => {
 	if (!dateString) return "";
 	try {
 		return new Date(dateString).toISOString().split('T')[0];
-	} catch (e) {
+	} catch {
 		return "";
 	}
 };
@@ -61,6 +61,8 @@ export default function PersonalInfoView() {
 			graduateYear: (formData.get("graduateYear") as string) || new Date().getFullYear().toString(),
 			birthPlace: formData.get("birthPlace") as string,
 			address: formData.get("address") as string,
+			priorityArea: formData.get("priorityArea") as string,
+			priorityGroup: formData.get("priorityGroup") as string,
 		};
 
 		try {
@@ -122,6 +124,23 @@ export default function PersonalInfoView() {
 				<section>
 					<SectionHeading icon={<MapPin size={19}/>} title="Hồ sơ thí sinh"/>
 					<div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+						<div className="flex flex-col gap-1.5">
+							<FieldLabel>Khu vực ưu tiên</FieldLabel>
+							<select disabled={isUpdating} className={inputClass} defaultValue={profile?.priorityArea || "KV3"} name="priorityArea">
+								<option value="KV1">KV1</option>
+								<option value="KV2-NT">KV2-NT</option>
+								<option value="KV2">KV2</option>
+								<option value="KV3">KV3</option>
+							</select>
+						</div>
+						<div className="flex flex-col gap-1.5">
+							<FieldLabel>Đối tượng ưu tiên</FieldLabel>
+							<select disabled={isUpdating} className={inputClass} defaultValue={profile?.priorityGroup || "NONE"} name="priorityGroup">
+								<option value="NONE">Không thuộc đối tượng ưu tiên</option>
+								<option value="UT1">Nhóm ưu tiên 1</option>
+								<option value="UT2">Nhóm ưu tiên 2</option>
+							</select>
+						</div>
 						<div className="flex flex-col gap-1.5">
 							<FieldLabel required>Giới tính</FieldLabel>
 							<select disabled={isUpdating} className={inputClass} defaultValue={profile?.sex || "Nam"} name="sex">

@@ -68,6 +68,8 @@ export interface CandidateProfileRequest {
 	graduateYear: string;
 	birthPlace: string;
 	address: string;
+	priorityArea: string;
+	priorityGroup: string;
 }
 
 export interface CandidateProfileResponse {
@@ -81,6 +83,8 @@ export interface CandidateProfileResponse {
 	graduateYear: string;
 	birthPlace: string;
 	address: string;
+	priorityArea: string;
+	priorityGroup: string;
 	certificateResult: CertificateResult;
 }
 

@@ -59,6 +59,7 @@ class ModelBundle:
     train_end_year: int
     source_data: pd.DataFrame
     national_subject_stats: pd.DataFrame | None
+    cutoff_bias: float = 0.0
     school_code: str = SCHOOL_CODE
     leaderboard: pd.DataFrame = field(default_factory=pd.DataFrame)
 
@@ -169,23 +170,66 @@ def _predict_cutoff(
     frame: pd.DataFrame,
     spec: FeatureSpec,
     school_code: str = SCHOOL_CODE,
+    cutoff_bias: float = 0.0,
 ) -> np.ndarray:
     """Dự đoán điểm chuẩn bằng cách cộng delta dự đoán vào điểm chuẩn năm trước."""
     pred_delta = estimator.predict(frame[required_feature_columns(spec)])
-    pred_cutoff = frame["Prev_Year_Score"].to_numpy(dtype=float) + pred_delta
+    pred_cutoff = (
+        frame["Prev_Year_Score"].to_numpy(dtype=float)
+        + pred_delta
+        + float(cutoff_bias or 0.0)
+    )
     pred_cutoff = np.clip(pred_cutoff, 0, 30)
     return _align_cutoff_by_school_grain(pred_cutoff, frame, school_code)
 
 
+def _estimate_cutoff_bias(
+    raw_data: pd.DataFrame,
+    national_subject_stats: pd.DataFrame | None,
+    model_name: str,
+    pipeline_name: str,
+    train_end_year: int,
+    school_code: str = SCHOOL_CODE,
+) -> float:
+    """Ước lượng độ lệch từ năm gần nhất mà không dùng dữ liệu của năm test."""
+    calibration_train_end = int(train_end_year) - 1
+    if calibration_train_end < 2020:
+        return 0.0
+
+    try:
+        estimator, spec, frame = _fit_single_model(
+            raw_data,
+            national_subject_stats,
+            model_name=model_name,
+            pipeline_name=pipeline_name,
+            train_end_year=calibration_train_end,
+            school_code=school_code,
+        )
+        calibration_rows = _valid_model_rows(frame, frame["Year"].eq(train_end_year))
+        if calibration_rows.empty:
+            return 0.0
+
+        predicted = _predict_cutoff(
+            estimator,
+            calibration_rows,
+            spec,
+            school_code=school_code,
+        )
+        actual = calibration_rows["Cutoff_Score"].to_numpy(dtype=float)
+        bias = float(np.mean(actual - predicted))
+        return bias if np.isfinite(bias) else 0.0
+    except Exception:
+        return 0.0
+
+
 def _select_best(leaderboard: pd.DataFrame) -> pd.Series:
     """Chọn mô hình tốt nhất từ bảng xếp hạng sau khi thử nhiều quy trình/mô hình."""
-    if leaderboard["F1_2025"].notna().any():
-        sort_cols = ["F1_2025", "Accuracy_2025", "MAE", "RMSE"]
-        ascending = [False, False, True, True]
-    else:
-        sort_cols = ["MAE", "RMSE", "R2"]
-        ascending = [True, True, False]
-    return leaderboard.sort_values(sort_cols, ascending=ascending).iloc[0]
+    # Mục tiêu chính là dự đoán điểm chuẩn. Các chỉ số phân loại đậu/rớt chỉ
+    # được tính trên dữ liệu nguyện vọng giả lập nên không dùng để chọn model.
+    return leaderboard.sort_values(
+        ["MAE", "RMSE", "R2"],
+        ascending=[True, True, False],
+    ).iloc[0]
 
 
 def _fit_single_model(
@@ -222,6 +266,7 @@ def run_nlu_experiment(
     test_year: int = TEST_YEAR,
     retrain_final: bool = True,
     school_code: str = SCHOOL_CODE,
+    model_configs: set[tuple[str, str]] | None = None,
 ) -> ExperimentReport:
     """Huấn luyện và đánh giá mô hình dự đoán điểm chuẩn.
 
@@ -263,13 +308,33 @@ def run_nlu_experiment(
     for pipeline_name, spec in pipeline_specs.items():
         feature_cols = required_feature_columns(spec)
         for model_name, regressor in regressors.items():
+            if model_configs is not None and (pipeline_name, model_name) not in model_configs:
+                continue
             estimator = _make_pipeline(model_name, regressor, spec)
             estimator.fit(train_rows[feature_cols], train_rows["Score_Change"])
+            cutoff_bias = _estimate_cutoff_bias(
+                historical_df,
+                national_subject_stats,
+                model_name=model_name,
+                pipeline_name=pipeline_name,
+                train_end_year=train_end_year,
+                school_code=school_code,
+            )
 
-            result_row: dict[str, object] = {"Pipeline": pipeline_name, "Model": model_name}
+            result_row: dict[str, object] = {
+                "Pipeline": pipeline_name,
+                "Model": model_name,
+                "Cutoff_Bias": cutoff_bias,
+            }
 
             if has_test_data:
-                y_pred = _predict_cutoff(estimator, test_rows, spec, school_code=school_code)
+                y_pred = _predict_cutoff(
+                    estimator,
+                    test_rows,
+                    spec,
+                    school_code=school_code,
+                    cutoff_bias=cutoff_bias,
+                )
                 y_true = test_rows["Cutoff_Score"].to_numpy(dtype=float)
                 metrics = regression_metrics(y_true, y_pred)
 
@@ -309,22 +374,48 @@ def run_nlu_experiment(
                 train_end_year=train_end_year,
                 source_data=historical_df.copy(),
                 national_subject_stats=None if national_subject_stats is None else national_subject_stats.copy(),
+                cutoff_bias=cutoff_bias,
                 school_code=school_code,
             )
 
     # Thử thêm XGBoost có tinh chỉnh tham số cho quy trình B nếu thư viện khả dụng.
-    if XGBRegressor is not None and "Pipeline_B_National" in pipeline_specs:
+    if (
+        XGBRegressor is not None
+        and "Pipeline_B_National" in pipeline_specs
+        and (
+            model_configs is None
+            or ("Pipeline_B_National", "XGB_Tuned") in model_configs
+        )
+    ):
         pipeline_name = "Pipeline_B_National"
         model_name = "XGB_Tuned"
         spec = pipeline_specs[pipeline_name]
         feature_cols = required_feature_columns(spec)
         estimator = _make_tuned_xgb_pipeline(spec)
         estimator.fit(train_rows[feature_cols], train_rows["Score_Change"])
+        cutoff_bias = _estimate_cutoff_bias(
+            historical_df,
+            national_subject_stats,
+            model_name=model_name,
+            pipeline_name=pipeline_name,
+            train_end_year=train_end_year,
+            school_code=school_code,
+        )
 
-        result_row = {"Pipeline": pipeline_name, "Model": model_name}
+        result_row = {
+            "Pipeline": pipeline_name,
+            "Model": model_name,
+            "Cutoff_Bias": cutoff_bias,
+        }
 
         if has_test_data:
-            y_pred = _predict_cutoff(estimator, test_rows, spec, school_code=school_code)
+            y_pred = _predict_cutoff(
+                estimator,
+                test_rows,
+                spec,
+                school_code=school_code,
+                cutoff_bias=cutoff_bias,
+            )
             y_true = test_rows["Cutoff_Score"].to_numpy(dtype=float)
             metrics = regression_metrics(y_true, y_pred)
 
@@ -361,8 +452,12 @@ def run_nlu_experiment(
             train_end_year=train_end_year,
             source_data=historical_df.copy(),
             national_subject_stats=None if national_subject_stats is None else national_subject_stats.copy(),
+            cutoff_bias=cutoff_bias,
             school_code=school_code,
         )
+
+    if not rows:
+        raise ValueError(f"Không tìm thấy cấu hình mô hình hợp lệ: {model_configs}")
 
     leaderboard = pd.DataFrame(rows)
 
@@ -387,6 +482,14 @@ def run_nlu_experiment(
             train_end_year=final_train_end_year,
             school_code=school_code,
         )
+        final_cutoff_bias = _estimate_cutoff_bias(
+            historical_df,
+            national_subject_stats,
+            model_name=best_bundle.model_name,
+            pipeline_name=best_bundle.pipeline_name,
+            train_end_year=final_train_end_year,
+            school_code=school_code,
+        )
         final_bundle = ModelBundle(
             estimator=estimator,
             model_name=best_bundle.model_name,
@@ -396,6 +499,7 @@ def run_nlu_experiment(
             train_end_year=final_train_end_year,
             source_data=historical_df.copy(),
             national_subject_stats=None if national_subject_stats is None else national_subject_stats.copy(),
+            cutoff_bias=final_cutoff_bias,
             school_code=school_code,
             leaderboard=leaderboard.copy(),
         )

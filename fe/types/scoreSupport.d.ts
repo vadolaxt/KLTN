@@ -8,6 +8,8 @@ export interface CombinationScore {
 
 export interface CompetencyScore {
 	score: number;
+	priorityScore: number;
+	totalScore: number;
 	convertScore: Record<string, number>;
 }
 

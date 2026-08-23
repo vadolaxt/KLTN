@@ -39,7 +39,7 @@ export default function DgnlScoreCards({
 
 	return (
 		<div className="space-y-4">
-			<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+			<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 				<div className="group rounded-[10px] border-1.5 border-gray-mid bg-gray-light p-5 transition-all hover:-translate-y-0.5 hover:border-green-light hover:bg-white hover:shadow-[0_14px_28px_rgba(45,122,45,0.1)]">
 					<div className="text-[12px] font-extrabold uppercase tracking-[0.9px] text-text-light transition-colors group-hover:text-green-main">
 						Điểm ĐGNL
@@ -47,6 +47,18 @@ export default function DgnlScoreCards({
 
 					<div className="mt-4 flex h-14 items-center rounded-lg border border-dashed border-gray-mid bg-white px-4 text-[24px] font-black text-text-light transition-colors group-hover:border-green-light group-hover:text-green-main">
 						{formatScore(score?.score)}
+					</div>
+				</div>
+				<div className="rounded-[10px] border-1.5 border-gray-mid bg-gray-light p-5">
+					<div className="text-[12px] font-extrabold uppercase tracking-[0.9px] text-text-light">Điểm ưu tiên ĐGNL</div>
+					<div className="mt-4 flex h-14 items-center rounded-lg border border-dashed border-gray-mid bg-white px-4 text-[24px] font-black text-green-main">
+						{formatScore(score?.priorityScore)}
+					</div>
+				</div>
+				<div className="rounded-[10px] border-1.5 border-gray-mid bg-gray-light p-5">
+					<div className="text-[12px] font-extrabold uppercase tracking-[0.9px] text-text-light">Tổng điểm ĐGNL</div>
+					<div className="mt-4 flex h-14 items-center rounded-lg border border-dashed border-gray-mid bg-white px-4 text-[24px] font-black text-green-main">
+						{formatScore(score?.totalScore)}
 					</div>
 				</div>
 

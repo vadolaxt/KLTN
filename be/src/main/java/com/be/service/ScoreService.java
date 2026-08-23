@@ -3,11 +3,13 @@ package com.be.service;
 import com.be.dto.response.MajorScoreResponse;
 import com.be.dto.response.ViewScoreResponse;
 import com.be.entity.AcademicScoreProfile;
+import com.be.entity.CandidateProfile;
 import com.be.entity.Major;
 import com.be.entity.NationalExamResult;
 import com.be.entity.Subject;
 import com.be.entity.SubjectCombination;
 import com.be.repository.AcademicScoreProfileRepository;
+import com.be.repository.CandidateProfileRepository;
 import com.be.repository.MajorRepository;
 import com.be.repository.SubjectCombinationRepository;
 import com.be.ultis.ScoreHelper;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 public class ScoreService {
     AuthService authService;
     AcademicScoreProfileRepository academicScoreProfileRepository;
+    CandidateProfileRepository candidateProfileRepository;
     SubjectCombinationRepository subjectCombinationRepository;
     MajorRepository majorRepository;
     ScoreHelper scoreHelper;
@@ -124,13 +127,20 @@ public class ScoreService {
 
     // diem dgnl
     private ViewScoreResponse.CompetencyScoreDTO buildCompetencyScore(
-            AcademicScoreProfile profile
+            AcademicScoreProfile profile,
+            CandidateProfile candidateProfile
     ) {
         double score = profile.getCompetencyTestResult().getScore();
+        double priorityLevel = scoreHelper.resolveCompetencyPriorityLevel(
+                candidateProfile.getPriorityArea(), candidateProfile.getPriorityGroup());
+        double priorityScore = scoreHelper.calculateCompetencyPriorityScore(score, priorityLevel);
+        double totalScore = Math.min(score + priorityScore, 1200.0);
 
         return ViewScoreResponse.CompetencyScoreDTO.builder()
                 .score((int) score)
-                .convertScore(scoreHelper.convertCompetencyScore(score))
+                .priorityScore(priorityScore)
+                .totalScore(totalScore)
+                .convertScore(scoreHelper.convertCompetencyScore(totalScore))
                 .build();
     }
 
@@ -138,6 +148,8 @@ public class ScoreService {
         String userId = authService.getUserIdFromToken(token);
         List<SubjectCombination> combinations = subjectCombinationRepository.findAllByOrderByCodeAsc();
         AcademicScoreProfile profile = academicScoreProfileRepository.findByUserId(userId).orElse(null);
+        CandidateProfile candidateProfile = candidateProfileRepository.findByUserId(userId)
+                .orElseGet(() -> CandidateProfile.builder().userId(userId).build());
 
         Map<String, Double> schoolRecord = profile.getSchoolRecord().getAvgScore();
 
@@ -159,7 +171,7 @@ public class ScoreService {
         List<ViewScoreResponse.CombineMethodScoreDTO> combineMethodCombination =
                 buildCombineMethodCombination(combinations, schoolRecord, nationalScoreMap);
 
-        ViewScoreResponse.CompetencyScoreDTO competencyScore = buildCompetencyScore(profile);
+        ViewScoreResponse.CompetencyScoreDTO competencyScore = buildCompetencyScore(profile, candidateProfile);
 
         return ViewScoreResponse.builder()
                 .schoolRecordMethodScore(schoolRecordCombination)
@@ -175,6 +187,8 @@ public class ScoreService {
         AcademicScoreProfile profile = academicScoreProfileRepository
                 .findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ điểm của người dùng"));
+        CandidateProfile candidateProfile = candidateProfileRepository.findByUserId(userId)
+                .orElseGet(() -> CandidateProfile.builder().userId(userId).build());
 
         Map<String, Double> schoolRecord = profile.getSchoolRecord().getAvgScore();
 
@@ -187,7 +201,7 @@ public class ScoreService {
                         (oldScore, newScore) -> newScore
                 ));
 
-        ViewScoreResponse.CompetencyScoreDTO competency = buildCompetencyScore(profile);
+        ViewScoreResponse.CompetencyScoreDTO competency = buildCompetencyScore(profile, candidateProfile);
 
         List<Major> majors = majorRepository.findAllByOrderByDepartmentCodeAsc();
 
@@ -290,7 +304,7 @@ public class ScoreService {
                                 .map(combinationCode -> MajorScoreResponse.MethodScoreDTO.builder()
                                         .type("COMPETENCY")
                                         .combination(combinationCode)
-                                        .rawScore(competency.getScore())
+                                        .rawScore(competency.getTotalScore())
                                         .convertedScore(competency.getConvertScore().get(combinationCode))
                                         .build()
                                 )

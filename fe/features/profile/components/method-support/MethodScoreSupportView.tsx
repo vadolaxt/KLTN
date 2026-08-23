@@ -13,7 +13,7 @@ import {ViewScoresService} from "@/service/view-score.api";
 
 export default function MethodScoreSupportView() {
 	const [activeMethod, setActiveMethod] = useState<ScoreMethod>('thpt');
-	const {resultByMethod, isLoading, error} = useAdmissionMethodResults();
+	const {resultByMethod} = useAdmissionMethodResults();
 	const visibleMethods = useMemo(
 		() => METHODS.filter((method) => resultByMethod[SCORE_METHOD_TO_ADMISSION_METHOD[method.value]]),
 		[resultByMethod],
@@ -39,6 +39,8 @@ export default function MethodScoreSupportView() {
 		combineMethodScore: [],
 		competencyMethod: {
 			score: 0,
+			priorityScore: 0,
+			totalScore: 0,
 			convertScore: {},
 		},
 	});

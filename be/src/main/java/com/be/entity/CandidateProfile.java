@@ -37,6 +37,10 @@ public class CandidateProfile {
     int graduateYear = Year.now().getValue();
 
     String birthPlace;
+    @Builder.Default
+    String priorityArea = "KV3";
+    @Builder.Default
+    String priorityGroup = "NONE";
     IdentityCard identityCard;
     Instant DOB;
     CertificateResult certificateResult;

@@ -20,6 +20,8 @@ public class ProfileMapper {
                 .ethnic(profile.getEthnic())
                 .graduateYear(profile.getGraduateYear())
                 .birthPlace(profile.getBirthPlace())
+                .priorityArea(profile.getPriorityArea())
+                .priorityGroup(profile.getPriorityGroup())
                 .identityCard(profile.getIdentityCard())
                 .dob(profile.getDOB())
                 .certificateResult(profile.getCertificateResult())

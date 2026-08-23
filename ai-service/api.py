@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config.rag_config import admission_bundles
 from entity.entity import AdmissionPredictRequest, AdmissionPredictResponse
-from score import predict_admission
+from score import predict_admission, predict_next_year_cutoffs
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -162,6 +162,7 @@ async def predict_admission_endpoint(request: AdmissionPredictRequest):
             priority_score=request.priority_score or 0.0,
             admission_method=request.admission_method,
             target_year=request.target_year,
+            top_k=request.top_k,
         )
 
         return AdmissionPredictResponse(result=result)
@@ -170,6 +171,40 @@ async def predict_admission_endpoint(request: AdmissionPredictRequest):
         raise HTTPException(
             status_code=500,
             detail="Loi xu ly du doan diem chuan.",
+        )
+
+
+@app.get("/api/predicted-cutoffs")
+async def predicted_cutoffs_endpoint(school_code: str = "NLU", target_year: int = 2026):
+    normalized_school_code = (school_code or "NLU").strip().upper()
+    selected_bundle = admission_bundles.get(normalized_school_code)
+    if selected_bundle is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Khong tim thay model du doan cho truong.",
+        )
+
+    try:
+        predictions = predict_next_year_cutoffs(
+            bundle=selected_bundle,
+            target_year=target_year,
+        )
+        predictions = predictions.drop_duplicates(subset=["Major_Code"], keep="first")
+
+        return {
+            "predictions": [
+                {
+                    "major_code": str(row.Major_Code),
+                    "predicted_cutoff": round(float(row.Predicted_Cutoff), 2),
+                }
+                for row in predictions.itertuples(index=False)
+            ]
+        }
+    except Exception as e:
+        print(f"Loi predicted cutoffs: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Loi xu ly tong quan du doan diem chuan.",
         )
 
 
