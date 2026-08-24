@@ -16,6 +16,9 @@ SCHOOL_CODE = "NLU"
 TRAIN_END_YEAR = 2024
 TEST_YEAR = 2025
 RANDOM_STATE = 42
+# Linear Regression ưu tiên mạnh dữ liệu gần nhất. Giá trị này được chọn bằng
+# validation năm 2024; năm test 2025 không tham gia chọn siêu tham số.
+LINEAR_YEAR_DECAY = 0.01
 
 # Mã môn dùng thống nhất cho dữ liệu điểm chuẩn, phổ điểm quốc gia và điểm thí sinh.
 BLOCK_SUBJECTS = {

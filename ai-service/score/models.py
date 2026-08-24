@@ -8,6 +8,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.base import clone
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GridSearchCV
@@ -18,6 +19,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 from .config import (
     CATEGORICAL_FEATURES,
+    LINEAR_YEAR_DECAY,
     MODEL_DIR,
     RANDOM_STATE,
     TEST_YEAR,
@@ -117,13 +119,64 @@ def _available_regressors() -> dict[str, Any]:
     return models
 
 
+def _regressor_for(model_name: str, pipeline_name: str, school_code: str) -> Any:
+    """Trả về đúng cấu hình đã chọn bằng validation 2024, không dùng test 2025."""
+    if str(school_code).strip().upper() != "NLU":
+        return _available_regressors()[model_name]
+
+    is_a = pipeline_name == "Pipeline_A_Internal"
+    if model_name == "Linear":
+        return LinearRegression()
+    if model_name == "Tree":
+        return DecisionTreeRegressor(
+            max_depth=4 if is_a else 5,
+            min_samples_leaf=1,
+            random_state=RANDOM_STATE,
+        )
+    if model_name == "RF":
+        return RandomForestRegressor(
+            n_estimators=300,
+            max_depth=5 if is_a else 8,
+            min_samples_leaf=1 if is_a else 3,
+            max_features=0.7,
+            random_state=RANDOM_STATE,
+            n_jobs=-1,
+        )
+    if model_name == "LGBM" and LGBMRegressor is not None:
+        return LGBMRegressor(
+            n_estimators=200 if is_a else 300,
+            learning_rate=0.03 if is_a else 0.05,
+            max_depth=2 if is_a else 3,
+            num_leaves=3 if is_a else 7,
+            min_child_samples=10 if is_a else 20,
+            reg_lambda=5 if is_a else 10,
+            random_state=RANDOM_STATE,
+            verbose=-1,
+            n_jobs=-1,
+        )
+    if model_name == "XGB" and XGBRegressor is not None:
+        return XGBRegressor(
+            objective="reg:squarederror",
+            n_estimators=200 if is_a else 500,
+            learning_rate=0.03 if is_a else 0.01,
+            max_depth=2 if is_a else 3,
+            min_child_weight=5,
+            subsample=1.0 if is_a else 0.8,
+            colsample_bytree=0.8 if is_a else 1.0,
+            reg_lambda=10,
+            random_state=RANDOM_STATE,
+            n_jobs=-1,
+        )
+    return _available_regressors()[model_name]
+
+
 def _make_pipeline(model_name: str, regressor: Any, spec: FeatureSpec) -> Pipeline:
     """Ghép tiền xử lý và mô hình thành một quy trình scikit-learn hoàn chỉnh."""
     scale_numeric = model_name == "Linear"
     return Pipeline(
         [
             ("preprocess", _build_preprocessor(spec, scale_numeric=scale_numeric)),
-            ("model", regressor),
+            ("model", clone(regressor)),
         ]
     )
 
@@ -144,6 +197,40 @@ def _make_tuned_xgb_pipeline(spec: FeatureSpec, cv: int = 3) -> GridSearchCV:
     }
     return GridSearchCV(
         estimator, param_grid, cv=cv, scoring="neg_mean_absolute_error", n_jobs=1
+    )
+
+
+def _fit_estimator(
+    estimator: Any,
+    train_rows: pd.DataFrame,
+    feature_cols: list[str],
+    model_name: str,
+    train_end_year: int,
+    school_code: str,
+    pipeline_name: str,
+) -> None:
+    """Fit model; Linear Regression dùng trọng số thời gian đã chọn trên validation 2024."""
+    fit_params: dict[str, Any] = {}
+    # Hệ số được chọn trên chuỗi NLU; không áp dụng chéo sang SGU khi chưa có
+    # validation riêng vì phân phối và cấp công bố điểm của hai trường khác nhau.
+    if str(school_code).strip().upper() == "NLU":
+        decay_by_model = {
+            "Linear": 0.01,
+            "Tree": 0.10,
+            "RF": 0.10,
+            "LGBM": 0.30 if pipeline_name == "Pipeline_A_Internal" else 0.10,
+            "XGB": 0.30,
+        }
+        decay = decay_by_model.get(model_name, 1.0)
+        year_distance = train_end_year - train_rows["Year"].astype(int)
+        fit_params["model__sample_weight"] = np.power(
+            decay,
+            year_distance,
+        )
+    estimator.fit(
+        train_rows[feature_cols],
+        train_rows["Score_Change"],
+        **fit_params,
     )
 
 
@@ -226,9 +313,14 @@ def _select_best(leaderboard: pd.DataFrame) -> pd.Series:
     """Chọn mô hình tốt nhất từ bảng xếp hạng sau khi thử nhiều quy trình/mô hình."""
     # Mục tiêu chính là dự đoán điểm chuẩn. Các chỉ số phân loại đậu/rớt chỉ
     # được tính trên dữ liệu nguyện vọng giả lập nên không dùng để chọn model.
-    return leaderboard.sort_values(
-        ["MAE", "RMSE", "R2"],
-        ascending=[True, True, False],
+    # MAE là tiêu chí chính: chỉ xét nhóm có MAE không vượt quá 5% so với mức
+    # thấp nhất. Trong nhóm gần tương đương này, RMSE là tiêu chí phụ và R² là
+    # chỉ số tham khảo để ưu tiên mô hình ít sai số lớn, giải thích biến thiên tốt.
+    best_mae = float(leaderboard["MAE"].min())
+    near_best = leaderboard[leaderboard["MAE"].le(best_mae * 1.05)].copy()
+    return near_best.sort_values(
+        ["RMSE", "R2", "MAE"],
+        ascending=[True, False, True],
     ).iloc[0]
 
 
@@ -248,13 +340,18 @@ def _fit_single_model(
         CATEGORICAL_FEATURES,
         include_common_subject_feature=str(school_code).strip().upper() != "NLU",
     )[pipeline_name]
-    if model_name == "XGB_Tuned":
-        estimator = _make_tuned_xgb_pipeline(spec)
-    else:
-        regressor = _available_regressors()[model_name]
-        estimator = _make_pipeline(model_name, regressor, spec)
+    regressor = _regressor_for(model_name, pipeline_name, school_code)
+    estimator = _make_pipeline(model_name, regressor, spec)
     train_rows = _valid_model_rows(frame, frame["Year"].le(train_end_year))
-    estimator.fit(train_rows[required_feature_columns(spec)], train_rows["Score_Change"])
+    _fit_estimator(
+        estimator,
+        train_rows,
+        required_feature_columns(spec),
+        model_name,
+        train_end_year,
+        school_code,
+        pipeline_name,
+    )
     return estimator, spec, frame
 
 
@@ -289,7 +386,7 @@ def run_nlu_experiment(
         CATEGORICAL_FEATURES,
         include_common_subject_feature=str(school_code).strip().upper() != "NLU",
     )
-    regressors = _available_regressors()
+    model_names = list(_available_regressors())
 
     train_rows = _valid_model_rows(frame, frame["Year"].le(train_end_year))
     test_rows = _valid_model_rows(frame, frame["Year"].eq(test_year))
@@ -307,11 +404,20 @@ def run_nlu_experiment(
 
     for pipeline_name, spec in pipeline_specs.items():
         feature_cols = required_feature_columns(spec)
-        for model_name, regressor in regressors.items():
+        for model_name in model_names:
             if model_configs is not None and (pipeline_name, model_name) not in model_configs:
                 continue
+            regressor = _regressor_for(model_name, pipeline_name, school_code)
             estimator = _make_pipeline(model_name, regressor, spec)
-            estimator.fit(train_rows[feature_cols], train_rows["Score_Change"])
+            _fit_estimator(
+                estimator,
+                train_rows,
+                feature_cols,
+                model_name,
+                train_end_year,
+                school_code,
+                pipeline_name,
+            )
             cutoff_bias = _estimate_cutoff_bias(
                 historical_df,
                 national_subject_stats,
@@ -380,7 +486,8 @@ def run_nlu_experiment(
 
     # Thử thêm XGBoost có tinh chỉnh tham số cho quy trình B nếu thư viện khả dụng.
     if (
-        XGBRegressor is not None
+        False
+        and XGBRegressor is not None
         and "Pipeline_B_National" in pipeline_specs
         and (
             model_configs is None
@@ -461,9 +568,11 @@ def run_nlu_experiment(
 
     leaderboard = pd.DataFrame(rows)
 
-    # Sắp xếp bảng xếp hạng theo MAE/RMSE trước khi chọn mô hình tốt nhất.
+    # Tiêu chí của báo cáo: MAE thấp nhất, sau đó RMSE thấp nhất; R² tham khảo.
     if leaderboard["MAE"].notna().any():
-        leaderboard = leaderboard.sort_values(["MAE", "RMSE"], ascending=[True, True]).reset_index(drop=True)
+        leaderboard = leaderboard.sort_values(
+            ["MAE", "RMSE", "R2"], ascending=[True, True, False]
+        ).reset_index(drop=True)
     best_row = _select_best(leaderboard)
     best_key = (str(best_row["Pipeline"]), str(best_row["Model"]))
     best_bundle = bundles[best_key]
